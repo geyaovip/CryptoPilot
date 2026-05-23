@@ -1,0 +1,28 @@
+---
+description: Prisma, PostgreSQL, pgvector, migration, and database integrity rules
+globs: apps/api/**/*,infra/db/**/*,packages/types/**/*
+alwaysApply: false
+---
+
+# Database Rules
+
+## MUST
+- Follow `docs/rules/db-rules.md`.
+- Use PostgreSQL, Prisma, and pgvector.
+- Use snake_case database fields.
+- Use migrations for schema changes.
+- Use soft delete for core business data.
+- Use unique constraints for dedupe.
+- Add indexes for list filters and foreign keys.
+- Keep database enums synchronized with `packages/types`.
+
+## REQUIRED CORE FIELDS
+- Business tables: `id`, `created_at`, `updated_at`, `deleted_at`.
+- Log tables: `id`, `created_at`.
+
+## FORBIDDEN
+- No manual production schema edits.
+- No editing executed migrations.
+- No secrets stored in plaintext.
+- No core query fields hidden only inside JSON.
+- No physical delete for core business data unless explicitly required.

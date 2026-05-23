@@ -1,0 +1,25 @@
+---
+description: Frontend React rules for web, admin, and shared UI code
+globs: apps/web/**/*,apps/admin/**/*,packages/ui/**/*
+alwaysApply: false
+---
+
+# Frontend React Rules
+
+## MUST
+- Follow `docs/rules/frontend-rules.md`.
+- Use Next.js App Router, TypeScript, TailwindCSS, and shadcn/ui.
+- Use TanStack Query for server data.
+- Use Zustand only for transient UI state.
+- Use API types from `packages/types`.
+- Type all props and keep components focused.
+- Implement Loading, Empty, Error, and Retry states for async UI.
+- Confirm destructive actions.
+
+## FORBIDDEN
+- No class components.
+- No `any` for core props or API data.
+- No server cache in Zustand.
+- No duplicate DTO definitions in frontend apps.
+- No dark theme or theme switcher.
+- No direct component imports between `apps/web` and `apps/admin`.

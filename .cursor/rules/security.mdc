@@ -1,0 +1,28 @@
+---
+description: Auth, admin, secrets, webhook, rate limit, and safe logging rules
+globs: apps/api/**/*,apps/web/**/*,apps/admin/**/*,packages/config/**/*
+alwaysApply: false
+---
+
+# Security Rules
+
+## MUST
+- Enforce auth for private user APIs.
+- Enforce admin guard for all `/api/admin/*`.
+- Validate Telegram webhook secret.
+- Rate-limit expensive APIs.
+- Never commit secrets.
+- Never log API keys, OAuth tokens, provider credentials, or Telegram secrets.
+- Validate all API input.
+- Store secrets in environment variables only.
+
+## AUTH RULES
+- Login required: AI Search, Watchlist, Bookmarks, Settings, Telegram bind/unbind.
+- Admin required: all `/api/admin/*`.
+- Webhook secret required: `POST /api/telegram/webhook`.
+
+## FORBIDDEN
+- No raw stack traces to frontend.
+- No secrets in frontend bundle.
+- No unvalidated external URLs.
+- No admin write operation without audit log.

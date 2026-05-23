@@ -1,0 +1,460 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER  @map("user")
+  ADMIN @map("admin")
+
+  @@map("user_role")
+}
+
+enum AuthProvider {
+  GOOGLE @map("google")
+  EMAIL  @map("email")
+
+  @@map("auth_provider")
+}
+
+enum SourceType {
+  RSS       @map("rss")
+  TWITTER   @map("twitter")
+  REDDIT    @map("reddit")
+  COINGECKO @map("coingecko")
+  MANUAL    @map("manual")
+
+  @@map("source_type")
+}
+
+enum SourceStatus {
+  ACTIVE @map("active")
+  PAUSED @map("paused")
+  ERROR  @map("error")
+
+  @@map("source_status")
+}
+
+enum FeedType {
+  NEWS         @map("news")
+  NARRATIVE    @map("narrative")
+  MARKET_MOVE  @map("market_move")
+  SOCIAL_TREND @map("social_trend")
+  BREAKING     @map("breaking")
+
+  @@map("feed_type")
+}
+
+enum FeedStatus {
+  PUBLISHED @map("published")
+  HIDDEN    @map("hidden")
+  DELETED   @map("deleted")
+
+  @@map("feed_status")
+}
+
+enum Sentiment {
+  BULLISH @map("bullish")
+  NEUTRAL @map("neutral")
+  BEARISH @map("bearish")
+
+  @@map("sentiment")
+}
+
+enum IngestionStatus {
+  SUCCESS @map("success")
+  FAILED  @map("failed")
+
+  @@map("ingestion_status")
+}
+
+enum PromptStatus {
+  DRAFT    @map("draft")
+  ACTIVE   @map("active")
+  ARCHIVED @map("archived")
+
+  @@map("prompt_status")
+}
+
+enum LlmCallStatus {
+  SUCCESS @map("success")
+  FAILED  @map("failed")
+
+  @@map("llm_call_status")
+}
+
+enum WatchlistTargetType {
+  TOKEN     @map("token")
+  NARRATIVE @map("narrative")
+  KOL       @map("kol")
+
+  @@map("watchlist_target_type")
+}
+
+enum KolPlatform {
+  TWITTER @map("twitter")
+  YOUTUBE @map("youtube")
+  OTHER   @map("other")
+
+  @@map("kol_platform")
+}
+
+model User {
+  id                    String        @id @default(uuid()) @db.Uuid
+  email                 String?       @unique @db.VarChar(255)
+  name                  String?       @db.VarChar(255)
+  avatarUrl             String?       @map("avatar_url")
+  role                  UserRole      @default(USER)
+  telegramChatId        String?       @map("telegram_chat_id") @db.VarChar(255)
+  telegramBoundAt       DateTime?     @map("telegram_bound_at")
+  dailyAiSearchCount    Int           @default(0) @map("daily_ai_search_count")
+  lastAiSearchResetAt   DateTime?     @map("last_ai_search_reset_at")
+  disabledAt            DateTime?     @map("disabled_at")
+  deletedAt             DateTime?     @map("deleted_at")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  authAccounts          AuthAccount[]
+  bookmarks             Bookmark[]
+  watchlistItems        WatchlistItem[]
+  aiSearchHistory       AiSearchHistory[]
+  llmCallLogs           LlmCallLog[]
+
+  @@map("users")
+}
+
+model AuthAccount {
+  id                    String       @id @default(uuid()) @db.Uuid
+  userId                String       @map("user_id") @db.Uuid
+  provider              AuthProvider
+  providerAccountId     String       @map("provider_account_id") @db.VarChar(255)
+  accessTokenEncrypted  String?      @map("access_token_encrypted")
+  refreshTokenEncrypted String?      @map("refresh_token_encrypted")
+  expiresAt             DateTime?    @map("expires_at")
+  createdAt             DateTime     @default(now()) @map("created_at")
+  updatedAt             DateTime     @updatedAt @map("updated_at")
+  user                  User         @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("auth_accounts")
+}
+
+model MagicLinkToken {
+  id          String    @id @default(uuid()) @db.Uuid
+  email       String    @db.VarChar(255)
+  tokenHash   String    @unique @map("token_hash") @db.VarChar(255)
+  expiresAt   DateTime  @map("expires_at")
+  consumedAt  DateTime? @map("consumed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@index([expiresAt])
+  @@map("magic_link_tokens")
+}
+
+model Source {
+  id                   String          @id @default(uuid()) @db.Uuid
+  name                 String          @db.VarChar(255)
+  type                 SourceType
+  status               SourceStatus    @default(ACTIVE)
+  url                  String?
+  sourceWeight         Int             @default(50) @map("source_weight")
+  fetchIntervalSeconds Int             @default(300) @map("fetch_interval_seconds")
+  lastSuccessAt        DateTime?       @map("last_success_at")
+  lastErrorAt          DateTime?       @map("last_error_at")
+  errorMessage         String?         @map("error_message")
+  deletedAt            DateTime?       @map("deleted_at")
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+  feedItems            FeedItem[]
+  ingestionLogs        IngestionLog[]
+
+  @@index([status])
+  @@map("sources")
+}
+
+model Token {
+  id              String          @id @default(uuid()) @db.Uuid
+  symbol          String          @unique @db.VarChar(32)
+  name            String          @db.VarChar(255)
+  coingeckoId     String?         @map("coingecko_id") @db.VarChar(255)
+  priceUsd        Decimal?        @map("price_usd") @db.Decimal(18, 8)
+  priceChange24h  Decimal?        @map("price_change_24h") @db.Decimal(10, 4)
+  isActive        Boolean         @default(true) @map("is_active")
+  displayOrder    Int             @default(0) @map("display_order")
+  deletedAt       DateTime?       @map("deleted_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  feedItemTokens  FeedItemToken[]
+
+  @@index([symbol])
+  @@index([isActive])
+  @@map("tokens")
+}
+
+model Narrative {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  name               String                   @db.VarChar(255)
+  slug               String                   @unique @db.VarChar(255)
+  description        String?
+  aiSummary          String?                  @map("ai_summary")
+  sentiment          Sentiment                @default(NEUTRAL)
+  heatScore          Int                      @default(0) @map("heat_score")
+  trendScore24h      Int                      @default(0) @map("trend_score_24h")
+  trendScore7d       Int                      @default(0) @map("trend_score_7d")
+  feedCount24h       Int                      @default(0) @map("feed_count_24h")
+  weight             Int                      @default(50)
+  isActive           Boolean                  @default(true) @map("is_active")
+  mergedIntoId       String?                  @map("merged_into_id") @db.Uuid
+  deletedAt          DateTime?                @map("deleted_at")
+  createdAt          DateTime                 @default(now()) @map("created_at")
+  updatedAt          DateTime                 @updatedAt @map("updated_at")
+  feedItemNarratives FeedItemNarrative[]
+  heatSnapshots      NarrativeHeatSnapshot[]
+  mergedInto         Narrative?               @relation("NarrativeMerge", fields: [mergedIntoId], references: [id])
+  mergedFrom         Narrative[]              @relation("NarrativeMerge")
+
+  @@index([slug])
+  @@index([isActive, heatScore])
+  @@index([mergedIntoId])
+  @@map("narratives")
+}
+
+model Kol {
+  id               String      @id @default(uuid()) @db.Uuid
+  name             String      @db.VarChar(255)
+  handle           String      @db.VarChar(255)
+  platform         KolPlatform @default(TWITTER)
+  profileUrl       String?     @map("profile_url")
+  influenceScore   Int         @default(50) @map("influence_score")
+  isActive         Boolean     @default(true) @map("is_active")
+  deletedAt        DateTime?   @map("deleted_at")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  @@unique([platform, handle])
+  @@index([isActive])
+  @@map("kols")
+}
+
+model WatchlistItem {
+  id                   String              @id @default(uuid()) @db.Uuid
+  userId               String              @map("user_id") @db.Uuid
+  targetType           WatchlistTargetType @map("target_type")
+  targetId             String              @map("target_id") @db.Uuid
+  notificationsEnabled Boolean             @default(true) @map("notifications_enabled")
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @updatedAt @map("updated_at")
+  user                 User                @relation(fields: [userId], references: [id])
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId, targetType])
+  @@map("watchlist_items")
+}
+
+model NarrativeHeatSnapshot {
+  id                 String    @id @default(uuid()) @db.Uuid
+  narrativeId        String    @map("narrative_id") @db.Uuid
+  heatScore          Int       @map("heat_score")
+  twitterMentions    Int       @default(0) @map("twitter_mentions")
+  feedCount          Int       @default(0) @map("feed_count")
+  tokenVolumeChange  Decimal?  @map("token_volume_change") @db.Decimal(10, 4)
+  capturedAt         DateTime  @map("captured_at")
+  narrative          Narrative @relation(fields: [narrativeId], references: [id])
+
+  @@index([narrativeId, capturedAt])
+  @@map("narrative_heat_snapshots")
+}
+
+model FeedItem {
+  id                 String              @id @default(uuid()) @db.Uuid
+  sourceId           String              @map("source_id") @db.Uuid
+  title              String              @db.VarChar(500)
+  content            String
+  aiSummary          String              @map("ai_summary")
+  aiKeyReasons       Json                @default("[]") @map("ai_key_reasons")
+  aiMarketImpact     String?             @map("ai_market_impact")
+  aiGeneratedAt      DateTime?           @map("ai_generated_at")
+  aiGenerationError  String?             @map("ai_generation_error")
+  sourceUrl          String              @unique @map("source_url")
+  type               FeedType            @default(NEWS)
+  status             FeedStatus          @default(PUBLISHED)
+  sentiment          Sentiment           @default(NEUTRAL)
+  heatScore          Int                 @default(0) @map("heat_score")
+  rankScore          Int                 @default(0) @map("rank_score")
+  publishTime        DateTime            @map("publish_time")
+  isPinned           Boolean             @default(false) @map("is_pinned")
+  deletedAt          DateTime?           @map("deleted_at")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  source             Source              @relation(fields: [sourceId], references: [id])
+  feedItemTokens     FeedItemToken[]
+  feedItemNarratives FeedItemNarrative[]
+  bookmarks          Bookmark[]
+
+  @@index([sourceId])
+  @@index([publishTime])
+  @@index([rankScore])
+  @@index([heatScore])
+  @@index([status])
+  @@map("feed_items")
+}
+
+model FeedItemToken {
+  feedItemId String   @map("feed_item_id") @db.Uuid
+  tokenId    String   @map("token_id") @db.Uuid
+  feedItem   FeedItem @relation(fields: [feedItemId], references: [id])
+  token      Token    @relation(fields: [tokenId], references: [id])
+
+  @@id([feedItemId, tokenId])
+  @@index([tokenId])
+  @@map("feed_item_tokens")
+}
+
+model FeedItemNarrative {
+  feedItemId  String    @map("feed_item_id") @db.Uuid
+  narrativeId String    @map("narrative_id") @db.Uuid
+  feedItem    FeedItem  @relation(fields: [feedItemId], references: [id])
+  narrative   Narrative @relation(fields: [narrativeId], references: [id])
+
+  @@id([feedItemId, narrativeId])
+  @@index([narrativeId])
+  @@map("feed_item_narratives")
+}
+
+model Bookmark {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  feedItemId String   @map("feed_item_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id])
+  feedItem   FeedItem @relation(fields: [feedItemId], references: [id])
+
+  @@unique([userId, feedItemId])
+  @@index([feedItemId])
+  @@map("bookmarks")
+}
+
+model IngestionLog {
+  id           String          @id @default(uuid()) @db.Uuid
+  sourceId     String?         @map("source_id") @db.Uuid
+  startedAt    DateTime        @map("started_at")
+  finishedAt   DateTime?       @map("finished_at")
+  status       IngestionStatus
+  itemsFound   Int             @default(0) @map("items_found")
+  itemsCreated Int             @default(0) @map("items_created")
+  errorMessage String?         @map("error_message")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  source       Source?         @relation(fields: [sourceId], references: [id])
+
+  @@index([sourceId, createdAt])
+  @@map("ingestion_logs")
+}
+
+model SystemSetting {
+  key       String   @id @db.VarChar(128)
+  valueJson Json     @map("value_json")
+  updatedBy String?  @map("updated_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model ApiErrorLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  method     String   @db.VarChar(16)
+  path       String   @db.VarChar(512)
+  statusCode Int      @map("status_code")
+  errorCode  String   @map("error_code") @db.VarChar(64)
+  message    String
+  requestId  String   @map("request_id") @db.VarChar(64)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([errorCode, createdAt])
+  @@index([createdAt])
+  @@map("api_error_logs")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  adminUserId String?  @map("admin_user_id") @db.Uuid
+  action      String   @db.VarChar(255)
+  entityType  String   @map("entity_type") @db.VarChar(255)
+  entityId    String?  @map("entity_id") @db.VarChar(255)
+  beforeJson  Json?    @map("before_json")
+  afterJson   Json?    @map("after_json")
+  ipAddress   String?  @map("ip_address") @db.VarChar(255)
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([adminUserId, createdAt])
+  @@map("audit_logs")
+}
+
+model Prompt {
+  id         String       @id @default(uuid()) @db.Uuid
+  promptKey  String       @map("prompt_key") @db.VarChar(128)
+  version    Int
+  content    String
+  status     PromptStatus @default(DRAFT)
+  createdBy  String?      @map("created_by") @db.Uuid
+  deletedAt  DateTime?    @map("deleted_at")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  @@unique([promptKey, version])
+  @@index([promptKey, status])
+  @@map("prompts")
+}
+
+model AiSearchHistory {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  query       String
+  answer      String
+  sourcesJson Json     @map("sources_json")
+  tokensUsed  Int      @default(0) @map("tokens_used")
+  provider    String   @db.VarChar(64)
+  model       String   @db.VarChar(128)
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("ai_search_history")
+}
+
+model LlmCallLog {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String?       @map("user_id") @db.Uuid
+  promptKey    String        @map("prompt_key") @db.VarChar(128)
+  provider     String        @db.VarChar(64)
+  model        String        @db.VarChar(128)
+  inputTokens  Int           @default(0) @map("input_tokens")
+  outputTokens Int           @default(0) @map("output_tokens")
+  costUsd      Decimal       @default(0) @map("cost_usd") @db.Decimal(12, 6)
+  latencyMs    Int           @default(0) @map("latency_ms")
+  status       LlmCallStatus
+  errorMessage String?       @map("error_message")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  user         User?         @relation(fields: [userId], references: [id])
+
+  @@index([promptKey, createdAt])
+  @@map("llm_call_logs")
+}
+
+model ContentEmbedding {
+  id              String   @id @default(uuid()) @db.Uuid
+  entityType      String   @map("entity_type") @db.VarChar(64)
+  entityId        String   @map("entity_id") @db.Uuid
+  embeddingModel  String   @map("embedding_model") @db.VarChar(128)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@unique([entityType, entityId])
+  @@index([entityType, entityId])
+  @@map("content_embeddings")
+}

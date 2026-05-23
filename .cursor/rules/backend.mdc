@@ -1,0 +1,38 @@
+---
+description: NestJS backend, API, jobs, logs, and service-layer rules
+globs: apps/api/**/*
+alwaysApply: false
+---
+
+# Backend API Rules
+
+## MUST
+- Follow `docs/rules/backend-rules.md` and `docs/rules/api-rules.md`.
+- Use NestJS modules by domain.
+- Use DTO validation for all inputs.
+- Keep business orchestration in services.
+- Use repositories or a Prisma access layer for database access.
+- Use BullMQ for long-running jobs.
+- Return `request_id` in API responses.
+- Apply auth and admin guards where required.
+- Log errors with stable codes and `request_id`.
+
+## MODULE SHAPE
+```txt
+modules/{domain}
+  {domain}.module.ts
+  {domain}.controller.ts
+  {domain}.service.ts
+  dto/
+  schemas/
+  repositories/
+  tests/
+```
+
+## FORBIDDEN
+- No business logic or direct database access in controllers.
+- No raw provider response to frontend.
+- No raw stack trace to frontend.
+- No API key or secret in logs.
+- No admin route without admin guard.
+- No long-running AI or ingestion task inside a request thread.

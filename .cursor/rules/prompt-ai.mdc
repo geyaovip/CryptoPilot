@@ -1,0 +1,33 @@
+---
+description: AI prompt, RAG, structured output, and market safety rules
+globs: apps/api/**/*,packages/prompts/**/*,packages/types/**/*
+alwaysApply: false
+---
+
+# Prompt AI Rules
+
+## MUST
+- Follow `docs/rules/prompt-rules.md`.
+- Store prompt content in the database.
+- Keep prompt metadata in `packages/prompts`.
+- Use active prompt versions.
+- Validate all AI output with JSON Schema.
+- Log every LLM call in `llm_call_logs`.
+- Include sources for market conclusions.
+- Distinguish facts, inference, and sentiment.
+- Say when sources are insufficient.
+
+## RAG
+- Keyword search top 10.
+- Vector search top 10.
+- Merge and dedupe.
+- Use at most 12 context items.
+- Preserve source URL and published time.
+
+## FORBIDDEN
+- No buy, sell, long, short, or leverage advice.
+- No promised returns.
+- No invented sources.
+- No speculation presented as fact.
+- No hardcoded prompt body in business code.
+- No publishing AI output that failed schema validation.

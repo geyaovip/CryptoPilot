@@ -1,0 +1,34 @@
+---
+description: User-facing web PWA route and boundary rules
+globs: apps/web/**/*
+alwaysApply: false
+---
+
+# Web App Rules
+
+## MUST
+- Build the user-facing PWA only.
+- Use Next.js App Router and mobile-first layout.
+- Use bottom navigation on mobile with only Home, Search, Watchlist, and Me.
+- Use TanStack Query for server data.
+- Use Zustand only for transient UI state.
+- Use types from `packages/types`.
+
+## MVP ROUTES
+- `/`
+- `/home`
+- `/feed/[id]`
+- `/search`
+- `/narratives`
+- `/narratives/[slug]`
+- `/watchlist`
+- `/me`
+- `/login`
+- `/settings/notifications`
+
+## FORBIDDEN
+- No admin-only UI in the web app.
+- No dark theme.
+- No Narrative bottom tab.
+- No direct imports from `apps/admin`.
+- No duplicate API DTOs.

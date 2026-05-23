@@ -1,0 +1,28 @@
+---
+description: CryptoPilot light theme UI and layout rules
+globs: apps/web/**/*,apps/admin/**/*,packages/ui/**/*
+alwaysApply: false
+---
+
+# UI Design Rules
+
+## MUST
+- Follow `docs/rules/ui-rules.md`.
+- Use light theme only.
+- Keep UI dense, calm, and financial-tool oriented.
+- Prioritize information scanning over decoration.
+- Use clear borders, neutral backgrounds, compact spacing, and small status colors.
+- User-facing web should follow a Perplexity-like calm research UI: warm off-white background, soft beige panels, low-contrast borders, dark ink text, and teal accents.
+- User-facing web tokens: page `#FCFCF9`, panel `#F7F5EE`, card `#FFFFFF`, border `#D9D5C9`, primary text `#102A2C`, secondary text `#5F6868`, accent `#20808D`, accent hover `#186A73`.
+- Admin may keep the existing neutral light workspace tokens for table density and operational clarity.
+- Mobile layout must be single-column with no horizontal scroll.
+- Desktop Home uses sidebar, feed, and market panel.
+- Admin uses sidebar plus table/config workspace.
+
+## FORBIDDEN
+- No dark backgrounds as primary UI.
+- No dark sidebar, header, or cards.
+- No neon crypto styling.
+- No large gradients or marketing hero layouts for product screens.
+- No nested cards or overflowing text.
+- No Narrative item in mobile bottom navigation.

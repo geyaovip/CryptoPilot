@@ -1,0 +1,25 @@
+{
+  "name": "cryptopilot",
+  "private": true,
+  "packageManager": "pnpm@11.2.2",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @cryptopilot/web --filter @cryptopilot/admin --filter @cryptopilot/api dev",
+    "dev:web": "pnpm --filter @cryptopilot/web dev",
+    "dev:admin": "pnpm --filter @cryptopilot/admin dev",
+    "dev:api": "pnpm --filter @cryptopilot/api dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:migrate": "pnpm --filter @cryptopilot/api db:migrate",
+    "db:generate": "pnpm --filter @cryptopilot/api db:generate",
+    "db:seed": "pnpm --filter @cryptopilot/api db:seed",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
+  }
+}

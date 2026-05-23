@@ -1,0 +1,35 @@
+---
+description: Test, verification, and acceptance reporting rules
+globs: apps/**/*,packages/**/*,infra/**/*
+alwaysApply: false
+---
+
+# Testing Rules
+
+## MUST
+- Follow the active version acceptance criteria.
+- Follow `docs/rules/agent-verification-workflow.md`: fix → verify → report; never hand off unverified fixes to the user.
+- Test critical business logic.
+- Test auth and admin permissions.
+- Test API validation and error cases.
+- Add UI smoke tests for new key pages required by the active version.
+- Run lint, typecheck, and relevant tests before marking work complete when available.
+- For API/Admin/Web integration changes: curl or browser-check the affected routes before saying done.
+
+## REQUIRED BACKEND TESTS
+- Service unit tests.
+- Guard tests.
+- API integration tests.
+- Job handler tests.
+- Provider mock tests.
+
+## REQUIRED FRONTEND TESTS
+- Add smoke tests when introducing key pages such as Home, Feed Detail, AI Search, Watchlist, Admin Dashboard, and Admin Feed.
+
+## FORBIDDEN
+- Do not remove tests to pass.
+- Do not disable lint or typecheck.
+- Do not mark acceptance complete without verification.
+
+## FINAL REPORT
+- Include tests run, tests passed, tests not run and why, and remaining risk.

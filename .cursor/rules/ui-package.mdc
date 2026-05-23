@@ -1,0 +1,21 @@
+---
+description: Shared UI package boundaries and component rules
+globs: packages/ui/**/*
+alwaysApply: false
+---
+
+# UI Package Rules
+
+## MUST
+- Store shared UI primitives and reusable components only.
+- Use shadcn/ui-compatible patterns.
+- Keep components light-theme only.
+- Type all props.
+- Keep components compatible with the Next.js apps.
+
+## FORBIDDEN
+- No app-specific business logic.
+- No API calls.
+- No server data fetching.
+- No dark theme variants.
+- No duplicated component styles across apps.

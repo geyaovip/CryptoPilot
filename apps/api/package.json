@@ -1,0 +1,53 @@
+{
+  "name": "@cryptopilot/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@cryptopilot/config": "workspace:*",
+    "@cryptopilot/prompts": "workspace:*",
+    "@cryptopilot/shared": "workspace:*",
+    "@cryptopilot/types": "workspace:*",
+    "zod": "^3.25.76",
+    "@nestjs/common": "latest",
+    "@nestjs/config": "latest",
+    "@nestjs/core": "latest",
+    "@nestjs/platform-express": "latest",
+    "@nestjs/schedule": "^6.1.3",
+    "@prisma/adapter-pg": "latest",
+    "@prisma/client": "latest",
+    "bullmq": "^5.76.10",
+    "class-transformer": "latest",
+    "class-validator": "latest",
+    "dotenv": "latest",
+    "ioredis": "latest",
+    "pg": "latest",
+    "reflect-metadata": "latest",
+    "rss-parser": "^3.13.0",
+    "rxjs": "latest"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "latest",
+    "@types/express": "latest",
+    "@types/node": "latest",
+    "@types/pg": "latest",
+    "@types/supertest": "latest",
+    "prisma": "latest",
+    "supertest": "latest",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}
