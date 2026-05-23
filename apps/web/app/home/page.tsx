@@ -40,7 +40,7 @@ export default async function HomePage({
           <Card className="border-[#D9D5C9] bg-white/90 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
             <HomeHeader />
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5F6868]">
-              AI 已帮你读过热点并生成摘要；点一条可看来源与解读。登录用户的「推荐」会结合关注列表排序。
+              AI 已帮你读过热点，并以叙事视角总结；点一条可看类型徽章、来源与解读。登录用户的「推荐」会结合叙事热度与关注列表排序。
             </p>
             {activeNarrative ? (
               <p className="mt-2 text-sm text-[#102A2C]">

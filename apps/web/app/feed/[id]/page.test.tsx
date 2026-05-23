@@ -7,6 +7,9 @@ vi.mock("../../lib/api", () => ({
     id: "feed-1",
     title: "ETH Layer 2 活跃度回升",
     ai_summary: "详情摘要",
+    narrative_hook: "Layer2 叙事再度升温",
+    primary_narrative: { id: "n1", name: "Layer2", slug: "layer2" },
+    feed_type: "narrative_shift",
     content: "详情正文",
     source_name: "Cointelegraph",
     source_url: "https://example.com",
@@ -24,6 +27,9 @@ vi.mock("../../lib/api", () => ({
         id: "feed-2",
         title: "相关标题",
         ai_summary: "相关摘要",
+        narrative_hook: "相关 hook",
+        primary_narrative: null,
+        feed_type: "news",
         source_name: "The Block",
         source_url: "https://example.com/2",
         publish_time: new Date().toISOString(),
@@ -46,7 +52,7 @@ describe("FeedDetailPage", () => {
   it("renders summary-first detail with related sources", async () => {
     render(await FeedDetailPage({ params: Promise.resolve({ id: "feed-1" }) }));
 
-    expect(screen.getByTestId("feed-detail-summary").textContent).toContain("详情摘要");
+    expect(screen.getByTestId("feed-detail-hook").textContent).toContain("Layer2");
     expect(screen.getByText("相关来源")).toBeTruthy();
     expect(screen.getByText("The Block")).toBeTruthy();
     expect(screen.getByText("关键原因")).toBeTruthy();

@@ -39,11 +39,15 @@ enum SourceStatus {
 }
 
 enum FeedType {
-  NEWS         @map("news")
-  NARRATIVE    @map("narrative")
-  MARKET_MOVE  @map("market_move")
-  SOCIAL_TREND @map("social_trend")
-  BREAKING     @map("breaking")
+  NEWS             @map("news")
+  NARRATIVE        @map("narrative")
+  MARKET_MOVE      @map("market_move")
+  SOCIAL_TREND     @map("social_trend")
+  BREAKING         @map("breaking")
+  NARRATIVE_SHIFT  @map("narrative_shift")
+  SENTIMENT_SPIKE  @map("sentiment_spike")
+  MARKET_ROTATION  @map("market_rotation")
+  KOL_SIGNAL       @map("kol_signal")
 
   @@map("feed_type")
 }
@@ -276,6 +280,7 @@ model FeedItem {
   title              String              @db.VarChar(500)
   content            String
   aiSummary          String              @map("ai_summary")
+  narrativeHook      String?             @map("narrative_hook") @db.VarChar(500)
   aiKeyReasons       Json                @default("[]") @map("ai_key_reasons")
   aiMarketImpact     String?             @map("ai_market_impact")
   aiGeneratedAt      DateTime?           @map("ai_generated_at")

@@ -24,10 +24,10 @@
 - `rank_score` 增加 `narrative_importance` 权重（见模块文档 Phase 2）。
 - Topic Chip 筛选与 Narrative slug 绑定。
 
-### 1.3 可选轻聚合（二选一，验收前定案）
+### 1.3 轻聚合（已定案）
 
-- **方案 A（推荐）**：仍 1 feed_item = 1 卡，仅文案与类型叙事化。
-- **方案 B**：2–5 条相似 item 合并展示为 1 卡，`related_source_count` 必选 >= 2；**不**要求 `market_insights` 表，可用 `cluster_id` 字段 on `feed_items`。
+- **V0.8 实现：方案 A** — 仍 1 feed_item = 1 卡，仅文案与类型叙事化。
+- **方案 B（产品登记，后续版本）**：2–5 条相似 item 合并为 1 卡、`cluster_id`、`related_source_count` ≥ 2。详见 `docs/design/V0.8_feed_aggregation_decision.md`。
 
 ### 1.4 Narrative 联动
 

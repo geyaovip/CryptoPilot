@@ -93,6 +93,10 @@ export function AdminFeedPanel({ items, sources, filters }: AdminFeedPanelProps)
             <option value="news">news</option>
             <option value="breaking">breaking</option>
             <option value="narrative">narrative</option>
+            <option value="narrative_shift">narrative_shift</option>
+            <option value="sentiment_spike">sentiment_spike</option>
+            <option value="market_rotation">market_rotation</option>
+            <option value="kol_signal">kol_signal</option>
           </select>
           <input className="rounded-lg border border-slate-200 px-3 py-2 text-sm" defaultValue={filters.published_from ?? ""} name="published_from" type="date" />
           <input className="rounded-lg border border-slate-200 px-3 py-2 text-sm" defaultValue={filters.published_to ?? ""} name="published_to" type="date" />

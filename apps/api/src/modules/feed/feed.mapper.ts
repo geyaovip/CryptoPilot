@@ -1,10 +1,12 @@
 import type { FeedItemDetail, FeedItemSummary } from "@cryptopilot/types";
+import { buildNarrativeHook, pickPrimaryNarrative, toApiFeedType } from "./feed-narrative.util";
 
 type FeedRecord = {
   id: string;
   title: string;
   content: string;
   aiSummary: string;
+  narrativeHook?: string | null;
   aiKeyReasons?: unknown;
   aiMarketImpact?: string | null;
   sourceUrl: string;
@@ -16,14 +18,23 @@ type FeedRecord = {
   isPinned: boolean;
   source: { name: string };
   feedItemTokens: { token: { id: string; symbol: string; name: string; priceUsd: unknown; priceChange24h: unknown } }[];
-  feedItemNarratives: { narrative: { id: string; name: string; slug: string } }[];
+  feedItemNarratives: {
+    narrative: { id: string; name: string; slug: string; heatScore: number; weight: number };
+  }[];
 };
 
 export function toFeedSummary(feed: FeedRecord, relatedSourceCount = 1): FeedItemSummary {
+  const primary = pickPrimaryNarrative(feed);
+  const feedType = toApiFeedType(feed.type);
+
   return {
     id: feed.id,
     title: feed.title,
     ai_summary: feed.aiSummary,
+    narrative_hook: buildNarrativeHook(feed),
+    primary_narrative: primary
+      ? { id: primary.id, name: primary.name, slug: primary.slug }
+      : null,
     source_name: feed.source.name,
     source_url: feed.sourceUrl,
     publish_time: feed.publishTime.toISOString(),
@@ -42,7 +53,8 @@ export function toFeedSummary(feed: FeedRecord, relatedSourceCount = 1): FeedIte
     })),
     sentiment: feed.sentiment.toLowerCase() as FeedItemSummary["sentiment"],
     heat_score: feed.heatScore,
-    type: feed.type.toLowerCase() as FeedItemSummary["type"],
+    type: feedType,
+    feed_type: feedType,
     status: feed.status.toLowerCase() as FeedItemSummary["status"],
     is_pinned: feed.isPinned
   };

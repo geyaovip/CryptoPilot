@@ -1,8 +1,9 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { FeedType, Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { FeedQueryDto } from "./dto/feed-query.dto";
 import { toFeedDetail, toFeedSummary } from "./feed.mapper";
+import { compareFeedsForTab, effectiveFeedSortScore } from "./feed-ranking.util";
 import { UserInterestService } from "./user-interest.service";
 
 const feedInclude = {
@@ -35,25 +36,30 @@ export class FeedService {
       };
     }
 
+    if (query.type) {
+      where.type = query.type.toUpperCase() as FeedType;
+    }
+
     const interestContext = await this.userInterest.loadContext(userId);
-    const fetchLimit = query.tab === "for_you" && interestContext ? Math.min(limit * 4, 80) : limit + 1;
+    const usePersonalizedRank = query.tab === "for_you" || Boolean(query.narrative);
+    const fetchLimit = usePersonalizedRank && (interestContext || query.narrative) ? Math.min(limit * 4, 80) : limit + 1;
 
     const items = await this.prisma.feedItem.findMany({
       where,
       include: feedInclude,
-      orderBy: query.tab === "for_you" && interestContext ? undefined : this.orderBy(query.tab),
+      orderBy: usePersonalizedRank && (interestContext || query.narrative) ? undefined : this.orderBy(query.tab),
       take: fetchLimit,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {})
     });
 
     const ranked =
-      query.tab === "for_you" && interestContext
+      usePersonalizedRank && (interestContext || query.narrative)
         ? [...items].sort((a, b) => {
-            const scoreA = a.rankScore + this.userInterest.scoreFeed(a, interestContext);
-            const scoreB = b.rankScore + this.userInterest.scoreFeed(b, interestContext);
-            if (scoreB !== scoreA) return scoreB - scoreA;
-            if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
-            return b.publishTime.getTime() - a.publishTime.getTime();
+            const interestA = interestContext ? this.userInterest.scoreFeed(a, interestContext) : 0;
+            const interestB = interestContext ? this.userInterest.scoreFeed(b, interestContext) : 0;
+            const scoreA = effectiveFeedSortScore(a, interestA, query.narrative);
+            const scoreB = effectiveFeedSortScore(b, interestB, query.narrative);
+            return compareFeedsForTab(a, b, scoreA, scoreB);
           })
         : items;
 

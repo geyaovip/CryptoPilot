@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card } from "@cryptopilot/ui";
 import { FeedCardActions } from "../../components/feed-card-actions";
+import { FeedTypeBadge } from "../../components/feed-type-badge";
 import { RelatedSourcesList } from "../../components/related-sources-list";
 import { getFeedDetail } from "../../lib/api";
 
@@ -9,7 +10,9 @@ export const dynamic = "force-dynamic";
 export default async function FeedDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const feed = await getFeedDetail(id);
+  const hook = feed.narrative_hook?.trim() || feed.ai_summary?.trim() || "叙事动态更新中…";
   const summary = feed.ai_summary?.trim() || "AI 摘要生成中，请稍后刷新。";
+  const feedType = feed.feed_type ?? feed.type;
 
   return (
     <main className="min-h-screen bg-[#FCFCF9] px-4 py-6 text-[#102A2C]">
@@ -18,10 +21,23 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
           返回首页
         </a>
         <Card className="border-[#D9D5C9] bg-white/95 p-6 shadow-[0_18px_70px_rgba(16,42,44,0.08)]">
-          <p className="text-xs text-[#5F6868]">{feed.source_name}</p>
-          <h1 className="mt-3 text-2xl font-semibold leading-snug tracking-[-0.02em] text-[#102A2C]" data-testid="feed-detail-summary">
-            {summary}
+          <div className="flex flex-wrap items-center gap-2">
+            <FeedTypeBadge feedType={feedType} />
+            {feed.primary_narrative ? (
+              <Link className="text-xs font-medium text-[#20808D]" href={`/narratives/${feed.primary_narrative.slug}`}>
+                🔥 {feed.primary_narrative.name}
+              </Link>
+            ) : null}
+            <span className="text-xs text-[#5F6868]">{feed.source_name}</span>
+          </div>
+          <h1 className="mt-3 text-2xl font-semibold leading-snug tracking-[-0.02em] text-[#102A2C]" data-testid="feed-detail-hook">
+            {hook}
           </h1>
+          {summary !== hook ? (
+            <p className="mt-3 text-sm leading-7 text-[#5F6868]" data-testid="feed-detail-summary">
+              {summary}
+            </p>
+          ) : null}
           <p className="mt-4 text-sm text-[#8A918C]">
             原文标题：
             <span className="text-[#5F6868]"> {feed.title}</span>

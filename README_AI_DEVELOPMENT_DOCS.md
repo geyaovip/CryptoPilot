@@ -31,8 +31,8 @@ AI 必须按顺序执行（MVP 主线）：
 3. `docs/versions/CryptoPilot_V0.3_AI.md`
 4. `docs/versions/CryptoPilot_V0.4_Narrative_Watchlist.md`
 5. `docs/versions/CryptoPilot_V0.6_MVP_Beta.md` — MVP Beta（已知缺口可延后）
-6. `docs/versions/CryptoPilot_V0.7_AI_Curated_Feed.md` — **当前活跃版本**：Phase 1 Summary-first 首页体验
-7. `docs/versions/CryptoPilot_V0.8_Narrative_Feed.md` — Phase 2：Narrative Layer
+6. `docs/versions/CryptoPilot_V0.7_AI_Curated_Feed.md` — Phase 1 Summary-first 首页体验
+7. `docs/versions/CryptoPilot_V0.8_Narrative_Feed.md` — **当前活跃版本**：Phase 2 Narrative Layer（**方案 A**；方案 B 见 `docs/design/V0.8_feed_aggregation_decision.md`）
 8. `docs/versions/CryptoPilot_V0.9_Market_Intelligence.md` — Phase 3：Insight 实体与市场雷达
 
 **延后至 MVP 主线完成之后（单独版本，不插队）：**

@@ -2,6 +2,8 @@ import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { NarrativeListItem } from "@cryptopilot/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { toFeedSummary } from "../feed/feed.mapper";
+import { compareFeedsForTab, effectiveFeedSortScore } from "../feed/feed-ranking.util";
+import { NarrativeAiService } from "./narrative-ai.service";
 import { NarrativeMetricsService } from "./narrative-metrics.service";
 import { buildWatchlistMap, toNarrativeDetail, toNarrativeListItem } from "./narratives.mapper";
 import { NarrativeListQueryDto } from "./dto/narrative-list-query.dto";
@@ -10,7 +12,8 @@ import { NarrativeListQueryDto } from "./dto/narrative-list-query.dto";
 export class NarrativesService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(NarrativeMetricsService) private readonly metrics: NarrativeMetricsService
+    @Inject(NarrativeMetricsService) private readonly metrics: NarrativeMetricsService,
+    @Inject(NarrativeAiService) private readonly narrativeAi: NarrativeAiService
   ) {}
 
   async list(query: NarrativeListQueryDto, userId?: string) {
@@ -47,7 +50,11 @@ export class NarrativesService {
     if (!narrative) throw new NotFoundException("Narrative 不存在");
 
     await this.metrics.refreshOne(narrative.id).catch(() => undefined);
-    const refreshed = await this.prisma.narrative.findUniqueOrThrow({ where: { id: narrative.id } });
+    let refreshed = await this.prisma.narrative.findUniqueOrThrow({ where: { id: narrative.id } });
+    if (!refreshed.aiSummary?.trim()) {
+      await this.narrativeAi.generateForNarrative(refreshed.id).catch(() => undefined);
+      refreshed = await this.prisma.narrative.findUniqueOrThrow({ where: { id: narrative.id } });
+    }
     const { followedIds, watchlistMap } = await this.narrativeWatchlistContext(userId);
     const topTokens = await this.topTokensForNarrative(refreshed.id);
 
@@ -58,7 +65,7 @@ export class NarrativesService {
       this.snapshotsSince(refreshed.id, new Date(now - 30 * 24 * 60 * 60 * 1000))
     ]);
 
-    const related = await this.prisma.feedItem.findMany({
+    const relatedRaw = await this.prisma.feedItem.findMany({
       where: {
         deletedAt: null,
         status: "PUBLISHED",
@@ -69,9 +76,15 @@ export class NarrativesService {
         feedItemTokens: { include: { token: true } },
         feedItemNarratives: { include: { narrative: true } }
       },
-      orderBy: [{ publishTime: "desc" }],
-      take: 12
+      take: 24
     });
+    const related = [...relatedRaw]
+      .sort((a, b) => {
+        const scoreA = effectiveFeedSortScore(a, 0, refreshed.slug);
+        const scoreB = effectiveFeedSortScore(b, 0, refreshed.slug);
+        return compareFeedsForTab(a, b, scoreA, scoreB);
+      })
+      .slice(0, 12);
 
     const sourceGroups = await this.prisma.feedItem.groupBy({
       by: ["sourceId"],

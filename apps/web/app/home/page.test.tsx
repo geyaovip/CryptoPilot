@@ -13,6 +13,9 @@ vi.mock("../lib/api", () => ({
         id: "feed-1",
         title: "BTC ETF 资金流继续支撑市场风险偏好",
         ai_summary: "示例摘要",
+        narrative_hook: "AI 叙事再度升温",
+        primary_narrative: { id: "n1", name: "AI", slug: "ai" },
+        feed_type: "narrative_shift",
         source_name: "CoinDesk",
         source_url: "https://example.com",
         publish_time: new Date().toISOString(),
@@ -40,7 +43,7 @@ describe("HomePage", () => {
 
     expect(screen.getByText("AI 精选市场简报")).toBeTruthy();
     expect(screen.getByTestId("home-search-entry")).toBeTruthy();
-    expect(screen.getByTestId("feed-card-summary").textContent).toContain("示例摘要");
+    expect(screen.getByTestId("feed-card-hook").textContent).toContain("AI 叙事");
     expect(screen.queryByText("BTC ETF 资金流继续支撑市场风险偏好")).toBeNull();
   });
 });

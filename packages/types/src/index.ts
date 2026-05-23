@@ -2,7 +2,16 @@ export type UserRole = "user" | "admin";
 export type AuthProvider = "google" | "email";
 export type SourceType = "rss" | "twitter" | "reddit" | "coingecko" | "manual";
 export type SourceStatus = "active" | "paused" | "error";
-export type FeedType = "news" | "narrative" | "market_move" | "social_trend" | "breaking";
+export type FeedType =
+  | "news"
+  | "narrative"
+  | "market_move"
+  | "social_trend"
+  | "breaking"
+  | "narrative_shift"
+  | "sentiment_spike"
+  | "market_rotation"
+  | "kol_signal";
 export type FeedStatus = "published" | "hidden" | "deleted";
 export type Sentiment = "bullish" | "neutral" | "bearish";
 
@@ -146,9 +155,15 @@ export type FeedItemSummary = {
   related_source_count: number;
   related_tokens: TokenSummary[];
   narrative_tags: NarrativeSummary[];
+  /** Phase 2: dominant narrative for card tag and ranking. */
+  primary_narrative: NarrativeSummary | null;
+  /** Phase 2: one-line narrative hook (list headline). */
+  narrative_hook: string;
   sentiment: Sentiment;
   heat_score: number;
   type: FeedType;
+  /** Same as `type`; explicit for V0.8 API consumers. */
+  feed_type: FeedType;
   status: FeedStatus;
   is_pinned: boolean;
 };

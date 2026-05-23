@@ -14,7 +14,8 @@ describe("NarrativesService list sorting", () => {
       feedItemToken: { findMany: vi.fn().mockResolvedValue([]) }
     };
     const metrics = { refreshAll: vi.fn().mockResolvedValue(undefined) };
-    const service = new NarrativesService(prisma as never, metrics as never);
+    const narrativeAi = { generateForNarrative: vi.fn().mockResolvedValue(undefined) };
+    const service = new NarrativesService(prisma as never, metrics as never, narrativeAi as never);
     const result = await service.list({}, undefined);
     expect(result.items[0]?.slug).toBe("a");
     expect(prisma.narrative.findMany).toHaveBeenCalledWith(
