@@ -1,0 +1,151 @@
+import type { InsightSourceRef, MarketInsightDetail, MarketInsightSummary } from "@cryptopilot/types";
+import type { FeedType } from "@cryptopilot/types";
+import { toFeedSummary } from "../feed/feed.mapper";
+import { toApiFeedType } from "../feed/feed-narrative.util";
+
+type InsightRecord = {
+  id: string;
+  aiInsight: string;
+  aiSummary: string;
+  type: string;
+  sentiment: string;
+  heatScore: number;
+  heatVelocity: number;
+  heatLabel: string;
+  rankScore: number;
+  sourcesJson: unknown;
+  keyReasons: unknown;
+  marketImpact: string | null;
+  primaryNarrative: { id: string; name: string; slug: string } | null;
+  signals?: SignalFeed[];
+};
+
+type SignalFeed = Parameters<typeof toFeedSummary>[0];
+
+export function parseSourcesJson(value: unknown): InsightSourceRef[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((row) => {
+      if (!row || typeof row !== "object") return null;
+      const item = row as Record<string, unknown>;
+      if (
+        typeof item.feed_item_id !== "string" ||
+        typeof item.source_url !== "string" ||
+        typeof item.source_name !== "string"
+      ) {
+        return null;
+      }
+      return {
+        feed_item_id: item.feed_item_id,
+        title: typeof item.title === "string" ? item.title : "",
+        source_name: item.source_name,
+        source_url: item.source_url,
+        published_at: typeof item.published_at === "string" ? item.published_at : new Date().toISOString()
+      };
+    })
+    .filter((item): item is InsightSourceRef => item !== null);
+}
+
+export function toInsightSummary(insight: InsightRecord): MarketInsightSummary {
+  const sources = parseSourcesJson(insight.sourcesJson);
+  const feedType = toApiFeedType(insight.type);
+  const tokens = collectTokens(insight.signals ?? []);
+  const narratives = collectNarratives(insight.signals ?? [], insight.primaryNarrative);
+
+  return {
+    id: insight.id,
+    ai_insight: insight.aiInsight,
+    ai_summary: insight.aiSummary,
+    type: feedType,
+    feed_type: feedType,
+    sentiment: insight.sentiment.toLowerCase() as MarketInsightSummary["sentiment"],
+    heat_score: insight.heatScore,
+    heat_velocity: insight.heatVelocity,
+    heat_label: insight.heatLabel.toLowerCase() as MarketInsightSummary["heat_label"],
+    primary_narrative: insight.primaryNarrative
+      ? {
+          id: insight.primaryNarrative.id,
+          name: insight.primaryNarrative.name,
+          slug: insight.primaryNarrative.slug
+        }
+      : null,
+    related_tokens: tokens,
+    narrative_tags: narratives,
+    source_count: sources.length,
+    sources
+  };
+}
+
+export function toInsightDetail(insight: InsightRecord): MarketInsightDetail {
+  const summary = toInsightSummary(insight);
+  return {
+    ...summary,
+    key_reasons: parseStringArray(insight.keyReasons),
+    market_impact: insight.marketImpact,
+    signals: (insight.signals ?? []).map((feed) => toFeedSummary(feed, 1))
+  };
+}
+
+export function buildSourcesFromSignals(
+  signals: Array<{
+    id: string;
+    title: string;
+    sourceUrl: string;
+    publishTime: Date;
+    source: { name: string };
+  }>
+): InsightSourceRef[] {
+  return signals.map((signal) => ({
+    feed_item_id: signal.id,
+    title: signal.title,
+    source_name: signal.source.name,
+    source_url: signal.sourceUrl,
+    published_at: signal.publishTime.toISOString()
+  }));
+}
+
+function parseStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function collectTokens(signals: SignalFeed[]) {
+  const seen = new Set<string>();
+  const tokens: MarketInsightSummary["related_tokens"] = [];
+  for (const signal of signals) {
+    for (const row of signal.feedItemTokens) {
+      if (seen.has(row.token.id)) continue;
+      seen.add(row.token.id);
+      tokens.push({
+        id: row.token.id,
+        symbol: row.token.symbol,
+        name: row.token.name,
+        price_usd: row.token.priceUsd === null ? null : Number(row.token.priceUsd),
+        price_change_24h: row.token.priceChange24h === null ? null : Number(row.token.priceChange24h)
+      });
+      if (tokens.length >= 6) return tokens;
+    }
+  }
+  return tokens;
+}
+
+function collectNarratives(
+  signals: SignalFeed[],
+  primary: InsightRecord["primaryNarrative"]
+): MarketInsightSummary["narrative_tags"] {
+  const seen = new Set<string>();
+  const tags: MarketInsightSummary["narrative_tags"] = [];
+  if (primary && !seen.has(primary.id)) {
+    seen.add(primary.id);
+    tags.push({ id: primary.id, name: primary.name, slug: primary.slug });
+  }
+  for (const signal of signals) {
+    for (const row of signal.feedItemNarratives) {
+      if (seen.has(row.narrative.id)) continue;
+      seen.add(row.narrative.id);
+      tags.push({ id: row.narrative.id, name: row.narrative.name, slug: row.narrative.slug });
+      if (tags.length >= 6) return tags;
+    }
+  }
+  return tags;
+}

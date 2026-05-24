@@ -4,7 +4,12 @@ export function MarketHeatBar({ tokens }: { tokens: TokenSummary[] }) {
   const majors = tokens.filter((token) => token.symbol === "BTC" || token.symbol === "ETH");
 
   return (
-    <div className="grid gap-3 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-3 sm:grid-cols-2">
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-3 text-xs text-[#5F6868]">
+        <span className="rounded-full bg-[#F7F5EE] px-3 py-1">恐惧贪婪指数：48（中性，占位）</span>
+        <span className="rounded-full bg-[#F7F5EE] px-3 py-1">市场雷达：Insight 模式</span>
+      </div>
+      <div className="grid gap-3 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-3 sm:grid-cols-2">
       {majors.map((token) => (
         <div className="text-sm text-[#5F6868]" key={token.id}>
           <span className="font-medium text-[#102A2C]">{token.symbol}</span>
@@ -14,6 +19,7 @@ export function MarketHeatBar({ tokens }: { tokens: TokenSummary[] }) {
           </span>
         </div>
       ))}
+      </div>
     </div>
   );
 }

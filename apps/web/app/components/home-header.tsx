@@ -6,7 +6,7 @@ export function HomeHeader() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-[#20808D]">CryptoPilot</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-[#102A2C]">AI 精选市场简报</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-[#102A2C]">AI 市场雷达</h1>
         </div>
         <Link className="rounded-full border border-[#D9D5C9] px-4 py-2 text-sm text-[#5F6868] hover:bg-white" href="/me">
           我的

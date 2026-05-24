@@ -4,14 +4,15 @@ import { SearchPanel } from "./search-panel";
 export default async function SearchPage({
   searchParams
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; insight_id?: string }>;
 }) {
   const params = await searchParams;
   const initialQuery = params.q?.trim() ?? "";
+  const insightId = params.insight_id?.trim() ?? "";
 
   return (
     <WebShell>
-      <SearchPanel initialQuery={initialQuery} />
+      <SearchPanel initialInsightId={insightId} initialQuery={initialQuery} />
     </WebShell>
   );
 }

@@ -18,7 +18,7 @@ export class AiSearchService {
     @Inject(SystemConfigService) private readonly systemConfig: SystemConfigService
   ) {}
 
-  async search(userId: string | undefined, query: string): Promise<AiSearchResult> {
+  async search(userId: string | undefined, query: string, insightId?: string): Promise<AiSearchResult> {
     if (!this.systemConfig.snapshot.feature_flags.ai_search) {
       throw new AppHttpException("VALIDATION_ERROR", "AI 搜索功能暂未开放");
     }
@@ -29,7 +29,9 @@ export class AiSearchService {
 
     await this.ensureDailyQuota(id);
 
-    const contextItems = await this.rag.retrieve(trimmed);
+    const contextItems = insightId
+      ? await this.loadInsightContext(insightId)
+      : await this.rag.retrieve(trimmed);
     if (contextItems.length < 2) {
       throw new AppHttpException("INSUFFICIENT_SOURCES", "来源不足，无法生成可靠回答，请换个问题或稍后再试");
     }
@@ -91,6 +93,28 @@ export class AiSearchService {
       sources: resolvedSources,
       updated_at: updatedAt
     };
+  }
+
+  private async loadInsightContext(insightId: string) {
+    const insight = await this.prisma.marketInsight.findFirst({
+      where: { id: insightId, deletedAt: null, status: "PUBLISHED" },
+      include: {
+        signals: {
+          where: { deletedAt: null, status: "PUBLISHED" },
+          include: { source: true }
+        }
+      }
+    });
+    if (!insight || insight.signals.length < 2) return [];
+    return insight.signals.map((signal) => ({
+      id: signal.id,
+      title: signal.title,
+      content: signal.content.slice(0, 600),
+      ai_summary: signal.aiSummary,
+      source_name: signal.source.name,
+      source_url: signal.sourceUrl,
+      publish_time: signal.publishTime.toISOString()
+    }));
   }
 
   private requireUser(userId: string | undefined): string {

@@ -11,7 +11,8 @@ const promptKeys: MvpPromptKey[] = [
   "narrative_summary_prompt",
   "sentiment_prompt",
   "ai_search_prompt",
-  "push_prompt"
+  "push_prompt",
+  "insight_synthesis_prompt"
 ];
 
 type AdminPromptsPanelProps = {

@@ -42,7 +42,41 @@ export type MvpPromptKey =
   | "narrative_summary_prompt"
   | "sentiment_prompt"
   | "ai_search_prompt"
-  | "push_prompt";
+  | "push_prompt"
+  | "insight_synthesis_prompt";
+
+export type HeatLabel = "heating_up" | "cooling" | "stable";
+
+export type InsightSourceRef = {
+  feed_item_id: string;
+  title: string;
+  source_name: string;
+  source_url: string;
+  published_at: string;
+};
+
+export type MarketInsightSummary = {
+  id: string;
+  ai_insight: string;
+  ai_summary: string;
+  type: FeedType;
+  feed_type: FeedType;
+  sentiment: Sentiment;
+  heat_score: number;
+  heat_velocity: number;
+  heat_label: HeatLabel;
+  primary_narrative: NarrativeSummary | null;
+  related_tokens: TokenSummary[];
+  narrative_tags: NarrativeSummary[];
+  source_count: number;
+  sources: InsightSourceRef[];
+};
+
+export type MarketInsightDetail = MarketInsightSummary & {
+  key_reasons: string[];
+  market_impact: string | null;
+  signals: FeedItemSummary[];
+};
 
 export type ApiError = {
   code: ApiErrorCode;
@@ -232,8 +266,16 @@ export type CursorList<T> = ApiSuccess<{
   next_cursor: string | null;
 }>;
 
-export type FeedListResponse = CursorList<FeedItemSummary>;
+export type FeedListEntity = "insight" | "feed_item";
+
+export type FeedListResponse = ApiSuccess<{
+  entity: FeedListEntity;
+  items: MarketInsightSummary[] | FeedItemSummary[];
+  next_cursor: string | null;
+}>;
+
 export type FeedDetailResponse = ApiSuccess<FeedItemDetail>;
+export type InsightDetailResponse = ApiSuccess<MarketInsightDetail>;
 
 export type TrendingResponse = ApiSuccess<{
   tokens: TokenSummary[];

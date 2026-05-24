@@ -1,7 +1,6 @@
 import type {
   AiMonitorResponse,
   FeedItemSummary,
-  FeedListResponse,
   IngestionLogListResponse,
   MvpPromptKey,
   PromptListResponse,
@@ -30,13 +29,18 @@ function toQuery(filters: AdminFeedFilters) {
   return query ? `?${query}` : "";
 }
 
-export async function getAdminFeed(filters: AdminFeedFilters = {}): Promise<FeedListResponse["data"]> {
+export type AdminFeedListData = {
+  items: FeedItemSummary[];
+  next_cursor: string | null;
+};
+
+export async function getAdminFeed(filters: AdminFeedFilters = {}): Promise<AdminFeedListData> {
   const response = await apiFetch(`${apiUrl}/api/admin/feed${toQuery(filters)}`, {
     cache: "no-store",
     headers: adminHeaders()
   });
   if (!response.ok) throw new Error("Feed 管理数据加载失败");
-  const body = (await response.json()) as FeedListResponse;
+  const body = (await response.json()) as { data: AdminFeedListData };
   return body.data;
 }
 

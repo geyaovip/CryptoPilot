@@ -16,9 +16,10 @@ const suggestions = [
 
 type SearchPanelProps = {
   initialQuery?: string;
+  initialInsightId?: string;
 };
 
-export function SearchPanel({ initialQuery = "" }: SearchPanelProps) {
+export function SearchPanel({ initialQuery = "", initialInsightId = "" }: SearchPanelProps) {
   const [query, setQuery] = useState(initialQuery);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +48,10 @@ export function SearchPanel({ initialQuery = "" }: SearchPanelProps) {
           "Content-Type": "application/json",
           "x-user-id": demoUserId
         },
-        body: JSON.stringify({ query: trimmed })
+        body: JSON.stringify({
+          query: trimmed,
+          ...(initialInsightId ? { insight_id: initialInsightId } : {})
+        })
       });
       const body = (await response.json()) as AiSearchResponse | ApiError;
       if (!response.ok || !("data" in body)) {

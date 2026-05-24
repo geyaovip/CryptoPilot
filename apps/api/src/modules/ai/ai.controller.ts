@@ -12,6 +12,6 @@ export class AiController {
   @Post("search")
   @UseGuards(UserGuard, AiRateLimitGuard)
   async search(@Req() req: { user: { id: string } }, @Body() dto: AiSearchDto) {
-    return ok(await this.aiSearchService.search(req.user.id, dto.query));
+    return ok(await this.aiSearchService.search(req.user.id, dto.query, dto.insight_id));
   }
 }

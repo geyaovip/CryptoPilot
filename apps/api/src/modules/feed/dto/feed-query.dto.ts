@@ -36,4 +36,9 @@ export class FeedQueryDto {
   @IsOptional()
   @IsIn(FEED_TYPES)
   type?: (typeof FEED_TYPES)[number];
+
+  /** Default insight list (V0.9). Use feed_item for legacy feed cards. */
+  @IsOptional()
+  @IsIn(["insight", "feed_item"])
+  entity?: "insight" | "feed_item";
 }

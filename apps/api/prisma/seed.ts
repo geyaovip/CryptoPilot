@@ -2,7 +2,13 @@ import "dotenv/config";
 import { config } from "dotenv";
 import { DEFAULT_PROMPT_CONTENT, MVP_PROMPT_KEYS } from "@cryptopilot/prompts";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { FeedType, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import {
+  backfillHeuristicTags,
+  ingestAllRssSources,
+  purgeExampleContent,
+  rebuildInsightsFromFeeds
+} from "./lib/real-content";
 import { Pool } from "pg";
 
 config({ path: "../../.env" });
@@ -86,7 +92,7 @@ async function main() {
     });
   }
 
-  const sourceRecords = await Promise.all(
+  await Promise.all(
     rssSources.map(([name, url]) =>
       prisma.source.upsert({
         where: { id: nameToStableId(name) },
@@ -177,142 +183,16 @@ async function main() {
     }
   }
 
-  await createFeed(
-    "BTC ETF 资金流继续支撑市场风险偏好",
-    "https://example.com/feed/btc-etf-flow",
-    sourceRecords[0].id,
-    ["ethereum", "stablecoin"],
-    86,
-    { tokenSymbols: ["BTC"] }
-  );
-  await createFeed(
-    "ETH Layer 2 活跃度回升，费用保持低位",
-    "https://example.com/feed/eth-l2-activity",
-    sourceRecords[1].id,
-    ["layer2", "ethereum"],
-    74,
-    { tokenSymbols: ["ETH"] }
-  );
-  await createFeed(
-    "Solana 生态交易量走高，市场关注 Meme 与 DeFi",
-    "https://example.com/feed/solana-activity",
-    sourceRecords[2].id,
-    ["solana", "meme"],
-    82,
-    { tokenSymbols: ["SOL"] }
-  );
-  await createFeed(
-    "AI Crypto 板块出现轮动，资金关注基础设施项目",
-    "https://example.com/feed/ai-crypto-rotation",
-    sourceRecords[3].id,
-    ["ai", "depin"],
-    68,
-    { tokenSymbols: ["LINK"] }
-  );
-
-  const feedTopics = [
-    "稳定币监管讨论升温",
-    "RWA 代币化试点扩大",
-    "DePIN 网络节点增长",
-    "Meme 币波动加剧",
-    "Layer2 费用竞争",
-    "以太坊质押收益率变化",
-    "比特币减半后矿工收入",
-    "链上 DEX 交易量回升",
-    "NFT 市场流动性低迷",
-    "跨链桥安全事件回顾",
-    "央行数字货币试点进展",
-    "加密 ETF 净流入数据",
-    "山寨币轮动信号",
-    "宏观利率预期影响风险资产",
-    "交易所储备变化",
-    "鲸鱼地址异动监测"
-  ];
-  for (let i = 0; i < feedTopics.length; i += 1) {
-    const source = sourceRecords[i % sourceRecords.length];
-    const slug = narratives[i % narratives.length][1];
-    const symbol = tokens[i % tokens.length][0];
-    await createFeed(
-      feedTopics[i],
-      `https://example.com/feed/v06-sample-${i + 1}`,
-      source.id,
-      [slug],
-      55 + (i % 30),
-      { tokenSymbols: [symbol] }
+  if (process.env.SEED_SKIP_RSS !== "1") {
+    console.log("Seed: 清理示例数据并采集真实 RSS…");
+    const purged = await purgeExampleContent(prisma);
+    const ingested = await ingestAllRssSources(prisma, 20);
+    await backfillHeuristicTags(prisma);
+    const insights = await rebuildInsightsFromFeeds(prisma);
+    console.log(
+      `Seed RSS: 移除示例 ${purged.removed_feeds} 条，新建 Feed ${ingested.items_created} 条，Insight ${insights.insights_created} 条`
     );
   }
-
-  const v08Showcase: Array<{
-    title: string;
-    url: string;
-    symbol: string;
-    slug: string;
-    type: FeedType;
-    hook: string;
-    summary: string;
-    heat: number;
-  }> = [
-    {
-      title: "AI infra tokens rally as GPU demand narrative returns",
-      url: "https://example.com/feed/v08-narrative-shift-ai",
-      symbol: "ETH",
-      slug: "ai",
-      type: "NARRATIVE_SHIFT",
-      hook: "AI infrastructure narrative heating up again.",
-      summary: "算力与应用链上数据回暖，AI 叙事在 ETF 资金流与基础设施融资消息带动下重新进入主流讨论。",
-      heat: 92
-    },
-    {
-      title: "Meme sector sentiment jumps after social volume spike",
-      url: "https://example.com/feed/v08-sentiment-meme",
-      symbol: "DOGE",
-      slug: "meme",
-      type: "SENTIMENT_SPIKE",
-      hook: "Meme 情绪出现明显波动",
-      summary: "社媒提及量短时抬升，Meme 板块波动率上升，资金在短线主题间快速轮动。",
-      heat: 88
-    },
-    {
-      title: "Liquidity rotates from L2 leaders into Solana ecosystem",
-      url: "https://example.com/feed/v08-rotation-sol",
-      symbol: "SOL",
-      slug: "solana",
-      type: "MARKET_ROTATION",
-      hook: "资金轮动信号：Solana",
-      summary: "Layer2 龙头热度边际回落，Solana 链上活跃与 TVL 指标相对走强，市场讨论聚焦生态应用。",
-      heat: 85
-    },
-    {
-      title: "Stablecoin bill markup triggers breaking news cycle",
-      url: "https://example.com/feed/v08-breaking-stable",
-      symbol: "ETH",
-      slug: "stablecoin",
-      type: "BREAKING",
-      hook: "Stablecoin 出现突发进展",
-      summary: "监管草案披露时间表，稳定币发行与储备披露要求成为跨资产热点，市场解读偏事件驱动。",
-      heat: 94
-    },
-    {
-      title: "KOL thread highlights DePIN hardware supply chain",
-      url: "https://example.com/feed/v08-kol-depin",
-      symbol: "LINK",
-      slug: "depin",
-      type: "KOL_SIGNAL",
-      hook: "KOL 关注度上升：DePIN",
-      summary: "意见领袖讨论硬件供应与节点激励，DePIN 叙事在社群渠道扩散，尚未形成一致基本面结论。",
-      heat: 79
-    }
-  ];
-  for (const item of v08Showcase) {
-    await createFeed(item.title, item.url, sourceRecords[0].id, [item.slug], item.heat, {
-      type: item.type,
-      narrativeHook: item.hook,
-      aiSummary: item.summary,
-      tokenSymbols: [item.symbol]
-    });
-  }
-
-  await backfillLegacyExampleFeeds();
 
   const settings: Array<[string, unknown]> = [
     ["ai_search_daily_limit", 30],
@@ -343,105 +223,6 @@ async function main() {
         version: 1,
         content: DEFAULT_PROMPT_CONTENT[promptKey],
         status: "ACTIVE"
-      }
-    });
-  }
-}
-
-type CreateFeedOptions = {
-  type?: FeedType;
-  narrativeHook?: string;
-  aiSummary?: string;
-  tokenSymbols?: string[];
-};
-
-async function createFeed(
-  title: string,
-  sourceUrl: string,
-  sourceId: string,
-  narrativeSlugs: string[],
-  heatScore: number,
-  options?: CreateFeedOptions
-) {
-  const source = await prisma.source.findUnique({ where: { id: sourceId } });
-  if (!source) return;
-
-  const summaryFallback = `${title}：多来源显示相关叙事与链上指标出现变化，适合结合详情页来源进一步阅读。`;
-  const content = `${title}。${summaryFallback}`;
-  const aiSummary = options?.aiSummary ?? summaryFallback;
-  const feed = await prisma.feedItem.upsert({
-    where: { sourceUrl },
-    update: {
-      title,
-      content,
-      aiSummary,
-      narrativeHook: options?.narrativeHook ?? null,
-      type: options?.type ?? "NEWS",
-      heatScore,
-      rankScore: heatScore + (options?.type && options.type !== "NEWS" ? 8 : 0)
-    },
-    create: {
-      sourceId: source.id,
-      title,
-      content,
-      aiSummary,
-      narrativeHook: options?.narrativeHook ?? null,
-      type: options?.type ?? "NEWS",
-      sourceUrl,
-      heatScore,
-      rankScore: heatScore + (options?.type && options.type !== "NEWS" ? 8 : 0),
-      publishTime: new Date()
-    }
-  });
-
-  for (const symbol of options?.tokenSymbols ?? []) {
-    const token = await prisma.token.findUnique({ where: { symbol } });
-    if (token) {
-      await prisma.feedItemToken.upsert({
-        where: { feedItemId_tokenId: { feedItemId: feed.id, tokenId: token.id } },
-        update: {},
-        create: { feedItemId: feed.id, tokenId: token.id }
-      });
-    }
-  }
-
-  for (const slug of narrativeSlugs) {
-    const narrative = await prisma.narrative.findUnique({ where: { slug } });
-    if (narrative) {
-      await prisma.feedItemNarrative.upsert({
-        where: { feedItemId_narrativeId: { feedItemId: feed.id, narrativeId: narrative.id } },
-        update: {},
-        create: { feedItemId: feed.id, narrativeId: narrative.id }
-      });
-    }
-  }
-}
-
-async function backfillLegacyExampleFeeds() {
-  const legacy = await prisma.feedItem.findMany({
-    where: {
-      sourceUrl: { startsWith: "https://example.com/feed/" },
-      NOT: { sourceUrl: { contains: "/v08-" } }
-    },
-    include: { feedItemNarratives: { include: { narrative: true } } }
-  });
-
-  for (const feed of legacy) {
-    const primary =
-      [...feed.feedItemNarratives]
-        .map((row) => row.narrative)
-        .sort((a, b) => b.heatScore - a.heatScore)[0] ?? null;
-    const narrativeHook = primary ? `${primary.name} 叙事持续受到市场关注` : `${feed.title.slice(0, 48)}`;
-    const aiSummary = `${feed.title}：链上与媒体讨论围绕${primary?.name ?? "宏观市场"}展开，建议查看相关来源交叉验证。`;
-
-    await prisma.feedItem.update({
-      where: { id: feed.id },
-      data: {
-        title: feed.title,
-        content: `${feed.title}。${aiSummary}`,
-        aiSummary,
-        narrativeHook,
-        rankScore: Math.max(feed.rankScore, feed.heatScore + 4)
       }
     });
   }

@@ -6,6 +6,7 @@ import { SystemConfigService } from "../system/system-config.service";
 import { AdminLogsService } from "./admin-logs.service";
 import { AdminAiMonitorService } from "./admin-ai-monitor.service";
 import { AdminFeedService } from "./admin-feed.service";
+import { AdminInsightService } from "./admin-insight.service";
 import { AdminKolService } from "./admin-kol.service";
 import { AdminNarrativeService } from "./admin-narrative.service";
 import { AdminPromptService } from "./admin-prompt.service";
@@ -33,7 +34,8 @@ export class AdminController {
     @Inject(AdminAiMonitorService) private readonly adminAiMonitorService: AdminAiMonitorService,
     @Inject(AdminNarrativeService) private readonly adminNarrativeService: AdminNarrativeService,
     @Inject(AdminTokenService) private readonly adminTokenService: AdminTokenService,
-    @Inject(AdminKolService) private readonly adminKolService: AdminKolService
+    @Inject(AdminKolService) private readonly adminKolService: AdminKolService,
+    @Inject(AdminInsightService) private readonly adminInsightService: AdminInsightService
   ) {}
 
   @Get("feed")
@@ -194,6 +196,21 @@ export class AdminController {
   @Get("config")
   async config() {
     return ok({ items: await this.systemConfig.listForAdmin() });
+  }
+
+  @Get("insights")
+  async insights() {
+    return ok(await this.adminInsightService.list());
+  }
+
+  @Get("insights/:id")
+  async insightDetail(@Param("id") id: string) {
+    return ok(await this.adminInsightService.getById(id));
+  }
+
+  @Post("insights/:id/resynthesize")
+  async resynthesizeInsight(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminInsightService.resynthesize(id, req.user.id));
   }
 
   @Patch("config")

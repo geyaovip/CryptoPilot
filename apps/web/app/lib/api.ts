@@ -2,6 +2,7 @@ import type {
   FeedDetailResponse,
   FeedListResponse,
   FeedTab,
+  InsightDetailResponse,
   KolListResponse,
   NarrativeDetailResponse,
   NarrativeListResponse,
@@ -32,6 +33,13 @@ export async function getFeed(
   return body.data;
 }
 
+export async function getInsightDetail(id: string): Promise<InsightDetailResponse["data"]> {
+  const response = await apiFetch(`${apiUrl}/api/insights/${id}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Insight 详情加载失败");
+  const body = (await response.json()) as InsightDetailResponse;
+  return body.data;
+}
+
 export async function getFeedDetail(id: string): Promise<FeedDetailResponse["data"]> {
   const response = await apiFetch(`${apiUrl}/api/feed/${id}`, { cache: "no-store" });
   if (!response.ok) throw new Error("Feed 详情加载失败");
@@ -51,6 +59,15 @@ export async function createBookmark(feedItemId: string) {
     method: "POST",
     headers: buildUserHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ feed_item_id: feedItemId })
+  });
+  if (!response.ok) throw new Error("收藏失败");
+}
+
+export async function createInsightBookmark(insightId: string) {
+  const response = await apiFetch(`${apiUrl}/api/bookmarks`, {
+    method: "POST",
+    headers: buildUserHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ insight_id: insightId })
   });
   if (!response.ok) throw new Error("收藏失败");
 }

@@ -1,5 +1,6 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { FeedType, Prisma } from "@prisma/client";
+import { InsightService } from "../insights/insight.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { FeedQueryDto } from "./dto/feed-query.dto";
 import { toFeedDetail, toFeedSummary } from "./feed.mapper";
@@ -16,10 +17,15 @@ const feedInclude = {
 export class FeedService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(UserInterestService) private readonly userInterest: UserInterestService
+    @Inject(UserInterestService) private readonly userInterest: UserInterestService,
+    @Inject(InsightService) private readonly insightService: InsightService
   ) {}
 
   async list(query: FeedQueryDto, userId?: string) {
+    if (query.entity !== "feed_item") {
+      return this.insightService.list(query, userId);
+    }
+
     const limit = query.limit ? Number(query.limit) : 20;
     const where: Prisma.FeedItemWhereInput = {
       deletedAt: null,
@@ -68,6 +74,7 @@ export class FeedService {
     const relatedCounts = await this.relatedSourceCounts(page.map((item) => item.id));
 
     return {
+      entity: "feed_item" as const,
       items: page.map((item, index) => toFeedSummary(item, relatedCounts[index] ?? 1)),
       next_cursor: next?.id ?? null
     };

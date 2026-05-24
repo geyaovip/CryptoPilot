@@ -16,7 +16,7 @@ export class BookmarksController {
 
   @Post()
   async create(@Req() req: { user: { id: string } }, @Body() dto: CreateBookmarkDto) {
-    return ok(await this.bookmarksService.create(req.user.id, dto.feed_item_id));
+    return ok(await this.bookmarksService.create(req.user.id, dto));
   }
 
   @Delete(":id")

@@ -8,25 +8,38 @@ vi.mock("../_components/web-user-menu", () => ({
 
 vi.mock("../lib/api", () => ({
   getFeed: async () => ({
+    entity: "insight",
     items: [
       {
-        id: "feed-1",
-        title: "BTC ETF 资金流继续支撑市场风险偏好",
-        ai_summary: "示例摘要",
-        narrative_hook: "AI 叙事再度升温",
-        primary_narrative: { id: "n1", name: "AI", slug: "ai" },
+        id: "insight-1",
+        ai_insight: "AI 市场雷达：叙事升温",
+        ai_summary: "综合多来源信号",
+        type: "narrative_shift",
         feed_type: "narrative_shift",
-        source_name: "CoinDesk",
-        source_url: "https://example.com",
-        publish_time: new Date().toISOString(),
+        sentiment: "neutral",
+        heat_score: 90,
+        heat_velocity: 8,
+        heat_label: "heating_up",
+        primary_narrative: { id: "n1", name: "AI", slug: "ai" },
         related_tokens: [],
         narrative_tags: [],
-        sentiment: "neutral",
-        heat_score: 86,
-        type: "news",
-        status: "published",
-        related_source_count: 2,
-        is_pinned: false
+        source_count: 2,
+        sources: [
+          {
+            feed_item_id: "f1",
+            title: "t1",
+            source_name: "CoinDesk",
+            source_url: "https://example.com/1",
+            published_at: new Date().toISOString()
+          },
+          {
+            feed_item_id: "f2",
+            title: "t2",
+            source_name: "The Block",
+            source_url: "https://example.com/2",
+            published_at: new Date().toISOString()
+          }
+        ]
       }
     ],
     next_cursor: null
@@ -38,12 +51,11 @@ vi.mock("../lib/api", () => ({
 }));
 
 describe("HomePage", () => {
-  it("renders AI curated feed with summary-first cards", async () => {
+  it("renders insight-first market radar", async () => {
     render(await HomePage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByText("AI 精选市场简报")).toBeTruthy();
-    expect(screen.getByTestId("home-search-entry")).toBeTruthy();
-    expect(screen.getByTestId("feed-card-hook").textContent).toContain("AI 叙事");
-    expect(screen.queryByText("BTC ETF 资金流继续支撑市场风险偏好")).toBeNull();
+    expect(screen.getByText("AI 市场雷达")).toBeTruthy();
+    expect(screen.getByTestId("insight-card-headline").textContent).toContain("叙事升温");
+    expect(screen.getByText("2 个可点击来源")).toBeTruthy();
   });
 });

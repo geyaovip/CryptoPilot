@@ -1,10 +1,10 @@
 "use client";
 
-import type { FeedItemSummary, FeedTab } from "@cryptopilot/types";
+import type { FeedTab, MarketInsightSummary } from "@cryptopilot/types";
 import { EmptyState, LoadingState } from "@cryptopilot/ui";
 import { useState } from "react";
 import { getFeed } from "../lib/api";
-import { FeedCard } from "./feed-card";
+import { InsightCard } from "./insight-card";
 
 const tabs: Array<{ id: FeedTab; label: string }> = [
   { id: "for_you", label: "推荐" },
@@ -14,7 +14,7 @@ const tabs: Array<{ id: FeedTab; label: string }> = [
 
 type HomeFeedPanelProps = {
   initialTab: FeedTab;
-  initialItems: FeedItemSummary[];
+  initialItems: MarketInsightSummary[];
   initialCursor: string | null;
   narrativeSlug?: string;
 };
@@ -37,10 +37,10 @@ export function HomeFeedPanel({
     try {
       const data = await getFeed(nextTab, undefined, narrativeSlug);
       setTab(nextTab);
-      setItems(data.items);
+      setItems(data.items as MarketInsightSummary[]);
       setCursor(data.next_cursor);
     } catch {
-      setError("Feed 加载失败，请重试。");
+      setError("市场雷达加载失败，请重试。");
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ export function HomeFeedPanel({
     setError("");
     try {
       const data = await getFeed(tab, cursor, narrativeSlug);
-      setItems((current) => [...current, ...data.items]);
+      setItems((current) => [...current, ...(data.items as MarketInsightSummary[])]);
       setCursor(data.next_cursor);
     } catch {
       setError("加载更多失败，请重试。");
@@ -78,20 +78,19 @@ export function HomeFeedPanel({
         ))}
       </div>
 
-      {loading && items.length === 0 ? <LoadingState title="Feed 加载中" /> : null}
+      {loading && items.length === 0 ? <LoadingState title="市场雷达加载中" /> : null}
       {error ? <EmptyState actionLabel="重试" description={error} title="加载失败" /> : null}
 
       {!loading && !error && items.length === 0 ? (
         <EmptyState
-          actionLabel="重试"
-          description={tab === "breaking" ? "当前没有突发热点。" : "当前没有可展示的 Feed，请稍后重试。"}
-          title={tab === "breaking" ? "暂无突发热点" : "暂无热点内容"}
+          description="暂无已发布的 Insight（需至少 2 个来源）。可执行 seed 或等待聚类任务。"
+          title="暂无市场雷达信号"
         />
       ) : null}
 
       <div className="space-y-4">
         {items.map((item) => (
-          <FeedCard feed={item} key={item.id} />
+          <InsightCard insight={item} key={item.id} />
         ))}
       </div>
 

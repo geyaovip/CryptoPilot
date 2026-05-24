@@ -1,3 +1,4 @@
+import type { MarketInsightSummary } from "@cryptopilot/types";
 import Link from "next/link";
 import { Card } from "@cryptopilot/ui";
 import { WebShell } from "../_components/web-shell";
@@ -16,7 +17,7 @@ export default async function HomePage({
   const params = await searchParams;
   const narrativeSlug = params.narrative?.trim() || undefined;
   let loadError: string | null = null;
-  let feed: Awaited<ReturnType<typeof getFeed>> = { items: [], next_cursor: null };
+  let feed: Awaited<ReturnType<typeof getFeed>> = { entity: "insight", items: [], next_cursor: null };
   let trending: Awaited<ReturnType<typeof getTrending>> = { tokens: [], narratives: [] };
   try {
     [feed, trending] = await Promise.all([
@@ -40,7 +41,7 @@ export default async function HomePage({
           <Card className="border-[#D9D5C9] bg-white/90 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
             <HomeHeader />
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5F6868]">
-              AI 已帮你读过热点，并以叙事视角总结；点一条可看类型徽章、来源与解读。登录用户的「推荐」会结合叙事热度与关注列表排序。
+              市场雷达由多条来源聚合为 Insight；主文案为 AI 解读，每条至少 2 个可点击来源。登录用户推荐会结合叙事热度与关注列表。
             </p>
             {activeNarrative ? (
               <p className="mt-2 text-sm text-[#102A2C]">
@@ -77,7 +78,7 @@ export default async function HomePage({
           </Card>
           <HomeFeedPanel
             initialCursor={feed.next_cursor}
-            initialItems={feed.items}
+            initialItems={(feed.entity === "insight" ? feed.items : []) as MarketInsightSummary[]}
             initialTab="for_you"
             narrativeSlug={narrativeSlug}
           />

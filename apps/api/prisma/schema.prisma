@@ -68,6 +68,14 @@ enum Sentiment {
   @@map("sentiment")
 }
 
+enum HeatLabel {
+  HEATING_UP @map("heating_up")
+  COOLING    @map("cooling")
+  STABLE     @map("stable")
+
+  @@map("heat_label")
+}
+
 enum IngestionStatus {
   SUCCESS @map("success")
   FAILED  @map("failed")
@@ -219,6 +227,7 @@ model Narrative {
   updatedAt          DateTime                 @updatedAt @map("updated_at")
   feedItemNarratives FeedItemNarrative[]
   heatSnapshots      NarrativeHeatSnapshot[]
+  primaryInsights    MarketInsight[]          @relation("InsightPrimaryNarrative")
   mergedInto         Narrative?               @relation("NarrativeMerge", fields: [mergedIntoId], references: [id])
   mergedFrom         Narrative[]              @relation("NarrativeMerge")
 
@@ -274,8 +283,37 @@ model NarrativeHeatSnapshot {
   @@map("narrative_heat_snapshots")
 }
 
+model MarketInsight {
+  id                 String      @id @default(uuid()) @db.Uuid
+  aiInsight          String      @map("ai_insight")
+  aiSummary          String      @map("ai_summary")
+  type               FeedType    @default(NEWS)
+  sentiment          Sentiment   @default(NEUTRAL)
+  heatScore          Int         @default(0) @map("heat_score")
+  heatVelocity       Int         @default(0) @map("heat_velocity")
+  heatLabel          HeatLabel   @default(STABLE) @map("heat_label")
+  primaryNarrativeId String?     @map("primary_narrative_id") @db.Uuid
+  rankScore          Int         @default(0) @map("rank_score")
+  sourcesJson        Json        @default("[]") @map("sources_json")
+  keyReasons         Json        @default("[]") @map("key_reasons")
+  marketImpact       String?     @map("market_impact")
+  status             FeedStatus  @default(PUBLISHED)
+  publishedAt        DateTime    @map("published_at")
+  deletedAt          DateTime?   @map("deleted_at")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+  primaryNarrative   Narrative?  @relation("InsightPrimaryNarrative", fields: [primaryNarrativeId], references: [id])
+  signals            FeedItem[]
+
+  @@index([status, rankScore])
+  @@index([primaryNarrativeId])
+  @@index([publishedAt])
+  @@map("market_insights")
+}
+
 model FeedItem {
   id                 String              @id @default(uuid()) @db.Uuid
+  insightId          String?             @map("insight_id") @db.Uuid
   sourceId           String              @map("source_id") @db.Uuid
   title              String              @db.VarChar(500)
   content            String
@@ -297,10 +335,12 @@ model FeedItem {
   createdAt          DateTime            @default(now()) @map("created_at")
   updatedAt          DateTime            @updatedAt @map("updated_at")
   source             Source              @relation(fields: [sourceId], references: [id])
+  insight            MarketInsight?      @relation(fields: [insightId], references: [id])
   feedItemTokens     FeedItemToken[]
   feedItemNarratives FeedItemNarrative[]
   bookmarks          Bookmark[]
 
+  @@index([insightId])
   @@index([sourceId])
   @@index([publishTime])
   @@index([rankScore])
@@ -332,14 +372,17 @@ model FeedItemNarrative {
 }
 
 model Bookmark {
-  id         String   @id @default(uuid()) @db.Uuid
-  userId     String   @map("user_id") @db.Uuid
-  feedItemId String   @map("feed_item_id") @db.Uuid
-  createdAt  DateTime @default(now()) @map("created_at")
-  user       User     @relation(fields: [userId], references: [id])
-  feedItem   FeedItem @relation(fields: [feedItemId], references: [id])
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @map("user_id") @db.Uuid
+  entityType String         @default("feed_item") @map("entity_type") @db.VarChar(64)
+  entityId   String         @map("entity_id") @db.Uuid
+  feedItemId String?        @map("feed_item_id") @db.Uuid
+  createdAt  DateTime       @default(now()) @map("created_at")
+  user       User      @relation(fields: [userId], references: [id])
+  feedItem   FeedItem? @relation(fields: [feedItemId], references: [id])
 
-  @@unique([userId, feedItemId])
+  @@unique([userId, entityType, entityId])
+  @@index([entityType, entityId])
   @@index([feedItemId])
   @@map("bookmarks")
 }
