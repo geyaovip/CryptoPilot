@@ -8,6 +8,7 @@ import type { FeedItemSummary } from "@cryptopilot/types";
 export type ClusterFeedRow = {
   id: string;
   clusterId: string | null;
+  isClusterLead?: boolean;
   title: string;
   content: string;
   aiSummary: string;
@@ -30,6 +31,14 @@ export function clusterBucketKey(feed: ClusterFeedRow): string {
   const windowMs = 6 * 60 * 60 * 1000;
   const window = Math.floor(feed.publishTime.getTime() / windowMs);
   return `${primary?.slug ?? "general"}:${window}`;
+}
+
+export function pickClusterRepresentative(members: ClusterFeedRow[]): ClusterFeedRow {
+  const lead = members.find((row) => row.isClusterLead);
+  if (lead) return lead;
+  return [...members].sort(
+    (a, b) => b.rankScore - a.rankScore || b.publishTime.getTime() - a.publishTime.getTime()
+  )[0];
 }
 
 export function buildClusterCards(feeds: ClusterFeedRow[]): Array<{ representative: ClusterFeedRow; members: ClusterFeedRow[] }> {
@@ -58,7 +67,7 @@ export function buildClusterCards(feeds: ClusterFeedRow[]): Array<{ representati
       continue;
     }
     const sorted = [...members].sort((a, b) => b.rankScore - a.rankScore || b.publishTime.getTime() - a.publishTime.getTime());
-    cards.push({ representative: sorted[0], members: sorted.slice(0, 5) });
+    cards.push({ representative: pickClusterRepresentative(sorted), members: sorted.slice(0, 5) });
   }
 
   return cards;
@@ -122,6 +131,28 @@ export function planClusterAssignments(feeds: ClusterFeedRow[]): Array<{ ids: st
     plans.push({ ids: slice.map((row) => row.id), clusterId: randomUUID() });
   }
   return plans;
+}
+
+/** Apply cluster_id and default representative (highest rank in plan.ids[0]). */
+export async function applyClusterPlans(
+  prisma: { feedItem: { updateMany: (args: unknown) => Promise<unknown>; update: (args: unknown) => Promise<unknown> } },
+  plans: Array<{ ids: string[]; clusterId: string }>
+): Promise<number> {
+  let linked = 0;
+  for (const plan of plans) {
+    const leadId = plan.ids[0];
+    if (!leadId) continue;
+    await prisma.feedItem.updateMany({
+      where: { id: { in: plan.ids } },
+      data: { clusterId: plan.clusterId, isClusterLead: false }
+    });
+    await prisma.feedItem.update({
+      where: { id: leadId },
+      data: { isClusterLead: true }
+    });
+    linked += plan.ids.length;
+  }
+  return linked;
 }
 
 export const clusterFeedInclude = {

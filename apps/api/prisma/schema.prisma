@@ -323,6 +323,7 @@ model FeedItem {
   id                 String              @id @default(uuid()) @db.Uuid
   insightId          String?             @map("insight_id") @db.Uuid
   clusterId          String?             @map("cluster_id") @db.Uuid
+  isClusterLead      Boolean             @default(false) @map("is_cluster_lead")
   sourceId           String              @map("source_id") @db.Uuid
   title              String              @db.VarChar(500)
   content            String

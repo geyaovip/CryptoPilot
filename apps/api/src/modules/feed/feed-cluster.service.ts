@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "../prisma/prisma.service";
-import { clusterFeedInclude, planClusterAssignments, type ClusterFeedRow } from "./feed-cluster.util";
+import { applyClusterPlans, clusterFeedInclude, planClusterAssignments, type ClusterFeedRow } from "./feed-cluster.util";
 
 @Injectable()
 export class FeedClusterService {
@@ -18,7 +18,7 @@ export class FeedClusterService {
 
   async assignClusters(reset = false): Promise<{ clusters: number; linked: number }> {
     if (reset) {
-      await this.prisma.feedItem.updateMany({ data: { clusterId: null } });
+      await this.prisma.feedItem.updateMany({ data: { clusterId: null, isClusterLead: false } });
     }
 
     const feeds = (await this.prisma.feedItem.findMany({
@@ -29,15 +29,7 @@ export class FeedClusterService {
     })) as ClusterFeedRow[];
 
     const plans = planClusterAssignments(feeds);
-    let linked = 0;
-    for (const plan of plans) {
-      await this.prisma.feedItem.updateMany({
-        where: { id: { in: plan.ids } },
-        data: { clusterId: plan.clusterId }
-      });
-      linked += plan.ids.length;
-    }
-
+    const linked = await applyClusterPlans(this.prisma, plans);
     return { clusters: plans.length, linked };
   }
 }

@@ -2,6 +2,7 @@ import type { FeedType, PrismaClient, Sentiment } from "@prisma/client";
 import { isChineseContent } from "../../src/modules/ingestion/chinese-content.util";
 import { ingestSourceItems } from "../../src/modules/ingestion/ingest-source.util";
 import {
+  applyClusterPlans,
   clusterFeedInclude,
   planClusterAssignments,
   type ClusterFeedRow
@@ -32,7 +33,7 @@ const tokenKeywords: Array<{ symbol: string; patterns: RegExp[] }> = [
 ];
 
 export async function assignFeedClusters(prisma: PrismaClient) {
-  await prisma.feedItem.updateMany({ data: { clusterId: null } });
+  await prisma.feedItem.updateMany({ data: { clusterId: null, isClusterLead: false } });
   const feeds = (await prisma.feedItem.findMany({
     where: { deletedAt: null, status: "PUBLISHED" },
     include: clusterFeedInclude,
@@ -40,14 +41,7 @@ export async function assignFeedClusters(prisma: PrismaClient) {
     take: 500
   })) as ClusterFeedRow[];
   const plans = planClusterAssignments(feeds);
-  let linked = 0;
-  for (const plan of plans) {
-    await prisma.feedItem.updateMany({
-      where: { id: { in: plan.ids } },
-      data: { clusterId: plan.clusterId }
-    });
-    linked += plan.ids.length;
-  }
+  const linked = await applyClusterPlans(prisma, plans);
   return { clusters: plans.length, linked };
 }
 

@@ -12,8 +12,11 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "db:migrate": "pnpm --filter @cryptopilot/api db:migrate",
+    "db:deploy": "pnpm --filter @cryptopilot/api db:deploy",
     "db:generate": "pnpm --filter @cryptopilot/api db:generate",
     "db:seed": "pnpm --filter @cryptopilot/api db:seed",
+    "db:refresh-content": "pnpm --filter @cryptopilot/api db:refresh-content",
+    "db:cluster-assign": "pnpm --filter @cryptopilot/api db:cluster-assign",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },
