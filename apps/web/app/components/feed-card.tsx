@@ -11,10 +11,9 @@ function isHot(heatScore: number) {
 export function FeedCard({ feed }: { feed: FeedItemSummary }) {
   const hook = feed.narrative_hook?.trim() || feed.ai_summary?.trim() || "叙事动态更新中…";
   const summary = feed.ai_summary?.trim() || "AI 摘要生成中，请稍后刷新。";
+  const sources = feed.related_sources ?? [];
   const sourceLabel =
-    feed.related_source_count > 1
-      ? `${feed.related_source_count} 个相关来源`
-      : "1 个来源";
+    feed.related_source_count > 1 ? `${feed.related_source_count} 个相关来源` : "1 个来源";
   const feedType = feed.feed_type ?? feed.type;
 
   return (
@@ -53,6 +52,18 @@ export function FeedCard({ feed }: { feed: FeedItemSummary }) {
         </p>
       ) : null}
       <p className="mt-2 text-xs text-[#8A918C]">{sourceLabel}</p>
+      {sources.length > 1 ? (
+        <ul className="mt-2 space-y-1 text-xs text-[#5F6868]">
+          {sources.slice(0, 3).map((source) => (
+            <li key={source.feed_item_id}>
+              <a className="text-[#20808D] hover:underline" href={source.source_url} rel="noopener noreferrer" target="_blank">
+                {source.source_name}
+              </a>
+              <span className="text-[#8A918C]"> · {source.title.slice(0, 48)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <div className="mt-3 flex flex-wrap gap-2">
         {feed.related_tokens.map((token) => (
           <span className="rounded-full border border-[#D9D5C9] bg-[#FCFCF9] px-2.5 py-1 text-xs text-[#5F6868]" key={token.id}>
@@ -73,7 +84,7 @@ export function FeedCard({ feed }: { feed: FeedItemSummary }) {
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#EDE8DA] pt-4">
         <a className="text-sm text-[#5F6868] hover:text-[#20808D]" href={feed.source_url} rel="noopener noreferrer" target="_blank">
-          查看原文
+          查看代表来源
         </a>
         <FeedCardActions askQuery={hook} feedId={feed.id} />
       </div>

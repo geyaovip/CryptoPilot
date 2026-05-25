@@ -17,9 +17,35 @@ type AdminFeedPanelProps = {
   items: FeedItemSummary[];
   sources: Array<{ id: string; name: string }>;
   filters: AdminFeedFilters;
+  total: number;
+  page: number;
+  pageLimit: number;
+  totalPages: number;
+  hasPrev: boolean;
+  hasNext: boolean;
 };
 
-export function AdminFeedPanel({ items, sources, filters }: AdminFeedPanelProps) {
+function buildFeedQuery(filters: AdminFeedFilters, page?: number) {
+  const query = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (!value || key === "page") return;
+    query.set(key, value);
+  });
+  if (page && page > 1) query.set("page", String(page));
+  return query.toString();
+}
+
+export function AdminFeedPanel({
+  items,
+  sources,
+  filters,
+  total,
+  page,
+  pageLimit,
+  totalPages,
+  hasPrev,
+  hasNext
+}: AdminFeedPanelProps) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -66,12 +92,16 @@ export function AdminFeedPanel({ items, sources, filters }: AdminFeedPanelProps)
           onSubmit={(event) => {
             event.preventDefault();
             const form = new FormData(event.currentTarget);
-            const query = new URLSearchParams();
-            ["status", "source_id", "type", "published_from", "published_to"].forEach((key) => {
-              const value = String(form.get(key) ?? "");
-              if (value) query.set(key, value);
-            });
-            router.push(`/admin/feed?${query.toString()}`);
+            const nextFilters: AdminFeedFilters = {
+              status: String(form.get("status") ?? "") || undefined,
+              source_id: String(form.get("source_id") ?? "") || undefined,
+              type: String(form.get("type") ?? "") || undefined,
+              published_from: String(form.get("published_from") ?? "") || undefined,
+              published_to: String(form.get("published_to") ?? "") || undefined,
+              limit: filters.limit
+            };
+            const query = buildFeedQuery(nextFilters);
+            router.push(query ? `/admin/feed?${query}` : "/admin/feed");
           }}
         >
           <select className="rounded-lg border border-slate-200 px-3 py-2 text-sm" defaultValue={filters.status ?? ""} name="status">
@@ -145,7 +175,7 @@ export function AdminFeedPanel({ items, sources, filters }: AdminFeedPanelProps)
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
-              {["标题", "类型", "来源", "热度", "状态", "置顶", "发布时间", "操作"].map((column) => (
+              {["标题", "类型", "来源", "热度", "状态", "簇", "置顶", "发布时间", "操作"].map((column) => (
                 <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
                   {column}
                 </th>
@@ -160,6 +190,7 @@ export function AdminFeedPanel({ items, sources, filters }: AdminFeedPanelProps)
                 <td className="px-4 py-3 text-slate-700">{item.source_name}</td>
                 <td className="px-4 py-3 text-slate-700">{item.heat_score}</td>
                 <td className="px-4 py-3 text-slate-700">{item.status}</td>
+                <td className="px-4 py-3 font-mono text-xs text-slate-500">{item.cluster_id?.slice(0, 8) ?? "—"}</td>
                 <td className="px-4 py-3 text-slate-700">{item.is_pinned ? "是" : "否"}</td>
                 <td className="px-4 py-3 text-slate-700">{new Date(item.publish_time).toLocaleString("zh-CN")}</td>
                 <td className="px-4 py-3">
@@ -182,6 +213,29 @@ export function AdminFeedPanel({ items, sources, filters }: AdminFeedPanelProps)
             ))}
           </tbody>
         </table>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
+          <p className="text-sm text-slate-600">
+            {total === 0
+              ? "共 0 条"
+              : `共 ${total} 条 · 第 ${(page - 1) * pageLimit + 1}–${(page - 1) * pageLimit + items.length} 条 · 第 ${page}/${totalPages || 1} 页`}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              disabled={pending || !hasPrev}
+              onClick={() => router.push(`/admin/feed?${buildFeedQuery(filters, page - 1)}`)}
+              type="button"
+            >
+              上一页
+            </Button>
+            <Button
+              disabled={pending || !hasNext}
+              onClick={() => router.push(`/admin/feed?${buildFeedQuery(filters, page + 1)}`)}
+              type="button"
+            >
+              下一页
+            </Button>
+          </div>
+        </div>
       </Card>
     </div>
   );

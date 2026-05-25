@@ -1,5 +1,10 @@
 import Parser from "rss-parser";
 import type { FeedType, PrismaClient, Sentiment } from "@prisma/client";
+import {
+  clusterFeedInclude,
+  planClusterAssignments,
+  type ClusterFeedRow
+} from "../../src/modules/feed/feed-cluster.util";
 import { pickPrimaryNarrative } from "../../src/modules/feed/feed-narrative.util";
 import { cleanRssItems } from "../../src/modules/ingestion/rss-cleaner";
 import { calculateHeatScore } from "../../src/modules/ingestion/heat-score";
@@ -26,6 +31,26 @@ const tokenKeywords: Array<{ symbol: string; patterns: RegExp[] }> = [
   { symbol: "DOGE", patterns: [/\bdoge\b/i, /dogecoin/i] },
   { symbol: "LINK", patterns: [/\bchainlink\b/i, /\blink\b/i] }
 ];
+
+export async function assignFeedClusters(prisma: PrismaClient) {
+  await prisma.feedItem.updateMany({ data: { clusterId: null } });
+  const feeds = (await prisma.feedItem.findMany({
+    where: { deletedAt: null, status: "PUBLISHED" },
+    include: clusterFeedInclude,
+    orderBy: { publishTime: "desc" },
+    take: 500
+  })) as ClusterFeedRow[];
+  const plans = planClusterAssignments(feeds);
+  let linked = 0;
+  for (const plan of plans) {
+    await prisma.feedItem.updateMany({
+      where: { id: { in: plan.ids } },
+      data: { clusterId: plan.clusterId }
+    });
+    linked += plan.ids.length;
+  }
+  return { clusters: plans.length, linked };
+}
 
 export async function countRealPublishedFeeds(prisma: PrismaClient) {
   return prisma.feedItem.count({

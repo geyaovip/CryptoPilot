@@ -18,6 +18,8 @@ export type AdminFeedFilters = {
   type?: string;
   published_from?: string;
   published_to?: string;
+  page?: string;
+  limit?: string;
 };
 
 function toQuery(filters: AdminFeedFilters) {
@@ -31,7 +33,12 @@ function toQuery(filters: AdminFeedFilters) {
 
 export type AdminFeedListData = {
   items: FeedItemSummary[];
-  next_cursor: string | null;
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  has_prev: boolean;
+  has_next: boolean;
 };
 
 export async function getAdminFeed(filters: AdminFeedFilters = {}): Promise<AdminFeedListData> {
@@ -160,6 +167,45 @@ export async function testPrompt(id: string, variables: Record<string, string>) 
   });
   if (!response.ok) throw new Error("测试 Prompt 失败");
   const body = (await response.json()) as { data: { rendered: string } };
+  return body.data;
+}
+
+export type AdminDashboardData = {
+  feeds_today: number;
+  insights_today: number;
+  ai_searches_today: number;
+  pushes_today: number;
+  pushes_note: string;
+  llm_calls_today: number;
+  llm_error_rate: number;
+  tokens_today: number;
+  cost_usd_today: number;
+  ingestion_failures_today: number;
+  sources: {
+    active: number;
+    paused: number;
+    error: number;
+    items: Array<{
+      id: string;
+      name: string;
+      status: string;
+      last_success_at: string | null;
+      last_error_at: string | null;
+    }>;
+  };
+  top_narratives: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    heat_score: number;
+    feed_count_24h: number;
+  }>;
+};
+
+export async function getAdminDashboard(): Promise<AdminDashboardData> {
+  const response = await apiFetch(`${apiUrl}/api/admin/dashboard`, { cache: "no-store", headers: adminHeaders() });
+  if (!response.ok) throw new Error("仪表盘数据加载失败");
+  const body = (await response.json()) as { data: AdminDashboardData };
   return body.data;
 }
 

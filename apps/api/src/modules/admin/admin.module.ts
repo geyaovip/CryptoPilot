@@ -8,6 +8,7 @@ import { PromptModule } from "../prompt/prompt.module";
 import { PrismaModule } from "../prisma/prisma.module";
 import { SystemModule } from "../system/system.module";
 import { AdminAiMonitorService } from "./admin-ai-monitor.service";
+import { AdminDashboardService } from "./admin-dashboard.service";
 import { AdminLogsService } from "./admin-logs.service";
 import { AdminController } from "./admin.controller";
 import { AdminFeedService } from "./admin-feed.service";
@@ -22,6 +23,7 @@ import { AdminTokenService } from "./admin-token.service";
   imports: [AuthModule, PrismaModule, SystemModule, IngestionModule, PromptModule, AiModule, NarrativesModule, InsightsModule],
   controllers: [AdminController],
   providers: [
+    AdminDashboardService,
     AdminLogsService,
     AdminFeedService,
     AdminSourceService,

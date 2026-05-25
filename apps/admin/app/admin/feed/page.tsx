@@ -15,7 +15,9 @@ function readFilters(searchParams: Record<string, string | string[] | undefined>
     source_id: read("source_id"),
     type: read("type"),
     published_from: read("published_from"),
-    published_to: read("published_to")
+    published_to: read("published_to"),
+    page: read("page"),
+    limit: read("limit")
   };
 }
 
@@ -27,7 +29,15 @@ export default async function AdminFeedPage({
   const params = await searchParams;
   const filters = readFilters(params);
   let loadError: string | null = null;
-  let feed: Awaited<ReturnType<typeof getAdminFeed>> = { items: [], next_cursor: null };
+  let feed: Awaited<ReturnType<typeof getAdminFeed>> = {
+    items: [],
+    total: 0,
+    page: 1,
+    limit: 25,
+    total_pages: 0,
+    has_prev: false,
+    has_next: false
+  };
   let sources: Awaited<ReturnType<typeof getAdminSources>> = { items: [], next_cursor: null };
   try {
     [feed, sources] = await Promise.all([getAdminFeed(filters), getAdminSources()]);
@@ -38,7 +48,17 @@ export default async function AdminFeedPage({
   return (
     <AdminShell>
       {loadError ? <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</p> : null}
-      <AdminFeedPanel filters={filters} items={feed.items} sources={sources.items.map((item) => ({ id: item.id, name: item.name }))} />
+      <AdminFeedPanel
+        filters={filters}
+        items={feed.items}
+        hasNext={feed.has_next}
+        hasPrev={feed.has_prev}
+        page={feed.page}
+        pageLimit={feed.limit}
+        total={feed.total}
+        totalPages={feed.total_pages}
+        sources={sources.items.map((item) => ({ id: item.id, name: item.name }))}
+      />
     </AdminShell>
   );
 }

@@ -89,6 +89,7 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
 
         <RelatedSourcesList
           primary={{ source_name: feed.source_name, source_url: feed.source_url, publish_time: feed.publish_time }}
+          related_sources={feed.related_sources}
           similar={feed.similar_feed}
         />
 

@@ -314,6 +314,7 @@ model MarketInsight {
 model FeedItem {
   id                 String              @id @default(uuid()) @db.Uuid
   insightId          String?             @map("insight_id") @db.Uuid
+  clusterId          String?             @map("cluster_id") @db.Uuid
   sourceId           String              @map("source_id") @db.Uuid
   title              String              @db.VarChar(500)
   content            String
@@ -341,6 +342,7 @@ model FeedItem {
   bookmarks          Bookmark[]
 
   @@index([insightId])
+  @@index([clusterId])
   @@index([sourceId])
   @@index([publishTime])
   @@index([rankScore])

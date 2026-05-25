@@ -19,11 +19,13 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? "http:/
 export async function getFeed(
   tab: FeedTab = "for_you",
   cursor?: string,
-  narrative?: string
+  narrative?: string,
+  entity: "insight" | "feed_item" = "insight"
 ): Promise<FeedListResponse["data"]> {
   const params = new URLSearchParams({ tab });
   if (cursor) params.set("cursor", cursor);
   if (narrative) params.set("narrative", narrative);
+  if (entity === "feed_item") params.set("entity", "feed_item");
   const response = await apiFetch(`${apiUrl}/api/feed?${params.toString()}`, {
     cache: "no-store",
     headers: buildUserHeaders()

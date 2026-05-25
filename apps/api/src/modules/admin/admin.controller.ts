@@ -3,6 +3,7 @@ import { AdminGuard } from "../auth/admin.guard";
 import { AuditService } from "../common/audit.service";
 import { ok } from "../common/api-response";
 import { SystemConfigService } from "../system/system-config.service";
+import { AdminDashboardService } from "./admin-dashboard.service";
 import { AdminLogsService } from "./admin-logs.service";
 import { AdminAiMonitorService } from "./admin-ai-monitor.service";
 import { AdminFeedService } from "./admin-feed.service";
@@ -25,6 +26,7 @@ import { AdminLogsQueryDto } from "./dto/admin-logs-query.dto";
 @UseGuards(AdminGuard)
 export class AdminController {
   constructor(
+    @Inject(AdminDashboardService) private readonly adminDashboardService: AdminDashboardService,
     @Inject(AdminLogsService) private readonly adminLogsService: AdminLogsService,
     @Inject(SystemConfigService) private readonly systemConfig: SystemConfigService,
     @Inject(AuditService) private readonly audit: AuditService,
@@ -37,6 +39,11 @@ export class AdminController {
     @Inject(AdminKolService) private readonly adminKolService: AdminKolService,
     @Inject(AdminInsightService) private readonly adminInsightService: AdminInsightService
   ) {}
+
+  @Get("dashboard")
+  async dashboard() {
+    return ok(await this.adminDashboardService.getOverview());
+  }
 
   @Get("feed")
   async feed(@Query() query: AdminFeedQueryDto) {

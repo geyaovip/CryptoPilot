@@ -26,8 +26,8 @@
 
 ### 1.3 轻聚合（已定案）
 
-- **V0.8 实现：方案 A** — 仍 1 feed_item = 1 卡，仅文案与类型叙事化。
-- **方案 B（产品登记，后续版本）**：2–5 条相似 item 合并为 1 卡、`cluster_id`、`related_source_count` ≥ 2。详见 `docs/design/V0.8_feed_aggregation_decision.md`。
+- **V0.8 实现：方案 B** — 2–5 条同叙事 + 6h 窗口的 `feed_item` 合并为 1 卡；`cluster_id`、`related_source_count` ≥ 2；`GET /api/feed?entity=feed_item` 返回 `aggregation: "cluster"`。详见 `docs/design/V0.8_feed_aggregation_decision.md`。
+- 未入簇单条仍以 1 卡展示（方案 A 行为保留）。
 
 ### 1.4 Narrative 联动
 
@@ -48,7 +48,7 @@
 ## 3. API
 
 - `GET /api/feed` 支持 `type` 筛选；返回 `feed_type`、`primary_narrative`。
-- 可选 `cluster_id`、`related_source_count`（若方案 B）。
+- `GET /api/feed?entity=feed_item`：`cluster_id`、`related_source_count`、`related_sources`、`aggregation`。
 
 ---
 

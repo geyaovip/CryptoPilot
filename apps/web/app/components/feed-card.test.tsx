@@ -12,6 +12,22 @@ const baseFeed = {
   source_url: "https://example.com/article",
   publish_time: new Date().toISOString(),
   related_source_count: 3,
+  related_sources: [
+    {
+      feed_item_id: "s1",
+      title: "Source one",
+      source_name: "CoinDesk",
+      source_url: "https://coindesk.com/1",
+      published_at: "2026-05-25T10:00:00.000Z"
+    },
+    {
+      feed_item_id: "s2",
+      title: "Source two",
+      source_name: "Decrypt",
+      source_url: "https://decrypt.co/2",
+      published_at: "2026-05-25T09:00:00.000Z"
+    }
+  ],
   related_tokens: [],
   narrative_tags: [{ id: "n-ai", name: "AI", slug: "ai" }],
   sentiment: "neutral" as const,

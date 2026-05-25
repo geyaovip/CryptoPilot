@@ -3,6 +3,7 @@ import { buildNarrativeHook, pickPrimaryNarrative, toApiFeedType } from "./feed-
 
 type FeedRecord = {
   id: string;
+  clusterId?: string | null;
   title: string;
   content: string;
   aiSummary: string;
@@ -56,7 +57,8 @@ export function toFeedSummary(feed: FeedRecord, relatedSourceCount = 1): FeedIte
     type: feedType,
     feed_type: feedType,
     status: feed.status.toLowerCase() as FeedItemSummary["status"],
-    is_pinned: feed.isPinned
+    is_pinned: feed.isPinned,
+    cluster_id: feed.clusterId ?? null
   };
 }
 

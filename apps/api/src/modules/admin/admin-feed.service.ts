@@ -15,6 +15,41 @@ export class AdminFeedService {
   ) {}
 
   async list(query: AdminFeedQueryDto = {}) {
+    const where = this.buildWhere(query);
+    const limit = query.limit ?? 25;
+    const page = query.page ?? 1;
+    const skip = (page - 1) * limit;
+
+    const [total, rows] = await Promise.all([
+      this.prisma.feedItem.count({ where }),
+      this.prisma.feedItem.findMany({
+        where,
+        include: {
+          source: true,
+          feedItemTokens: { include: { token: true } },
+          feedItemNarratives: { include: { narrative: true } }
+        },
+        orderBy: [{ isPinned: "desc" }, { publishTime: "desc" }, { id: "desc" }],
+        skip,
+        take: limit
+      })
+    ]);
+
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+    const safePage = totalPages === 0 ? 1 : Math.min(page, totalPages);
+
+    return {
+      items: rows.map(toFeedSummary),
+      total,
+      page: safePage,
+      limit,
+      total_pages: totalPages,
+      has_prev: safePage > 1,
+      has_next: safePage < totalPages
+    };
+  }
+
+  private buildWhere(query: AdminFeedQueryDto): Prisma.FeedItemWhereInput {
     const where: Prisma.FeedItemWhereInput = { deletedAt: null };
 
     if (query.status) {
@@ -33,17 +68,7 @@ export class AdminFeedService {
       };
     }
 
-    const items = await this.prisma.feedItem.findMany({
-      where,
-      include: {
-        source: true,
-        feedItemTokens: { include: { token: true } },
-        feedItemNarratives: { include: { narrative: true } }
-      },
-      orderBy: [{ isPinned: "desc" }, { publishTime: "desc" }],
-      take: 50
-    });
-    return { items: items.map(toFeedSummary), next_cursor: null };
+    return where;
   }
 
   async create(dto: CreateAdminFeedDto, adminUserId: string) {

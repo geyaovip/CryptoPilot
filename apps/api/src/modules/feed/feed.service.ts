@@ -3,15 +3,16 @@ import { FeedType, Prisma } from "@prisma/client";
 import { InsightService } from "../insights/insight.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { FeedQueryDto } from "./dto/feed-query.dto";
+import {
+  buildClusterCards,
+  clusterFeedInclude,
+  paginateClusterSummaries,
+  sortClusterCards,
+  toClusteredSummaries,
+  type ClusterFeedRow
+} from "./feed-cluster.util";
 import { toFeedDetail, toFeedSummary } from "./feed.mapper";
-import { compareFeedsForTab, effectiveFeedSortScore } from "./feed-ranking.util";
 import { UserInterestService } from "./user-interest.service";
-
-const feedInclude = {
-  source: true,
-  feedItemTokens: { include: { token: true } },
-  feedItemNarratives: { include: { narrative: true } }
-} satisfies Prisma.FeedItemInclude;
 
 @Injectable()
 export class FeedService {
@@ -27,71 +28,74 @@ export class FeedService {
     }
 
     const limit = query.limit ? Number(query.limit) : 20;
-    const where: Prisma.FeedItemWhereInput = {
-      deletedAt: null,
-      status: "PUBLISHED"
-    };
-
-    if (query.tab === "breaking") {
-      where.OR = [{ type: "BREAKING" }, { heatScore: { gte: 90 } }];
-    }
-
-    if (query.narrative) {
-      where.feedItemNarratives = {
-        some: { narrative: { slug: query.narrative, deletedAt: null, isActive: true } }
-      };
-    }
-
-    if (query.type) {
-      where.type = query.type.toUpperCase() as FeedType;
-    }
-
+    const where = this.buildWhere(query);
     const interestContext = await this.userInterest.loadContext(userId);
     const usePersonalizedRank = query.tab === "for_you" || Boolean(query.narrative);
-    const fetchLimit = usePersonalizedRank && (interestContext || query.narrative) ? Math.min(limit * 4, 80) : limit + 1;
+    const fetchLimit = Math.min(limit * 8, 160);
 
-    const items = await this.prisma.feedItem.findMany({
+    const rows = (await this.prisma.feedItem.findMany({
       where,
-      include: feedInclude,
-      orderBy: usePersonalizedRank && (interestContext || query.narrative) ? undefined : this.orderBy(query.tab),
-      take: fetchLimit,
-      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {})
-    });
+      include: clusterFeedInclude,
+      orderBy: usePersonalizedRank ? undefined : this.orderBy(query.tab),
+      take: fetchLimit
+    })) as ClusterFeedRow[];
 
-    const ranked =
-      usePersonalizedRank && (interestContext || query.narrative)
-        ? [...items].sort((a, b) => {
-            const interestA = interestContext ? this.userInterest.scoreFeed(a, interestContext) : 0;
-            const interestB = interestContext ? this.userInterest.scoreFeed(b, interestContext) : 0;
-            const scoreA = effectiveFeedSortScore(a, interestA, query.narrative);
-            const scoreB = effectiveFeedSortScore(b, interestB, query.narrative);
-            return compareFeedsForTab(a, b, scoreA, scoreB);
-          })
-        : items;
-
-    const page = ranked.slice(0, limit);
-    const next = ranked.length > limit ? ranked[limit] : null;
-    const relatedCounts = await this.relatedSourceCounts(page.map((item) => item.id));
+    const cards = buildClusterCards(rows);
+    const sorted = sortClusterCards(
+      cards,
+      query.narrative,
+      interestContext ? (feed) => this.userInterest.scoreFeed(feed, interestContext) : undefined
+    );
+    const summaries = toClusteredSummaries(sorted);
+    const page = paginateClusterSummaries(summaries, limit, query.cursor);
 
     return {
       entity: "feed_item" as const,
-      items: page.map((item, index) => toFeedSummary(item, relatedCounts[index] ?? 1)),
-      next_cursor: next?.id ?? null
+      aggregation: "cluster" as const,
+      items: page.items,
+      next_cursor: page.next_cursor
     };
   }
 
   async getById(id: string) {
-    const feed = await this.prisma.feedItem.findFirst({
+    const feed = (await this.prisma.feedItem.findFirst({
       where: { id, deletedAt: null, status: { not: "DELETED" } },
-      include: feedInclude
-    });
+      include: clusterFeedInclude
+    })) as ClusterFeedRow | null;
 
-    if (!feed) {
-      throw new NotFoundException("Feed 不存在");
+    if (!feed) throw new NotFoundException("Feed 不存在");
+
+    const similar = feed.clusterId
+      ? ((await this.prisma.feedItem.findMany({
+          where: {
+            clusterId: feed.clusterId,
+            id: { not: id },
+            deletedAt: null,
+            status: "PUBLISHED"
+          },
+          include: clusterFeedInclude,
+          orderBy: [{ rankScore: "desc" }, { publishTime: "desc" }],
+          take: 4
+        })) as ClusterFeedRow[])
+      : await this.findSimilarFeeds(id);
+
+    const members = feed.clusterId
+      ? ([feed, ...similar] as ClusterFeedRow[])
+      : [feed, ...similar];
+    const detail = toFeedDetail(feed, similar);
+    if (feed.clusterId && members.length >= 2) {
+      detail.cluster_id = feed.clusterId;
+      detail.related_source_count = members.length;
+      detail.related_sources = members.map((row) => ({
+        feed_item_id: row.id,
+        title: row.title,
+        source_name: row.source.name,
+        source_url: row.sourceUrl,
+        published_at: row.publishTime.toISOString()
+      }));
+      detail.similar_feed = similar.map((row) => toFeedSummary(row, 1));
     }
-
-    const similar = await this.findSimilarFeeds(id);
-    return toFeedDetail(feed, similar);
+    return detail;
   }
 
   async trending() {
@@ -124,28 +128,29 @@ export class FeedService {
     };
   }
 
+  private buildWhere(query: FeedQueryDto): Prisma.FeedItemWhereInput {
+    const where: Prisma.FeedItemWhereInput = { deletedAt: null, status: "PUBLISHED" };
+    if (query.tab === "breaking") where.OR = [{ type: "BREAKING" }, { heatScore: { gte: 90 } }];
+    if (query.narrative) {
+      where.feedItemNarratives = {
+        some: { narrative: { slug: query.narrative, deletedAt: null, isActive: true } }
+      };
+    }
+    if (query.type) where.type = query.type.toUpperCase() as FeedType;
+    return where;
+  }
+
   private orderBy(tab?: string): Prisma.FeedItemOrderByWithRelationInput[] {
     if (tab === "latest") return [{ publishTime: "desc" }];
     return [{ isPinned: "desc" }, { rankScore: "desc" }, { publishTime: "desc" }];
   }
 
-  private findSimilarFeeds(excludeId: string) {
-    return this.prisma.feedItem.findMany({
+  private async findSimilarFeeds(excludeId: string) {
+    return (await this.prisma.feedItem.findMany({
       where: { id: { not: excludeId }, deletedAt: null, status: "PUBLISHED" },
-      include: feedInclude,
+      include: clusterFeedInclude,
       orderBy: [{ heatScore: "desc" }, { publishTime: "desc" }],
       take: 3
-    });
-  }
-
-  private async relatedSourceCounts(feedIds: string[]): Promise<number[]> {
-    if (feedIds.length === 0) return [];
-    const counts = await Promise.all(
-      feedIds.map(async (feedId) => {
-        const similar = await this.findSimilarFeeds(feedId);
-        return 1 + similar.length;
-      })
-    );
-    return counts;
+    })) as ClusterFeedRow[];
   }
 }

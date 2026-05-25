@@ -179,6 +179,14 @@ export type WatchlistListResponse = ApiSuccess<{ items: WatchlistItemView[] }>;
 export type TokenListResponse = ApiSuccess<{ items: TokenListItem[] }>;
 export type KolListResponse = ApiSuccess<{ items: KolSummary[] }>;
 
+export type FeedRelatedSourceRef = {
+  feed_item_id: string;
+  title: string;
+  source_name: string;
+  source_url: string;
+  published_at: string;
+};
+
 export type FeedItemSummary = {
   id: string;
   title: string;
@@ -186,8 +194,11 @@ export type FeedItemSummary = {
   source_name: string;
   source_url: string;
   publish_time: string;
-  /** Primary source + similar_feed count (Phase 1 list). */
+  /** Primary source + cluster/similar count (V0.8 方案 B). */
   related_source_count: number;
+  /** V0.8 方案 B：同簇多来源（≥2 时填充）。 */
+  cluster_id?: string | null;
+  related_sources?: FeedRelatedSourceRef[];
   related_tokens: TokenSummary[];
   narrative_tags: NarrativeSummary[];
   /** Phase 2: dominant narrative for card tag and ranking. */
@@ -271,6 +282,8 @@ export type FeedListEntity = "insight" | "feed_item";
 
 export type FeedListResponse = ApiSuccess<{
   entity: FeedListEntity;
+  /** Present when entity=feed_item and V0.8 cluster aggregation is active. */
+  aggregation?: "cluster";
   items: MarketInsightSummary[] | FeedItemSummary[];
   next_cursor: string | null;
 }>;

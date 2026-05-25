@@ -1,8 +1,13 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { NarrativeListItem } from "@cryptopilot/types";
 import { PrismaService } from "../prisma/prisma.service";
-import { toFeedSummary } from "../feed/feed.mapper";
-import { compareFeedsForTab, effectiveFeedSortScore } from "../feed/feed-ranking.util";
+import {
+  buildClusterCards,
+  clusterFeedInclude,
+  sortClusterCards,
+  toClusteredSummaries,
+  type ClusterFeedRow
+} from "../feed/feed-cluster.util";
 import { NarrativeAiService } from "./narrative-ai.service";
 import { NarrativeMetricsService } from "./narrative-metrics.service";
 import { buildWatchlistMap, toNarrativeDetail, toNarrativeListItem } from "./narratives.mapper";
@@ -65,26 +70,17 @@ export class NarrativesService {
       this.snapshotsSince(refreshed.id, new Date(now - 30 * 24 * 60 * 60 * 1000))
     ]);
 
-    const relatedRaw = await this.prisma.feedItem.findMany({
+    const relatedRaw = (await this.prisma.feedItem.findMany({
       where: {
         deletedAt: null,
         status: "PUBLISHED",
         feedItemNarratives: { some: { narrativeId: refreshed.id } }
       },
-      include: {
-        source: true,
-        feedItemTokens: { include: { token: true } },
-        feedItemNarratives: { include: { narrative: true } }
-      },
-      take: 24
-    });
-    const related = [...relatedRaw]
-      .sort((a, b) => {
-        const scoreA = effectiveFeedSortScore(a, 0, refreshed.slug);
-        const scoreB = effectiveFeedSortScore(b, 0, refreshed.slug);
-        return compareFeedsForTab(a, b, scoreA, scoreB);
-      })
-      .slice(0, 12);
+      include: clusterFeedInclude,
+      take: 80
+    })) as ClusterFeedRow[];
+    const cards = buildClusterCards(relatedRaw);
+    const related = toClusteredSummaries(sortClusterCards(cards, refreshed.slug)).slice(0, 12);
 
     const sourceGroups = await this.prisma.feedItem.groupBy({
       by: ["sourceId"],

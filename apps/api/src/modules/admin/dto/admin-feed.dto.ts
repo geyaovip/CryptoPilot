@@ -1,4 +1,5 @@
-import { IsIn, IsOptional, IsString, IsUrl, MaxLength } from "class-validator";
+import { Type } from "class-transformer";
+import { IsIn, IsInt, IsOptional, IsString, IsUrl, Max, MaxLength, Min } from "class-validator";
 
 export class AdminFeedQueryDto {
   @IsOptional()
@@ -20,6 +21,19 @@ export class AdminFeedQueryDto {
   @IsOptional()
   @IsString()
   published_to?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit?: number;
 }
 
 export class CreateAdminFeedDto {
