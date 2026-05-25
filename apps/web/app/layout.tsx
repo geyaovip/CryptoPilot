@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { PwaInstallBanner } from "./components/pwa-install-banner";
 import { PwaRegister } from "./components/pwa-register";
 import { Providers } from "./providers";
 
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <Providers>
           <PwaRegister />
+          <PwaInstallBanner />
           {children}
         </Providers>
       </body>

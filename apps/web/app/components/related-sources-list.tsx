@@ -26,7 +26,7 @@ export function RelatedSourcesList({ primary, similar }: RelatedSourcesListProps
         <ul className="mt-3 space-y-3">
           {rows.map((row) => (
             <li className="text-sm" key={row.key}>
-              <a className="font-medium text-[#20808D] hover:text-[#186A73]" href={row.url} rel="noreferrer" target="_blank">
+              <a className="font-medium text-[#20808D] hover:text-[#186A73]" href={row.url} rel="noopener noreferrer" target="_blank">
                 {row.name}
               </a>
               <span className="text-[#8A918C]"> · {new Date(row.time).toLocaleString("zh-CN")}</span>

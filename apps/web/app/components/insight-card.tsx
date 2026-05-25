@@ -45,7 +45,7 @@ export function InsightCard({ insight }: { insight: MarketInsightSummary }) {
       <ul className="mt-2 space-y-1">
         {insight.sources.slice(0, 3).map((source) => (
           <li className="text-xs" key={source.feed_item_id}>
-            <a className="text-[#20808D] hover:underline" href={source.source_url} rel="noreferrer" target="_blank">
+            <a className="text-[#20808D] hover:underline" href={source.source_url} rel="noopener noreferrer" target="_blank">
               {source.source_name}
             </a>
           </li>

@@ -5,6 +5,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import {
   backfillHeuristicTags,
+  countRealPublishedFeeds,
   ingestAllRssSources,
   purgeExampleContent,
   rebuildInsightsFromFeeds
@@ -189,9 +190,13 @@ async function main() {
     const ingested = await ingestAllRssSources(prisma, 20);
     await backfillHeuristicTags(prisma);
     const insights = await rebuildInsightsFromFeeds(prisma);
+    const feedCount = await countRealPublishedFeeds(prisma);
     console.log(
-      `Seed RSS: 移除示例 ${purged.removed_feeds} 条，新建 Feed ${ingested.items_created} 条，Insight ${insights.insights_created} 条`
+      `Seed RSS: 移除示例 ${purged.removed_feeds} 条，新建 Feed ${ingested.items_created} 条，Insight ${insights.insights_created} 条，真实 Feed 共 ${feedCount} 条`
     );
+    if (feedCount < 20) {
+      console.warn("Seed: 真实 Feed 少于 20 条，请检查 RSS 网络或执行 pnpm db:refresh-content");
+    }
   }
 
   const settings: Array<[string, unknown]> = [

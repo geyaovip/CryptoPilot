@@ -141,7 +141,7 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
             <ul className="mt-2 space-y-2 text-sm">
               {result.sources.map((source) => (
                 <li key={source.url}>
-                  <a className="text-[#20808D]" href={source.url} rel="noreferrer" target="_blank">
+                  <a className="text-[#20808D]" href={source.url} rel="noopener noreferrer" target="_blank">
                     {source.source_name}
                   </a>
                   <span className="text-[#8A918C]"> · {new Date(source.published_at).toLocaleString("zh-CN")}</span>

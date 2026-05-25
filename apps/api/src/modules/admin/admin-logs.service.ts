@@ -11,14 +11,15 @@ export class AdminLogsService {
     const to = query.to ? new Date(query.to) : new Date();
     const take = query.limit ?? 50;
 
-    const [apiErrors, ingestionErrors, llmErrors, audits] = await Promise.all([
+    const [apiErrors, ingestionErrors, llmErrors, pushErrors, audits] = await Promise.all([
       query.type && query.type !== "api" ? [] : this.apiErrors(from, to, take),
       query.type && query.type !== "ingestion" ? [] : this.ingestionErrors(from, to, take),
       query.type && query.type !== "llm" ? [] : this.llmErrors(from, to, take),
+      query.type && query.type !== "push" ? [] : this.pushErrors(from, to, take),
       query.type && query.type !== "audit" ? [] : this.auditLogs(from, to, take)
     ]);
 
-    const items = [...apiErrors, ...ingestionErrors, ...llmErrors, ...audits]
+    const items = [...apiErrors, ...ingestionErrors, ...llmErrors, ...pushErrors, ...audits]
       .sort((a, b) => b.created_at.localeCompare(a.created_at))
       .slice(0, take);
 
@@ -75,6 +76,18 @@ export class AdminLogsService {
       created_at: row.createdAt.toISOString(),
       detail: { provider: row.provider, model: row.model }
     }));
+  }
+
+  private async pushErrors(_from: Date, _to: Date, _take: number) {
+    return [] as Array<{
+      id: string;
+      type: "push";
+      title: string;
+      message: string;
+      error_code: string;
+      created_at: string;
+      detail: Record<string, unknown>;
+    }>;
   }
 
   private async auditLogs(from: Date, to: Date, take: number) {

@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { AuditService } from "../common/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { NarrativeAiService } from "../narratives/narrative-ai.service";
 import { NarrativeMetricsService } from "../narratives/narrative-metrics.service";
@@ -9,12 +10,19 @@ export class AdminNarrativeService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(NarrativeMetricsService) private readonly metrics: NarrativeMetricsService,
-    @Inject(NarrativeAiService) private readonly narrativeAi: NarrativeAiService
+    @Inject(NarrativeAiService) private readonly narrativeAi: NarrativeAiService,
+    @Inject(AuditService) private readonly audit: AuditService
   ) {}
 
-  async regenerateAi(id: string) {
+  async regenerateAi(id: string, adminUserId: string) {
     await this.findOrThrow(id);
     await this.narrativeAi.generateForNarrative(id);
+    await this.audit.log({
+      adminUserId,
+      action: "narrative.regenerate_ai",
+      entityType: "narrative",
+      entityId: id
+    });
     return { id, regenerated: true };
   }
 
@@ -39,7 +47,7 @@ export class AdminNarrativeService {
     };
   }
 
-  async create(dto: CreateAdminNarrativeDto) {
+  async create(dto: CreateAdminNarrativeDto, adminUserId: string) {
     const narrative = await this.prisma.narrative.create({
       data: {
         name: dto.name,
@@ -51,10 +59,17 @@ export class AdminNarrativeService {
       }
     });
     await this.metrics.refreshOne(narrative.id).catch(() => undefined);
+    await this.audit.log({
+      adminUserId,
+      action: "narrative.create",
+      entityType: "narrative",
+      entityId: narrative.id,
+      after: narrative
+    });
     return { id: narrative.id };
   }
 
-  async update(id: string, dto: UpdateAdminNarrativeDto) {
+  async update(id: string, dto: UpdateAdminNarrativeDto, adminUserId: string) {
     const existing = await this.findOrThrow(id);
     const narrative = await this.prisma.narrative.update({
       where: { id },
@@ -71,10 +86,18 @@ export class AdminNarrativeService {
       }
     });
     await this.metrics.refreshOne(narrative.id).catch(() => undefined);
+    await this.audit.log({
+      adminUserId,
+      action: "narrative.update",
+      entityType: "narrative",
+      entityId: id,
+      before: existing,
+      after: narrative
+    });
     return { id: existing.id, updated: true };
   }
 
-  async merge(id: string, dto: MergeAdminNarrativeDto) {
+  async merge(id: string, dto: MergeAdminNarrativeDto, adminUserId: string) {
     await this.findOrThrow(id);
     const target = await this.findOrThrow(dto.target_narrative_id);
     await this.prisma.feedItemNarrative.updateMany({
@@ -84,6 +107,13 @@ export class AdminNarrativeService {
     await this.prisma.narrative.update({
       where: { id },
       data: { mergedIntoId: target.id, isActive: false }
+    });
+    await this.audit.log({
+      adminUserId,
+      action: "narrative.merge",
+      entityType: "narrative",
+      entityId: id,
+      after: { merged_into: target.id }
     });
     return { merged_into: target.id };
   }

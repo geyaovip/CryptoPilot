@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { AuditService } from "../common/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { IngestionService } from "../ingestion/ingestion.service";
 import { UpdateSourceDto } from "./dto/admin-source.dto";
@@ -7,7 +8,8 @@ import { UpdateSourceDto } from "./dto/admin-source.dto";
 export class AdminSourceService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(IngestionService) private readonly ingestionService: IngestionService
+    @Inject(IngestionService) private readonly ingestionService: IngestionService,
+    @Inject(AuditService) private readonly audit: AuditService
   ) {}
 
   async list() {
@@ -31,20 +33,32 @@ export class AdminSourceService {
     };
   }
 
-  async update(id: string, dto: UpdateSourceDto) {
-    await this.ensureSource(id);
+  async update(id: string, dto: UpdateSourceDto, adminUserId: string) {
+    const before = await this.ensureSource(id);
     await this.prisma.source.update({
       where: { id },
       data: { status: dto.status?.toUpperCase() as "ACTIVE" | "PAUSED" | "ERROR" | undefined }
     });
-    await this.audit("update_source", id);
+    await this.audit.log({
+      adminUserId,
+      action: "source.update",
+      entityType: "source",
+      entityId: id,
+      before,
+      after: dto
+    });
     return { success: true };
   }
 
-  async retry(id: string) {
+  async retry(id: string, adminUserId: string) {
     await this.ensureSource(id);
     await this.ingestionService.ingestRssSource(id);
-    await this.audit("retry_source", id);
+    await this.audit.log({
+      adminUserId,
+      action: "source.retry",
+      entityType: "source",
+      entityId: id
+    });
     return { success: true };
   }
 
@@ -75,9 +89,4 @@ export class AdminSourceService {
     return source;
   }
 
-  private async audit(action: string, entityId: string) {
-    await this.prisma.auditLog.create({
-      data: { action, entityType: "source", entityId }
-    });
-  }
 }

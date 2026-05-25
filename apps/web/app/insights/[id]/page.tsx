@@ -49,7 +49,7 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
           <ul className="mt-3 space-y-2 text-sm">
             {insight.sources.map((source) => (
               <li key={source.feed_item_id}>
-                <a className="font-medium text-[#20808D]" href={source.source_url} rel="noreferrer" target="_blank">
+                <a className="font-medium text-[#20808D]" href={source.source_url} rel="noopener noreferrer" target="_blank">
                   {source.source_name}
                 </a>
                 <span className="text-[#8A918C]"> · {source.title}</span>

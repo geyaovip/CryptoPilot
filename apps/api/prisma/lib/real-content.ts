@@ -27,6 +27,16 @@ const tokenKeywords: Array<{ symbol: string; patterns: RegExp[] }> = [
   { symbol: "LINK", patterns: [/\bchainlink\b/i, /\blink\b/i] }
 ];
 
+export async function countRealPublishedFeeds(prisma: PrismaClient) {
+  return prisma.feedItem.count({
+    where: {
+      deletedAt: null,
+      status: "PUBLISHED",
+      NOT: { sourceUrl: { startsWith: EXAMPLE_PREFIX } }
+    }
+  });
+}
+
 export async function purgeExampleContent(prisma: PrismaClient) {
   const now = new Date();
   const exampleFeeds = await prisma.feedItem.findMany({

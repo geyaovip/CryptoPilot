@@ -34,6 +34,7 @@ export type ApiErrorCode =
   | "LLM_OUTPUT_INVALID"
   | "LLM_PROVIDER_ERROR"
   | "SOURCE_UNAVAILABLE"
+  | "TELEGRAM_WEBHOOK_INVALID"
   | "INTERNAL_ERROR";
 
 export type PromptStatus = "draft" | "active" | "archived";

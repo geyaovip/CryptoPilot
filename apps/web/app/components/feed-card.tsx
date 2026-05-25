@@ -72,7 +72,7 @@ export function FeedCard({ feed }: { feed: FeedItemSummary }) {
           ))}
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#EDE8DA] pt-4">
-        <a className="text-sm text-[#5F6868] hover:text-[#20808D]" href={feed.source_url} rel="noreferrer" target="_blank">
+        <a className="text-sm text-[#5F6868] hover:text-[#20808D]" href={feed.source_url} rel="noopener noreferrer" target="_blank">
           查看原文
         </a>
         <FeedCardActions askQuery={hook} feedId={feed.id} />

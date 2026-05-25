@@ -1,10 +1,14 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { AuditService } from "../common/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { UpdateAdminTokenDto } from "./dto/admin-token.dto";
 
 @Injectable()
 export class AdminTokenService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(AuditService) private readonly audit: AuditService
+  ) {}
 
   async list() {
     const items = await this.prisma.token.findMany({
@@ -25,8 +29,8 @@ export class AdminTokenService {
     };
   }
 
-  async update(id: string, dto: UpdateAdminTokenDto) {
-    await this.findOrThrow(id);
+  async update(id: string, dto: UpdateAdminTokenDto, adminUserId: string) {
+    const before = await this.findOrThrow(id);
     await this.prisma.token.update({
       where: { id },
       data: {
@@ -37,10 +41,18 @@ export class AdminTokenService {
         displayOrder: dto.display_order
       }
     });
+    await this.audit.log({
+      adminUserId,
+      action: "token.update",
+      entityType: "token",
+      entityId: id,
+      before,
+      after: dto
+    });
     return { id, updated: true };
   }
 
-  async refresh(id: string) {
+  async refresh(id: string, adminUserId: string) {
     const token = await this.findOrThrow(id);
     const jitter = (Math.random() - 0.5) * 2;
     const nextChange =
@@ -50,6 +62,12 @@ export class AdminTokenService {
     await this.prisma.token.update({
       where: { id },
       data: { priceChange24h: nextChange, priceUsd: nextPrice }
+    });
+    await this.audit.log({
+      adminUserId,
+      action: "token.refresh_price",
+      entityType: "token",
+      entityId: id
     });
     return { id, refreshed: true };
   }

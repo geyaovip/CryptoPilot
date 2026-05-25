@@ -1,10 +1,14 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { AuditService } from "../common/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateAdminKolDto, UpdateAdminKolDto } from "./dto/admin-kol.dto";
 
 @Injectable()
 export class AdminKolService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(AuditService) private readonly audit: AuditService
+  ) {}
 
   async list() {
     const items = await this.prisma.kol.findMany({
@@ -24,7 +28,7 @@ export class AdminKolService {
     };
   }
 
-  async create(dto: CreateAdminKolDto) {
+  async create(dto: CreateAdminKolDto, adminUserId: string) {
     try {
       const kol = await this.prisma.kol.create({
         data: {
@@ -36,14 +40,21 @@ export class AdminKolService {
           isActive: dto.is_active ?? true
         }
       });
+      await this.audit.log({
+        adminUserId,
+        action: "kol.create",
+        entityType: "kol",
+        entityId: kol.id,
+        after: kol
+      });
       return { id: kol.id };
     } catch {
       throw new ConflictException("KOL 已存在");
     }
   }
 
-  async update(id: string, dto: UpdateAdminKolDto) {
-    await this.findOrThrow(id);
+  async update(id: string, dto: UpdateAdminKolDto, adminUserId: string) {
+    const before = await this.findOrThrow(id);
     await this.prisma.kol.update({
       where: { id },
       data: {
@@ -54,6 +65,14 @@ export class AdminKolService {
         influenceScore: dto.influence_score,
         isActive: dto.is_active
       }
+    });
+    await this.audit.log({
+      adminUserId,
+      action: "kol.update",
+      entityType: "kol",
+      entityId: id,
+      before,
+      after: { id, ...dto }
     });
     return { id, updated: true };
   }

@@ -56,7 +56,7 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
           </div>
           <div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-[#5F6868]">{feed.content}</div>
           <div className="mt-5 flex flex-wrap items-center gap-4">
-            <a className="text-sm font-medium text-[#20808D]" href={feed.source_url} rel="noreferrer" target="_blank">
+            <a className="text-sm font-medium text-[#20808D]" href={feed.source_url} rel="noopener noreferrer" target="_blank">
               打开原文
             </a>
             <FeedCardActions askQuery={summary} feedId={feed.id} />

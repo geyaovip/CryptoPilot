@@ -4,7 +4,7 @@ import { Card } from "@cryptopilot/ui";
 import { useEffect, useState } from "react";
 import { getAdminLogs, type AdminLogItem } from "../../lib/api";
 
-const types = ["", "api", "ingestion", "llm", "audit"] as const;
+const types = ["", "api", "ingestion", "llm", "push", "audit"] as const;
 
 export function LogsPanel() {
   const [type, setType] = useState("");

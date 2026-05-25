@@ -1,6 +1,7 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { FeedType, Prisma } from "@prisma/client";
 import { FeedAiService } from "../ai/feed-ai.service";
+import { AuditService } from "../common/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { toFeedSummary } from "../feed/feed.mapper";
 import { AdminFeedQueryDto, CreateAdminFeedDto, UpdateAdminFeedDto } from "./dto/admin-feed.dto";
@@ -9,7 +10,8 @@ import { AdminFeedQueryDto, CreateAdminFeedDto, UpdateAdminFeedDto } from "./dto
 export class AdminFeedService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(FeedAiService) private readonly feedAiService: FeedAiService
+    @Inject(FeedAiService) private readonly feedAiService: FeedAiService,
+    @Inject(AuditService) private readonly audit: AuditService
   ) {}
 
   async list(query: AdminFeedQueryDto = {}) {
@@ -44,7 +46,7 @@ export class AdminFeedService {
     return { items: items.map(toFeedSummary), next_cursor: null };
   }
 
-  async create(dto: CreateAdminFeedDto) {
+  async create(dto: CreateAdminFeedDto, adminUserId: string) {
     const source = await this.ensureManualSource();
     const feed = await this.prisma.feedItem.create({
       data: {
@@ -58,22 +60,23 @@ export class AdminFeedService {
         rankScore: 50
       }
     });
-    await this.audit("create_feed", feed.id, null, feed);
+    await this.writeAudit(adminUserId, "create_feed", feed.id, null, feed);
     this.feedAiService.queueGeneration(feed.id);
     return { success: true, id: feed.id };
   }
 
-  async regenerateAi(id: string) {
+  async regenerateAi(id: string, adminUserId: string) {
     await this.find(id);
     await this.prisma.feedItem.update({
       where: { id },
       data: { aiGeneratedAt: null, aiGenerationError: null }
     });
     this.feedAiService.queueGeneration(id);
+    await this.writeAudit(adminUserId, "regenerate_feed_ai", id);
     return { success: true };
   }
 
-  async update(id: string, dto: UpdateAdminFeedDto) {
+  async update(id: string, dto: UpdateAdminFeedDto, adminUserId: string) {
     const before = await this.find(id);
     const feed = await this.prisma.feedItem.update({
       where: { id },
@@ -82,32 +85,32 @@ export class AdminFeedService {
         aiSummary: dto.ai_summary
       }
     });
-    await this.audit("edit_feed", id, before, feed);
+    await this.writeAudit(adminUserId, "edit_feed", id, before, feed);
     return { success: true };
   }
 
-  async pin(id: string) {
+  async pin(id: string, adminUserId: string) {
     const before = await this.find(id);
     const feed = await this.prisma.feedItem.update({ where: { id }, data: { isPinned: !before.isPinned } });
-    await this.audit("pin_feed", id, before, feed);
+    await this.writeAudit(adminUserId, "pin_feed", id, before, feed);
     return { success: true };
   }
 
-  async hide(id: string) {
+  async hide(id: string, adminUserId: string) {
     const before = await this.find(id);
     const status = before.status === "HIDDEN" ? "PUBLISHED" : "HIDDEN";
     const feed = await this.prisma.feedItem.update({ where: { id }, data: { status } });
-    await this.audit("hide_feed", id, before, feed);
+    await this.writeAudit(adminUserId, "hide_feed", id, before, feed);
     return { success: true };
   }
 
-  async delete(id: string) {
+  async delete(id: string, adminUserId: string) {
     const before = await this.find(id);
     const feed = await this.prisma.feedItem.update({
       where: { id },
       data: { status: "DELETED", deletedAt: new Date() }
     });
-    await this.audit("delete_feed", id, before, feed);
+    await this.writeAudit(adminUserId, "delete_feed", id, before, feed);
     return { success: true };
   }
 
@@ -125,19 +128,21 @@ export class AdminFeedService {
     });
   }
 
-  private async audit(action: string, entityId: string, beforeJson: unknown, afterJson: unknown) {
-    await this.prisma.auditLog.create({
-      data: {
-        action,
-        entityType: "feed_item",
-        entityId,
-        beforeJson: toJson(beforeJson),
-        afterJson: toJson(afterJson)
-      }
+  private async writeAudit(
+    adminUserId: string,
+    action: string,
+    entityId: string,
+    before?: unknown,
+    after?: unknown
+  ) {
+    await this.audit.log({
+      adminUserId,
+      action,
+      entityType: "feed_item",
+      entityId,
+      before,
+      after
     });
   }
 }
 
-function toJson(value: unknown): Prisma.InputJsonValue {
-  return JSON.parse(JSON.stringify(value ?? {})) as Prisma.InputJsonValue;
-}

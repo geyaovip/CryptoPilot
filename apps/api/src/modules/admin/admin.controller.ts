@@ -44,28 +44,32 @@ export class AdminController {
   }
 
   @Post("feed")
-  async createFeed(@Body() dto: CreateAdminFeedDto) {
-    return ok(await this.adminFeedService.create(dto));
+  async createFeed(@Req() req: { user: { id: string } }, @Body() dto: CreateAdminFeedDto) {
+    return ok(await this.adminFeedService.create(dto, req.user.id));
   }
 
   @Patch("feed/:id")
-  async updateFeed(@Param("id") id: string, @Body() dto: UpdateAdminFeedDto) {
-    return ok(await this.adminFeedService.update(id, dto));
+  async updateFeed(
+    @Req() req: { user: { id: string } },
+    @Param("id") id: string,
+    @Body() dto: UpdateAdminFeedDto
+  ) {
+    return ok(await this.adminFeedService.update(id, dto, req.user.id));
   }
 
   @Post("feed/:id/pin")
-  async pinFeed(@Param("id") id: string) {
-    return ok(await this.adminFeedService.pin(id));
+  async pinFeed(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminFeedService.pin(id, req.user.id));
   }
 
   @Post("feed/:id/hide")
-  async hideFeed(@Param("id") id: string) {
-    return ok(await this.adminFeedService.hide(id));
+  async hideFeed(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminFeedService.hide(id, req.user.id));
   }
 
   @Delete("feed/:id")
-  async deleteFeed(@Param("id") id: string) {
-    return ok(await this.adminFeedService.delete(id));
+  async deleteFeed(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminFeedService.delete(id, req.user.id));
   }
 
   @Get("sources")
@@ -74,13 +78,17 @@ export class AdminController {
   }
 
   @Patch("sources/:id")
-  async updateSource(@Param("id") id: string, @Body() dto: UpdateSourceDto) {
-    return ok(await this.adminSourceService.update(id, dto));
+  async updateSource(
+    @Req() req: { user: { id: string } },
+    @Param("id") id: string,
+    @Body() dto: UpdateSourceDto
+  ) {
+    return ok(await this.adminSourceService.update(id, dto, req.user.id));
   }
 
   @Post("sources/:id/retry")
-  async retrySource(@Param("id") id: string) {
-    return ok(await this.adminSourceService.retry(id));
+  async retrySource(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminSourceService.retry(id, req.user.id));
   }
 
   @Get("sources/:id/logs")
@@ -89,8 +97,8 @@ export class AdminController {
   }
 
   @Post("feed/:id/regenerate-ai")
-  async regenerateAi(@Param("id") id: string) {
-    return ok(await this.adminFeedService.regenerateAi(id));
+  async regenerateAi(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminFeedService.regenerateAi(id, req.user.id));
   }
 
   @Get("prompts")
@@ -99,23 +107,27 @@ export class AdminController {
   }
 
   @Post("prompts")
-  async createPrompt(@Body() dto: CreatePromptDto) {
-    return ok(await this.adminPromptService.create(dto));
+  async createPrompt(@Req() req: { user: { id: string } }, @Body() dto: CreatePromptDto) {
+    return ok(await this.adminPromptService.create(dto, req.user.id));
   }
 
   @Patch("prompts/:id")
-  async updatePrompt(@Param("id") id: string, @Body() dto: UpdatePromptDto) {
-    return ok(await this.adminPromptService.update(id, dto.content));
+  async updatePrompt(
+    @Req() req: { user: { id: string } },
+    @Param("id") id: string,
+    @Body() dto: UpdatePromptDto
+  ) {
+    return ok(await this.adminPromptService.update(id, dto.content, req.user.id));
   }
 
   @Patch("prompts/:id/activate")
-  async activatePrompt(@Param("id") id: string) {
-    return ok(await this.adminPromptService.activate(id));
+  async activatePrompt(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminPromptService.activate(id, req.user.id));
   }
 
   @Patch("prompts/:id/archive")
-  async archivePrompt(@Param("id") id: string) {
-    return ok(await this.adminPromptService.archive(id));
+  async archivePrompt(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminPromptService.archive(id, req.user.id));
   }
 
   @Post("prompts/:id/test")
@@ -134,18 +146,26 @@ export class AdminController {
   }
 
   @Post("narratives")
-  async createNarrative(@Body() dto: CreateAdminNarrativeDto) {
-    return ok(await this.adminNarrativeService.create(dto));
+  async createNarrative(@Req() req: { user: { id: string } }, @Body() dto: CreateAdminNarrativeDto) {
+    return ok(await this.adminNarrativeService.create(dto, req.user.id));
   }
 
   @Patch("narratives/:id")
-  async updateNarrative(@Param("id") id: string, @Body() dto: UpdateAdminNarrativeDto) {
-    return ok(await this.adminNarrativeService.update(id, dto));
+  async updateNarrative(
+    @Req() req: { user: { id: string } },
+    @Param("id") id: string,
+    @Body() dto: UpdateAdminNarrativeDto
+  ) {
+    return ok(await this.adminNarrativeService.update(id, dto, req.user.id));
   }
 
   @Post("narratives/:id/merge")
-  async mergeNarrative(@Param("id") id: string, @Body() dto: MergeAdminNarrativeDto) {
-    return ok(await this.adminNarrativeService.merge(id, dto));
+  async mergeNarrative(
+    @Req() req: { user: { id: string } },
+    @Param("id") id: string,
+    @Body() dto: MergeAdminNarrativeDto
+  ) {
+    return ok(await this.adminNarrativeService.merge(id, dto, req.user.id));
   }
 
   @Get("narratives/:id/feeds")
@@ -154,8 +174,8 @@ export class AdminController {
   }
 
   @Post("narratives/:id/regenerate-ai")
-  async regenerateNarrativeAi(@Param("id") id: string) {
-    return ok(await this.adminNarrativeService.regenerateAi(id));
+  async regenerateNarrativeAi(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminNarrativeService.regenerateAi(id, req.user.id));
   }
 
   @Get("tokens")
@@ -164,13 +184,17 @@ export class AdminController {
   }
 
   @Patch("tokens/:id")
-  async updateToken(@Param("id") id: string, @Body() dto: UpdateAdminTokenDto) {
-    return ok(await this.adminTokenService.update(id, dto));
+  async updateToken(
+    @Req() req: { user: { id: string } },
+    @Param("id") id: string,
+    @Body() dto: UpdateAdminTokenDto
+  ) {
+    return ok(await this.adminTokenService.update(id, dto, req.user.id));
   }
 
   @Post("tokens/:id/refresh")
-  async refreshToken(@Param("id") id: string) {
-    return ok(await this.adminTokenService.refresh(id));
+  async refreshToken(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminTokenService.refresh(id, req.user.id));
   }
 
   @Get("kols")
@@ -179,13 +203,17 @@ export class AdminController {
   }
 
   @Post("kols")
-  async createKol(@Body() dto: CreateAdminKolDto) {
-    return ok(await this.adminKolService.create(dto));
+  async createKol(@Req() req: { user: { id: string } }, @Body() dto: CreateAdminKolDto) {
+    return ok(await this.adminKolService.create(dto, req.user.id));
   }
 
   @Patch("kols/:id")
-  async updateKol(@Param("id") id: string, @Body() dto: UpdateAdminKolDto) {
-    return ok(await this.adminKolService.update(id, dto));
+  async updateKol(
+    @Req() req: { user: { id: string } },
+    @Param("id") id: string,
+    @Body() dto: UpdateAdminKolDto
+  ) {
+    return ok(await this.adminKolService.update(id, dto, req.user.id));
   }
 
   @Get("logs")
