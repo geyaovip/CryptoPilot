@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { pickPrimaryNarrative } from "./feed-narrative.util";
 import { compareFeedsForTab, effectiveFeedSortScore } from "./feed-ranking.util";
 import { toFeedSummary } from "./feed.mapper";
@@ -135,7 +135,7 @@ export function planClusterAssignments(feeds: ClusterFeedRow[]): Array<{ ids: st
 
 /** Apply cluster_id and default representative (highest rank in plan.ids[0]). */
 export async function applyClusterPlans(
-  prisma: { feedItem: { updateMany: (args: unknown) => Promise<unknown>; update: (args: unknown) => Promise<unknown> } },
+  prisma: PrismaClient,
   plans: Array<{ ids: string[]; clusterId: string }>
 ): Promise<number> {
   let linked = 0;

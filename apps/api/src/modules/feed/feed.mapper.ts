@@ -17,6 +17,7 @@ type FeedRecord = {
   type: string;
   status: string;
   isPinned: boolean;
+  isClusterLead?: boolean;
   source: { name: string };
   feedItemTokens: { token: { id: string; symbol: string; name: string; priceUsd: unknown; priceChange24h: unknown } }[];
   feedItemNarratives: {
@@ -58,7 +59,8 @@ export function toFeedSummary(feed: FeedRecord, relatedSourceCount = 1): FeedIte
     feed_type: feedType,
     status: feed.status.toLowerCase() as FeedItemSummary["status"],
     is_pinned: feed.isPinned,
-    cluster_id: feed.clusterId ?? null
+    cluster_id: feed.clusterId ?? null,
+    is_cluster_lead: feed.isClusterLead ?? false
   };
 }
 

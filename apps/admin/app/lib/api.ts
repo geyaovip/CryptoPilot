@@ -1,4 +1,6 @@
 import type {
+  AdminFeedClusterListData,
+  AdminFeedClusterSummary,
   AiMonitorResponse,
   FeedItemSummary,
   IngestionLogListResponse,
@@ -102,6 +104,60 @@ export async function hideAdminFeed(id: string) {
 export async function deleteAdminFeed(id: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/feed/${id}`, { method: "DELETE", headers: adminHeaders() });
   if (!response.ok) throw new Error("删除 Feed 失败");
+}
+
+export type AdminFeedClusterFilters = { page?: string; limit?: string; cluster_id?: string };
+
+export async function getAdminFeedClusters(
+  filters: AdminFeedClusterFilters = {}
+): Promise<AdminFeedClusterListData> {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.set(key, value);
+  });
+  const query = params.toString();
+  const response = await apiFetch(`${apiUrl}/api/admin/feed/clusters${query ? `?${query}` : ""}`, {
+    cache: "no-store",
+    headers: adminHeaders()
+  });
+  if (!response.ok) throw new Error("Feed 簇列表加载失败");
+  const body = (await response.json()) as { data: AdminFeedClusterListData };
+  return body.data;
+}
+
+export async function reassignAdminFeedClusters() {
+  const response = await apiFetch(`${apiUrl}/api/admin/feed/clusters/reassign`, {
+    method: "POST",
+    headers: adminHeaders()
+  });
+  if (!response.ok) throw new Error("重新聚类失败");
+  return (await response.json()) as { data: { clusters: number; linked: number } };
+}
+
+export async function setClusterRepresentative(clusterId: string, feedItemId: string) {
+  const response = await apiFetch(`${apiUrl}/api/admin/feed/clusters/${clusterId}/representative`, {
+    method: "PATCH",
+    headers: adminHeaders(),
+    body: JSON.stringify({ feed_item_id: feedItemId })
+  });
+  if (!response.ok) throw new Error("设置代表条失败");
+  return (await response.json()) as { data: AdminFeedClusterSummary };
+}
+
+export async function dissolveAdminFeedCluster(clusterId: string) {
+  const response = await apiFetch(`${apiUrl}/api/admin/feed/clusters/${clusterId}/dissolve`, {
+    method: "POST",
+    headers: adminHeaders()
+  });
+  if (!response.ok) throw new Error("解散簇失败");
+}
+
+export async function removeFeedFromCluster(feedItemId: string) {
+  const response = await apiFetch(`${apiUrl}/api/admin/feed/${feedItemId}/cluster`, {
+    method: "DELETE",
+    headers: adminHeaders()
+  });
+  if (!response.ok) throw new Error("移出簇失败");
 }
 
 export async function updateAdminSource(id: string, status: "active" | "paused") {

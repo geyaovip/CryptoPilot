@@ -198,6 +198,7 @@ export type FeedItemSummary = {
   related_source_count: number;
   /** V0.8 方案 B：同簇多来源（≥2 时填充）。 */
   cluster_id?: string | null;
+  is_cluster_lead?: boolean;
   related_sources?: FeedRelatedSourceRef[];
   related_tokens: TokenSummary[];
   narrative_tags: NarrativeSummary[];
@@ -212,6 +213,24 @@ export type FeedItemSummary = {
   feed_type: FeedType;
   status: FeedStatus;
   is_pinned: boolean;
+};
+
+export type AdminFeedClusterSummary = {
+  cluster_id: string;
+  member_count: number;
+  narrative_names: string[];
+  representative: FeedItemSummary;
+  members: FeedItemSummary[];
+};
+
+export type AdminFeedClusterListData = {
+  items: AdminFeedClusterSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  has_prev: boolean;
+  has_next: boolean;
 };
 
 export type FeedItemDetail = FeedItemSummary & {

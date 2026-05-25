@@ -51,6 +51,8 @@ pnpm test
 pnpm docker:up          # 如未启动
 pnpm db:deploy          # 如有新迁移
 pnpm db:seed            # 仅本地；生产禁止自动 seed 弱账号
+pnpm db:refresh-content # 采集 RSS、标签、Insight、Feed 簇（根目录快捷命令）
+pnpm db:cluster-assign  # 仅重新分配 Feed 轻聚合簇
 ```
 
 API 开发：

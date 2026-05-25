@@ -5,6 +5,7 @@ import { AdminUserMenu } from "./admin-user-menu";
 const navItems: NavItem[] = [
   { label: "仪表盘", href: "/admin/dashboard" },
   { label: "Feed 管理", href: "/admin/feed" },
+  { label: "Feed 簇", href: "/admin/feed-clusters" },
   { label: "Prompt 管理", href: "/admin/prompts" },
   { label: "AI Monitor", href: "/admin/ai-monitor" },
   { label: "Narrative", href: "/admin/narratives" },

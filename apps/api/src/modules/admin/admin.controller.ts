@@ -6,7 +6,9 @@ import { SystemConfigService } from "../system/system-config.service";
 import { AdminDashboardService } from "./admin-dashboard.service";
 import { AdminLogsService } from "./admin-logs.service";
 import { AdminAiMonitorService } from "./admin-ai-monitor.service";
+import { AdminFeedClusterService } from "./admin-feed-cluster.service";
 import { AdminFeedService } from "./admin-feed.service";
+import { AdminFeedClusterQueryDto, SetClusterRepresentativeDto } from "./dto/admin-feed-cluster.dto";
 import { AdminInsightService } from "./admin-insight.service";
 import { AdminKolService } from "./admin-kol.service";
 import { AdminNarrativeService } from "./admin-narrative.service";
@@ -31,6 +33,7 @@ export class AdminController {
     @Inject(SystemConfigService) private readonly systemConfig: SystemConfigService,
     @Inject(AuditService) private readonly audit: AuditService,
     @Inject(AdminFeedService) private readonly adminFeedService: AdminFeedService,
+    @Inject(AdminFeedClusterService) private readonly adminFeedClusterService: AdminFeedClusterService,
     @Inject(AdminSourceService) private readonly adminSourceService: AdminSourceService,
     @Inject(AdminPromptService) private readonly adminPromptService: AdminPromptService,
     @Inject(AdminAiMonitorService) private readonly adminAiMonitorService: AdminAiMonitorService,
@@ -48,6 +51,35 @@ export class AdminController {
   @Get("feed")
   async feed(@Query() query: AdminFeedQueryDto) {
     return ok(await this.adminFeedService.list(query));
+  }
+
+  @Get("feed/clusters")
+  async feedClusters(@Query() query: AdminFeedClusterQueryDto) {
+    return ok(await this.adminFeedClusterService.list(query));
+  }
+
+  @Post("feed/clusters/reassign")
+  async reassignFeedClusters(@Req() req: { user: { id: string } }) {
+    return ok(await this.adminFeedClusterService.reassign(req.user.id));
+  }
+
+  @Patch("feed/clusters/:clusterId/representative")
+  async setClusterRepresentative(
+    @Req() req: { user: { id: string } },
+    @Param("clusterId") clusterId: string,
+    @Body() dto: SetClusterRepresentativeDto
+  ) {
+    return ok(await this.adminFeedClusterService.setRepresentative(clusterId, dto.feed_item_id, req.user.id));
+  }
+
+  @Post("feed/clusters/:clusterId/dissolve")
+  async dissolveFeedCluster(@Req() req: { user: { id: string } }, @Param("clusterId") clusterId: string) {
+    return ok(await this.adminFeedClusterService.dissolve(clusterId, req.user.id));
+  }
+
+  @Delete("feed/:id/cluster")
+  async removeFeedFromCluster(@Req() req: { user: { id: string } }, @Param("id") id: string) {
+    return ok(await this.adminFeedClusterService.removeMember(id, req.user.id));
   }
 
   @Post("feed")
