@@ -17,6 +17,8 @@
     "db:seed": "pnpm --filter @cryptopilot/api db:seed",
     "db:refresh-content": "pnpm --filter @cryptopilot/api db:refresh-content",
     "db:cluster-assign": "pnpm --filter @cryptopilot/api db:cluster-assign",
+    "db:sync-to-server": "bash scripts/sync-local-db-to-server.sh",
+    "release:push": "bash scripts/release-push.sh",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },
