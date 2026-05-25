@@ -25,7 +25,10 @@ export async function getFeed(
   const params = new URLSearchParams({ tab });
   if (cursor) params.set("cursor", cursor);
   if (narrative) params.set("narrative", narrative);
-  if (entity === "feed_item") params.set("entity", "feed_item");
+  if (entity === "feed_item") {
+    params.set("entity", "feed_item");
+    params.set("locale", "zh");
+  }
   const response = await apiFetch(`${apiUrl}/api/feed?${params.toString()}`, {
     cache: "no-store",
     headers: buildUserHeaders()

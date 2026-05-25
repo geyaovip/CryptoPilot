@@ -41,4 +41,9 @@ export class FeedQueryDto {
   @IsOptional()
   @IsIn(["insight", "feed_item"])
   entity?: "insight" | "feed_item";
+
+  /** Prefer Chinese-facing items in sort order (default zh for web). */
+  @IsOptional()
+  @IsIn(["zh", "en", "all"])
+  locale?: "zh" | "en" | "all";
 }

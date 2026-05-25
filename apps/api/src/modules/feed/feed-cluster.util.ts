@@ -20,7 +20,7 @@ export type ClusterFeedRow = {
   type: string;
   status: string;
   isPinned: boolean;
-  source: { name: string };
+  source: { name: string; contentLocale?: string };
   feedItemTokens: { token: { id: string; symbol: string; name: string; priceUsd: unknown; priceChange24h: unknown } }[];
   feedItemNarratives: { narrative: { id: string; name: string; slug: string; heatScore: number; weight: number } }[];
 };
@@ -125,7 +125,7 @@ export function planClusterAssignments(feeds: ClusterFeedRow[]): Array<{ ids: st
 }
 
 export const clusterFeedInclude = {
-  source: true,
+  source: { select: { name: true, contentLocale: true } },
   feedItemTokens: { include: { token: true } },
   feedItemNarratives: { include: { narrative: true } }
 } satisfies Prisma.FeedItemInclude;

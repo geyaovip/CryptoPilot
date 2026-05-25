@@ -296,11 +296,14 @@ export type TrendingResponse = ApiSuccess<{
   narratives: NarrativeSummary[];
 }>;
 
+export type ContentLocale = "zh" | "en";
+
 export type SourceSummary = {
   id: string;
   name: string;
   type: SourceType;
   status: SourceStatus;
+  content_locale: ContentLocale;
   last_success_at: string | null;
   last_error_at: string | null;
   fetch_interval_seconds: number;

@@ -75,10 +75,12 @@ export class FeedAiService {
           continue;
         }
         const output = parsed.data;
+        const headline = output.headline?.trim() || output.summary.trim().slice(0, 50);
         await this.prisma.feedItem.update({
           where: { id: feedItemId },
           data: {
             aiSummary: output.summary,
+            narrativeHook: headline,
             aiKeyReasons: output.key_reasons,
             aiMarketImpact: output.market_impact,
             sentiment: output.sentiment.toUpperCase() as "BULLISH" | "NEUTRAL" | "BEARISH",

@@ -53,7 +53,7 @@ export function AdminSourcesPanel({ items }: { items: SourceSummary[] }) {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
-              {["名称", "类型", "状态", "最近成功", "最近错误", "间隔(秒)", "操作"].map((column) => (
+              {["名称", "语言", "类型", "状态", "最近成功", "最近错误", "间隔(秒)", "操作"].map((column) => (
                 <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
                   {column}
                 </th>
@@ -64,6 +64,9 @@ export function AdminSourcesPanel({ items }: { items: SourceSummary[] }) {
             {items.map((source) => (
               <tr className="border-b border-slate-100" key={source.id}>
                 <td className="px-4 py-3 text-slate-700">{source.name}</td>
+                <td className="px-4 py-3 text-slate-700">
+                  {source.content_locale === "zh" ? "中文" : "英文"}
+                </td>
                 <td className="px-4 py-3 text-slate-700">{source.type}</td>
                 <td className="px-4 py-3 text-slate-700">{source.status}</td>
                 <td className="px-4 py-3 text-slate-700">

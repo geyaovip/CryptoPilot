@@ -3,6 +3,7 @@ import { z } from "zod";
 const sentimentSchema = z.enum(["bullish", "neutral", "bearish"]);
 
 export const feedSummarySchema = z.object({
+  headline: z.string().min(1).max(80).optional(),
   summary: z.string().min(1).max(500),
   key_reasons: z.array(z.string().min(1)).min(1).max(6),
   market_impact: z.string().min(1).max(500),

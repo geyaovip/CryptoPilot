@@ -14,6 +14,13 @@ MVP：
 - Twitter/X API 或替代服务。
 - Reddit。
 
+### 1.1 中文读者（默认）
+
+- 种子数据包含 **中文源**（如律动 BlockBeats 开放快讯 API）与 **英文源**（CoinDesk 等）；`sources.content_locale` 为 `zh` / `en`。
+- 中文源 `source_weight` 更高；列表 API 支持 `locale=zh` 提升中文条目排序。
+- 英文条目经 `feed_summary_prompt` 生成 **中文 headline + summary**（卡片主文案为中文）。
+- Admin → 数据源 可查看「语言」列；可在库中追加可用中文 RSS URL（部分国内站点无公开 RSS，需 API 或运营录入）。
+
 ## 2. 采集频率
 
 - RSS：5 分钟。

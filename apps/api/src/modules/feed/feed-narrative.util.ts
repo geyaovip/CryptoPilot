@@ -1,4 +1,5 @@
 import type { FeedType } from "@cryptopilot/types";
+import { pickChineseDisplayText } from "../ingestion/chinese-content.util";
 
 type LinkedNarrative = {
   id: string;
@@ -10,6 +11,8 @@ type LinkedNarrative = {
 
 type FeedWithNarratives = {
   type: string;
+  title?: string;
+  aiSummary?: string;
   narrativeHook?: string | null;
   feedItemNarratives: { narrative: LinkedNarrative }[];
 };
@@ -24,6 +27,9 @@ export function pickPrimaryNarrative(feed: FeedWithNarratives): LinkedNarrative 
 export function buildNarrativeHook(feed: FeedWithNarratives): string {
   const stored = feed.narrativeHook?.trim();
   if (stored) return stored;
+
+  const chinese = pickChineseDisplayText([feed.aiSummary, feed.title]);
+  if (chinese) return chinese.slice(0, 120);
 
   const primary = pickPrimaryNarrative(feed);
   const name = primary?.name ?? "市场";

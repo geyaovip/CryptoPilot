@@ -1,13 +1,12 @@
-import Parser from "rss-parser";
 import type { FeedType, PrismaClient, Sentiment } from "@prisma/client";
+import { isChineseContent } from "../../src/modules/ingestion/chinese-content.util";
+import { ingestSourceItems } from "../../src/modules/ingestion/ingest-source.util";
 import {
   clusterFeedInclude,
   planClusterAssignments,
   type ClusterFeedRow
 } from "../../src/modules/feed/feed-cluster.util";
 import { pickPrimaryNarrative } from "../../src/modules/feed/feed-narrative.util";
-import { cleanRssItems } from "../../src/modules/ingestion/rss-cleaner";
-import { calculateHeatScore } from "../../src/modules/ingestion/heat-score";
 
 const EXAMPLE_PREFIX = "https://example.com/";
 
@@ -86,7 +85,6 @@ export async function purgeExampleContent(prisma: PrismaClient) {
 }
 
 export async function ingestAllRssSources(prisma: PrismaClient, maxPerSource = 25) {
-  const parser = new Parser();
   const sources = await prisma.source.findMany({
     where: { type: "RSS", status: "ACTIVE", deletedAt: null }
   });
@@ -96,41 +94,12 @@ export async function ingestAllRssSources(prisma: PrismaClient, maxPerSource = 2
 
   for (const source of sources) {
     if (!source.url) continue;
-    const startedAt = new Date();
     try {
-      const feed = await parser.parseURL(source.url);
-      const items = cleanRssItems(feed.items ?? [], startedAt).slice(0, maxPerSource);
-      found += items.length;
-
-      for (const item of items) {
-        const existing = await prisma.feedItem.findUnique({ where: { sourceUrl: item.sourceUrl } });
-        if (existing) continue;
-
-        const heatScore = calculateHeatScore({
-          publishTime: item.publishTime,
-          sourceWeight: source.sourceWeight,
-          tokenMoves: []
-        });
-        const summary = item.content.replace(/\s+/g, " ").trim().slice(0, 220);
-
-        const row = await prisma.feedItem.create({
-          data: {
-            sourceId: source.id,
-            title: item.title,
-            content: item.content,
-            aiSummary: summary || item.title,
-            narrativeHook: null,
-            sourceUrl: item.sourceUrl,
-            publishTime: item.publishTime,
-            heatScore,
-            rankScore: heatScore,
-            status: "PUBLISHED"
-          }
-        });
-
-        await attachHeuristicTags(prisma, row.id, item.title, item.content);
-        created += 1;
-      }
+      const result = await ingestSourceItems(prisma, source, maxPerSource, async (feedItemId, item) => {
+        await attachHeuristicTags(prisma, feedItemId, item.title, item.content);
+      });
+      found += result.items_found;
+      created += result.items_created;
 
       await prisma.source.update({
         where: { id: source.id },
@@ -141,7 +110,7 @@ export async function ingestAllRssSources(prisma: PrismaClient, maxPerSource = 2
         where: { id: source.id },
         data: {
           lastErrorAt: new Date(),
-          errorMessage: error instanceof Error ? error.message : "RSS 采集失败"
+          errorMessage: error instanceof Error ? error.message : "采集失败"
         }
       });
     }
@@ -181,11 +150,27 @@ export async function backfillHeuristicTags(prisma: PrismaClient) {
       status: "PUBLISHED",
       NOT: { sourceUrl: { startsWith: EXAMPLE_PREFIX } }
     },
-    select: { id: true, title: true, content: true }
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      narrativeHook: true,
+      source: { select: { contentLocale: true } }
+    }
   });
 
   for (const feed of feeds) {
     await attachHeuristicTags(prisma, feed.id, feed.title, feed.content);
+    if (
+      !feed.narrativeHook?.trim() &&
+      feed.source.contentLocale === "ZH" &&
+      isChineseContent(feed.title)
+    ) {
+      await prisma.feedItem.update({
+        where: { id: feed.id },
+        data: { narrativeHook: feed.title.slice(0, 120) }
+      });
+    }
   }
 
   const withNarrative = await prisma.feedItem.count({

@@ -25,6 +25,7 @@ export class AdminSourceService {
         name: source.name,
         type: source.type.toLowerCase(),
         status: source.status.toLowerCase(),
+        content_locale: source.contentLocale.toLowerCase() as "zh" | "en",
         last_success_at: source.lastSuccessAt?.toISOString() ?? null,
         last_error_at: source.lastErrorAt?.toISOString() ?? null,
         fetch_interval_seconds: source.fetchIntervalSeconds

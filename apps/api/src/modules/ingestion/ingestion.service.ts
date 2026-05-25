@@ -1,15 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
-import Parser from "rss-parser";
 import { FeedAiService } from "../ai/feed-ai.service";
 import { PrismaService } from "../prisma/prisma.service";
-import { calculateHeatScore } from "./heat-score";
-import { cleanRssItems } from "./rss-cleaner";
+import { ingestSourceItems } from "./ingest-source.util";
 
 @Injectable()
 export class IngestionService {
-  private readonly parser = new Parser();
-
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(FeedAiService) private readonly feedAiService: FeedAiService
@@ -55,54 +51,44 @@ export class IngestionService {
 
     const startedAt = new Date();
     try {
-      const feed = await this.parser.parseURL(source.url);
-      const items = cleanRssItems(feed.items, startedAt);
-      let created = 0;
-
-      for (const item of items) {
-        const result = await this.createFeedFromRssItem(source.id, source.sourceWeight, item);
-        if (result) created += 1;
-      }
+      const result = await ingestSourceItems(this.prisma, source, 25, (feedItemId) => {
+        this.feedAiService.queueGeneration(feedItemId);
+      });
 
       await this.prisma.source.update({
         where: { id: source.id },
         data: { lastSuccessAt: new Date(), errorMessage: null, status: "ACTIVE" }
       });
       await this.prisma.ingestionLog.create({
-        data: { sourceId: source.id, startedAt, finishedAt: new Date(), status: "SUCCESS", itemsFound: items.length, itemsCreated: created }
+        data: {
+          sourceId: source.id,
+          startedAt,
+          finishedAt: new Date(),
+          status: "SUCCESS",
+          itemsFound: result.items_found,
+          itemsCreated: result.items_created
+        }
       });
 
-      return { items_found: items.length, items_created: created };
+      return result;
     } catch (error) {
       await this.prisma.source.update({
         where: { id: source.id },
-        data: { lastErrorAt: new Date(), errorMessage: error instanceof Error ? error.message : "RSS 采集失败" }
+        data: {
+          lastErrorAt: new Date(),
+          errorMessage: error instanceof Error ? error.message : "采集失败"
+        }
       });
       await this.prisma.ingestionLog.create({
-        data: { sourceId: source.id, startedAt, finishedAt: new Date(), status: "FAILED", errorMessage: error instanceof Error ? error.message : "RSS 采集失败" }
+        data: {
+          sourceId: source.id,
+          startedAt,
+          finishedAt: new Date(),
+          status: "FAILED",
+          errorMessage: error instanceof Error ? error.message : "采集失败"
+        }
       });
       throw error;
     }
-  }
-
-  private async createFeedFromRssItem(sourceId: string, sourceWeight: number, item: { title: string; sourceUrl: string; content: string; publishTime: Date }) {
-    const existing = await this.prisma.feedItem.findUnique({ where: { sourceUrl: item.sourceUrl } });
-    if (existing) return null;
-
-    const heatScore = calculateHeatScore({ publishTime: item.publishTime, sourceWeight, tokenMoves: [] });
-    const feed = await this.prisma.feedItem.create({
-      data: {
-        sourceId,
-        title: item.title,
-        content: item.content,
-        aiSummary: item.content.slice(0, 160),
-        sourceUrl: item.sourceUrl,
-        publishTime: item.publishTime,
-        heatScore,
-        rankScore: heatScore
-      }
-    });
-    this.feedAiService.queueGeneration(feed.id);
-    return feed;
   }
 }

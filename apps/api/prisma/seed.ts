@@ -11,19 +11,13 @@ import {
   purgeExampleContent,
   rebuildInsightsFromFeeds
 } from "./lib/real-content";
+import { SOURCE_CATALOG } from "../src/modules/ingestion/source-catalog";
 import { Pool } from "pg";
 
 config({ path: "../../.env" });
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
-
-const rssSources = [
-  ["CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/"],
-  ["Cointelegraph", "https://cointelegraph.com/rss"],
-  ["Decrypt", "https://decrypt.co/feed"],
-  ["The Block", "https://www.theblock.co/rss.xml"]
-] as const;
 
 const tokens = [
   ["BTC", "Bitcoin", "bitcoin", 104250, 2.4],
@@ -95,18 +89,24 @@ async function main() {
   }
 
   await Promise.all(
-    rssSources.map(([name, url]) =>
+    SOURCE_CATALOG.map((entry) =>
       prisma.source.upsert({
-        where: { id: nameToStableId(name) },
-        update: { url, status: "ACTIVE" },
+        where: { id: nameToStableId(entry.name) },
+        update: {
+          url: entry.url,
+          status: "ACTIVE",
+          contentLocale: entry.locale,
+          sourceWeight: entry.sourceWeight
+        },
         create: {
-          id: nameToStableId(name),
-          name,
-          url,
+          id: nameToStableId(entry.name),
+          name: entry.name,
+          url: entry.url,
           type: "RSS",
           status: "ACTIVE",
+          contentLocale: entry.locale,
           fetchIntervalSeconds: 300,
-          sourceWeight: 50
+          sourceWeight: entry.sourceWeight
         }
       })
     )

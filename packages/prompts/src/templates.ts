@@ -19,8 +19,9 @@ export const DEFAULT_PROMPT_CONTENT: Record<MvpPromptKey, string> = {
 相关代币: {{related_tokens}}
 候选叙事: {{narrative_candidates}}
 
-输出 JSON 字段: summary, key_reasons, market_impact, related_tokens, narrative_tags, sentiment。
-sentiment 只能是 bullish、neutral、bearish。summary 不超过 160 个中文字符。必须基于来源，不可编造。`,
+输出 JSON 字段: headline, summary, key_reasons, market_impact, related_tokens, narrative_tags, sentiment。
+headline: 面向中国读者的一句中文标题（<=50 字）；若原文为英文须翻译为自然中文，禁止投资建议。
+sentiment 只能是 bullish、neutral、bearish。summary 不超过 160 个中文字符，须为中文。必须基于来源，不可编造。`,
   narrative_summary_prompt: `总结叙事 {{narrative_name}} ({{narrative_slug}}) 的近期动态。
 相关 Feed: {{related_feed}}
 输出 JSON: summary, key_points, sentiment。

@@ -74,7 +74,7 @@ export function HomeFeedPanel({
   const emptyTitle = view === "signals" ? "暂无聚合信号" : "暂无市场雷达信号";
   const emptyDesc =
     view === "signals"
-      ? "暂无满足条件的 Feed 簇（需至少 2 个来源）。可执行 db:refresh-content 或等待聚类任务。"
+      ? "暂无满足条件的 Feed 簇。请确认已采集中文源（Admin → 数据源），或执行 cd apps/api && pnpm db:refresh-content。"
       : "暂无已发布的 Insight（需至少 2 个来源）。可执行 seed 或等待聚类任务。";
 
   return (

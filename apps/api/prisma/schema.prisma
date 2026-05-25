@@ -38,6 +38,13 @@ enum SourceStatus {
   @@map("source_status")
 }
 
+enum ContentLocale {
+  ZH @map("zh")
+  EN @map("en")
+
+  @@map("content_locale")
+}
+
 enum FeedType {
   NEWS             @map("news")
   NARRATIVE        @map("narrative")
@@ -173,6 +180,7 @@ model Source {
   name                 String          @db.VarChar(255)
   type                 SourceType
   status               SourceStatus    @default(ACTIVE)
+  contentLocale        ContentLocale   @default(EN) @map("content_locale")
   url                  String?
   sourceWeight         Int             @default(50) @map("source_weight")
   fetchIntervalSeconds Int             @default(300) @map("fetch_interval_seconds")
