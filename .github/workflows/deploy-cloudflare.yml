@@ -45,8 +45,14 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Build web worker
+        run: pnpm --filter @cryptopilot/web build:cloudflare
+
       - name: Deploy web worker
         run: pnpm --filter @cryptopilot/web deploy:cloudflare
+
+      - name: Build admin worker
+        run: pnpm --filter @cryptopilot/admin build:cloudflare
 
       - name: Deploy admin worker
         run: pnpm --filter @cryptopilot/admin deploy:cloudflare
