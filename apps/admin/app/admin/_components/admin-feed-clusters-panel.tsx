@@ -114,8 +114,12 @@ export function AdminFeedClustersPanel({
           暂无满足多来源聚合条件的 Feed 簇。可点击「重新自动聚类」刷新聚合结果。
         </Card>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="grid gap-4 2xl:grid-cols-[minmax(780px,1fr)_minmax(420px,480px)]">
           <Card className="overflow-hidden p-0">
+            <div className="border-b border-slate-200 px-4 py-3">
+              <h2 className="text-sm font-semibold text-slate-950">簇列表</h2>
+              <p className="mt-1 text-xs text-slate-500">先在列表中选择一个簇，再在下方查看成员与代表条。</p>
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-[920px] text-left text-sm">
                 <thead className="bg-slate-50 text-slate-500">
@@ -199,12 +203,14 @@ export function AdminFeedClustersPanel({
           </Card>
 
           {selectedCluster ? (
-            <AdminFeedClusterDetailCard
-              cluster={selectedCluster}
-              onDissolve={() => dissolveAdminFeedCluster(selectedCluster.cluster_id)}
-              pending={pending}
-              run={run}
-            />
+            <div className="2xl:sticky 2xl:top-6 2xl:self-start">
+              <AdminFeedClusterDetailCard
+                cluster={selectedCluster}
+                onDissolve={() => dissolveAdminFeedCluster(selectedCluster.cluster_id)}
+                pending={pending}
+                run={run}
+              />
+            </div>
           ) : null}
         </div>
       )}

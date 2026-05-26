@@ -3,6 +3,7 @@ import Parser from "rss-parser";
 import { isChineseContent } from "./chinese-content.util";
 import { fetchBlockBeatsFlashItems, isBlockBeatsSourceUrl } from "./blockbeats-ingest.util";
 import { calculateHeatScore } from "./heat-score";
+import { evaluateFeedQuality } from "./feed-quality.util";
 import { cleanRssItems, type CleanRssItem } from "./rss-cleaner";
 
 const parser = new Parser();
@@ -47,6 +48,9 @@ export async function ingestSourceItems(
   for (const item of items) {
     const existing = await prisma.feedItem.findUnique({ where: { sourceUrl: item.sourceUrl } });
     if (existing) continue;
+
+    const quality = evaluateFeedQuality(item);
+    if (!quality.shouldPublish) continue;
 
     const heatScore = calculateHeatScore({
       publishTime: item.publishTime,

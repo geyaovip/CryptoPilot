@@ -15,7 +15,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:refresh-content": "tsx prisma/refresh-real-content.ts",
-    "db:cluster-assign": "tsx prisma/scripts/assign-clusters.ts"
+    "db:cluster-assign": "tsx prisma/scripts/assign-clusters.ts",
+    "db:hide-low-value-feeds": "tsx prisma/scripts/hide-low-value-feeds.ts"
   },
   "dependencies": {
     "@cryptopilot/config": "workspace:*",
