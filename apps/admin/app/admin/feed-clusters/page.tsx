@@ -1,5 +1,8 @@
 import { AdminFeedClustersPanel } from "../_components/admin-feed-clusters-panel";
+import { AdminShell } from "../_components/admin-shell";
 import { getAdminFeedClusters, type AdminFeedClusterFilters } from "../../lib/api";
+
+export const dynamic = "force-dynamic";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -21,15 +24,17 @@ export default async function AdminFeedClustersPage({ searchParams }: PageProps)
   const data = await getAdminFeedClusters(filters);
 
   return (
-    <AdminFeedClustersPanel
-      filters={filters}
-      hasNext={data.has_next}
-      hasPrev={data.has_prev}
-      items={data.items}
-      page={data.page}
-      pageLimit={data.limit}
-      total={data.total}
-      totalPages={data.total_pages}
-    />
+    <AdminShell>
+      <AdminFeedClustersPanel
+        filters={filters}
+        hasNext={data.has_next}
+        hasPrev={data.has_prev}
+        items={data.items}
+        page={data.page}
+        pageLimit={data.limit}
+        total={data.total}
+        totalPages={data.total_pages}
+      />
+    </AdminShell>
   );
 }

@@ -2,7 +2,6 @@
 
 import type { AdminFeedClusterSummary } from "@cryptopilot/types";
 import { Button, Card } from "@cryptopilot/ui";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { AdminFeedClusterFilters } from "../../lib/api";
@@ -73,9 +72,6 @@ export function AdminFeedClustersPanel({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link className="text-sm text-[#20808D] hover:underline" href="/admin/feed">
-              ← Feed 列表
-            </Link>
             <Button
               disabled={pending}
               onClick={() => run(async () => { await reassignAdminFeedClusters(); }, "已重新自动聚类")}
