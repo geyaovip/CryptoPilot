@@ -28,6 +28,13 @@ describe("evaluateFeedQuality", () => {
     expect(evaluateFeedQuality(digest).shouldPublish).toBe(false);
   });
 
+  it("filters long multi-event titles", () => {
+    const title = "AI叙事双线发酵：NEAR凭隐私+AI升级跳涨28%，DeepSeek加速构建国产AI工具链；Spotify与环球音乐推AI混音工具，传统娱乐巨头正式入场。";
+    expect(evaluateFeedQuality(item(title)).shouldPublish).toBe(false);
+    expect(evaluateFeedQuality(item("NEAR 升级隐私 AI 模块后单日上涨 28%")).shouldPublish).toBe(true);
+    expect(evaluateFeedQuality(item("Nathan Allman, founder and CEO of Ondo Finance, dies unexpectedly")).shouldPublish).toBe(true);
+  });
+
   it("keeps high-value single-event stories", () => {
     expect(evaluateFeedQuality(item("SEC 批准新的现货 ETF 申请")).shouldPublish).toBe(true);
     expect(evaluateFeedQuality(item("DeFi 协议遭攻击损失 1200 万美元")).shouldPublish).toBe(true);

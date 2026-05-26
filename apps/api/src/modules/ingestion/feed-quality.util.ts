@@ -38,13 +38,30 @@ function looksLikeList(text: string): boolean {
   return bulletMatches >= 3 || separatorMatches >= 4;
 }
 
+function looksLikeMultiEventTitle(title: string): boolean {
+  if (/[；;]/.test(title)) return true;
+
+  const chineseCommaCount = title.match(/[，、]/g)?.length ?? 0;
+  const clauseSeparators = title.match(/[，、；]/g)?.length ?? 0;
+  const hasTopicPrefix = /[:：]/.test(title.slice(0, 24));
+  const hasCjk = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(title);
+
+  if (!hasCjk) return false;
+  if (title.length >= 48 && chineseCommaCount >= 2) return true;
+  return title.length >= 56 && hasTopicPrefix && clauseSeparators >= 2;
+}
+
 export function evaluateFeedQuality(item: CleanRssItem): FeedQualityDecision {
   const title = item.title.trim();
   const content = item.content.replace(/\s+/g, " ").trim();
   const combined = `${title}\n${content}`;
 
-  if (hasPattern(title, HIGH_VALUE_PATTERNS)) {
+  if (hasPattern(title, HIGH_VALUE_PATTERNS) && !looksLikeMultiEventTitle(title)) {
     return { shouldPublish: true };
+  }
+
+  if (looksLikeMultiEventTitle(title)) {
+    return { shouldPublish: false, reason: "low_value_multi_event_title" };
   }
 
   if (hasPattern(title, LOW_VALUE_TITLE_PATTERNS)) {
