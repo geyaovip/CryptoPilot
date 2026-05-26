@@ -22,6 +22,20 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     ingest: "blockbeats_flash"
   },
   {
+    name: "PANews",
+    url: "https://www.panewslab.com/rss.xml?type=NEWS&lang=zh",
+    locale: "ZH",
+    sourceWeight: 82,
+    ingest: "rss"
+  },
+  {
+    name: "Cointelegraph 中文",
+    url: "https://cointelegraph-cn.com/rss",
+    locale: "ZH",
+    sourceWeight: 68,
+    ingest: "rss"
+  },
+  {
     name: "CoinDesk",
     url: "https://www.coindesk.com/arc/outboundfeeds/rss/",
     locale: "EN",

@@ -16,7 +16,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:refresh-content": "tsx prisma/refresh-real-content.ts",
     "db:cluster-assign": "tsx prisma/scripts/assign-clusters.ts",
-    "db:hide-low-value-feeds": "tsx prisma/scripts/hide-low-value-feeds.ts"
+    "db:hide-low-value-feeds": "tsx prisma/scripts/hide-low-value-feeds.ts",
+    "db:sync-sources": "tsx prisma/scripts/sync-sources.ts"
   },
   "dependencies": {
     "@cryptopilot/config": "workspace:*",
