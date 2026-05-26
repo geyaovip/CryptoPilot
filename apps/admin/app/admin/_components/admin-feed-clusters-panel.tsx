@@ -8,10 +8,9 @@ import { useState } from "react";
 import type { AdminFeedClusterFilters } from "../../lib/api";
 import {
   dissolveAdminFeedCluster,
-  reassignAdminFeedClusters,
-  removeFeedFromCluster,
-  setClusterRepresentative
+  reassignAdminFeedClusters
 } from "../../lib/api";
+import { AdminFeedClusterDetailCard } from "./admin-feed-cluster-detail-card";
 
 type Props = {
   items: AdminFeedClusterSummary[];
@@ -46,7 +45,8 @@ export function AdminFeedClustersPanel({
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(items[0]?.cluster_id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(items[0]?.cluster_id ?? null);
+  const selectedCluster = items.find((cluster) => cluster.cluster_id === selectedId) ?? items[0] ?? null;
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     setPending(true);
@@ -69,7 +69,7 @@ export function AdminFeedClustersPanel({
           <div>
             <h1 className="text-lg font-semibold text-slate-950">Feed 簇管理</h1>
             <p className="mt-1 text-sm text-slate-500">
-              查看多来源聚合簇、指定代表条（首页卡片主文案来源）、解散簇或移出成员。
+              管理多来源聚合结果：检查簇是否合理、选择首页代表条、移出误归类成员或解散整簇。
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -90,7 +90,7 @@ export function AdminFeedClustersPanel({
 
       <Card className="p-4">
         <form
-          className="flex flex-wrap gap-3"
+          className="grid gap-3 md:grid-cols-[1fr_auto_auto]"
           onSubmit={(event) => {
             event.preventDefault();
             const form = new FormData(event.currentTarget);
@@ -99,7 +99,7 @@ export function AdminFeedClustersPanel({
           }}
         >
           <input
-            className="min-w-[280px] flex-1 rounded-lg border border-slate-200 px-3 py-2 font-mono text-sm"
+            className="rounded-lg border border-slate-200 px-3 py-2 font-mono text-sm"
             defaultValue={filters.cluster_id ?? ""}
             name="cluster_id"
             placeholder="按 cluster_id (UUID) 筛选"
@@ -107,121 +107,107 @@ export function AdminFeedClustersPanel({
           <Button disabled={pending} type="submit">
             筛选
           </Button>
+          <Button disabled={pending} onClick={() => router.push("/admin/feed-clusters")} type="button">
+            重置
+          </Button>
         </form>
       </Card>
 
       {items.length === 0 ? (
         <Card className="p-6 text-sm text-slate-500">暂无 ≥2 条的 Feed 簇。可点击「重新自动聚类」或执行根目录 `pnpm db:cluster-assign`。</Card>
       ) : (
-        items.map((cluster) => (
-          <Card className="overflow-hidden p-0" key={cluster.cluster_id}>
-            <button
-              className="flex w-full items-center justify-between gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 text-left"
-              onClick={() =>
-                setExpandedId(expandedId === cluster.cluster_id ? null : cluster.cluster_id)
-              }
-              type="button"
-            >
-              <div>
-                <p className="font-mono text-xs text-slate-500">{cluster.cluster_id}</p>
-                <p className="mt-1 text-sm font-medium text-slate-900">
-                  {cluster.member_count} 条来源 · {cluster.narrative_names.join("、") || "未打叙事标签"}
-                </p>
-              </div>
-              <span className="text-xs text-slate-500">{expandedId === cluster.cluster_id ? "收起" : "展开"}</span>
-            </button>
-            {expandedId === cluster.cluster_id ? (
-              <div className="space-y-4 p-4">
-                <div className="rounded-lg border border-[#20808D]/20 bg-[#20808D]/5 p-3">
-                  <p className="text-xs font-medium text-[#20808D]">当前代表条（列表主文案）</p>
-                  <p className="mt-1 text-sm text-slate-800">
-                    {cluster.representative.narrative_hook || cluster.representative.ai_summary}
-                  </p>
-                </div>
-                <ul>
-                  {cluster.members.map((member) => (
-                    <li
-                      className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 py-2 last:border-0"
-                      key={member.id}
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <Card className="overflow-hidden p-0">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-slate-500">
+                <tr>
+                  {["簇", "成员", "叙事", "代表来源", "热度", "发布时间", "操作"].map((column) => (
+                    <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
+                      {column}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((cluster) => {
+                  const active = selectedCluster?.cluster_id === cluster.cluster_id;
+                  return (
+                    <tr
+                      className={active ? "border-b border-slate-100 bg-[#20808D]/5 align-top" : "border-b border-slate-100 align-top"}
+                      key={cluster.cluster_id}
                     >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm text-slate-800 line-clamp-2">
-                          {member.narrative_hook || member.ai_summary}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {member.source_name} · {new Date(member.publish_time).toLocaleString("zh-CN")}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 gap-2">
-                        {member.is_cluster_lead || member.id === cluster.representative.id ? (
-                          <span className="rounded-full bg-[#20808D]/10 px-2 py-0.5 text-xs font-medium text-[#20808D]">
-                            代表条
-                          </span>
-                        ) : (
-                          <button
-                            className="text-xs text-[#20808D]"
-                            disabled={pending}
-                            onClick={() =>
-                              run(
-                                () => setClusterRepresentative(cluster.cluster_id, member.id),
-                                "已更新代表条"
-                              )
-                            }
-                            type="button"
-                          >
-                            设为代表
-                          </button>
-                        )}
+                      <td className="px-4 py-3">
                         <button
-                          className="text-xs text-slate-600"
-                          disabled={pending}
-                          onClick={() =>
-                            run(() => removeFeedFromCluster(member.id), "已移出簇")
-                          }
+                          className="font-mono text-xs text-[#20808D] hover:underline"
+                          onClick={() => setSelectedId(cluster.cluster_id)}
                           type="button"
                         >
-                          移出
+                          {cluster.cluster_id.slice(0, 8)}
                         </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                        {active ? <p className="mt-1 text-[11px] text-[#20808D]">当前查看</p> : null}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">{cluster.member_count}</td>
+                      <td className="max-w-[180px] px-4 py-3 text-slate-700">
+                        {cluster.narrative_names.length > 0 ? cluster.narrative_names.join("、") : "未打叙事标签"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">{cluster.representative.source_name}</td>
+                      <td className="px-4 py-3 text-slate-700">{cluster.representative.heat_score}</td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {new Date(cluster.representative.publish_time).toLocaleString("zh-CN")}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button className="text-[#20808D]" onClick={() => setSelectedId(cluster.cluster_id)} type="button">
+                            查看
+                          </button>
+                          <button
+                            className="text-red-600"
+                            disabled={pending}
+                            onClick={() => run(() => dissolveAdminFeedCluster(cluster.cluster_id), "簇已解散")}
+                            type="button"
+                          >
+                            解散
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
+              <p className="text-sm text-slate-600">
+                共 {total} 个簇 · 第 {page}/{totalPages || 1} 页
+              </p>
+              <div className="flex gap-2">
                 <Button
-                  disabled={pending}
-                  onClick={() =>
-                    run(() => dissolveAdminFeedCluster(cluster.cluster_id), "簇已解散")
-                  }
+                  disabled={pending || !hasPrev}
+                  onClick={() => router.push(`/admin/feed-clusters${buildQuery(filters, page - 1)}`)}
                   type="button"
                 >
-                  解散此簇
+                  上一页
+                </Button>
+                <Button
+                  disabled={pending || !hasNext}
+                  onClick={() => router.push(`/admin/feed-clusters${buildQuery(filters, page + 1)}`)}
+                  type="button"
+                >
+                  下一页
                 </Button>
               </div>
-            ) : null}
+            </div>
           </Card>
-        ))
-      )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-slate-600">
-          共 {total} 个簇 · 第 {page}/{totalPages || 1} 页
-        </p>
-        <div className="flex gap-2">
-          <Button
-            disabled={pending || !hasPrev}
-            onClick={() => router.push(`/admin/feed-clusters${buildQuery(filters, page - 1)}`)}
-            type="button"
-          >
-            上一页
-          </Button>
-          <Button
-            disabled={pending || !hasNext}
-            onClick={() => router.push(`/admin/feed-clusters${buildQuery(filters, page + 1)}`)}
-            type="button"
-          >
-            下一页
-          </Button>
+          {selectedCluster ? (
+            <AdminFeedClusterDetailCard
+              cluster={selectedCluster}
+              onDissolve={() => dissolveAdminFeedCluster(selectedCluster.cluster_id)}
+              pending={pending}
+              run={run}
+            />
+          ) : null}
         </div>
-      </div>
+      )}
     </div>
   );
 }
