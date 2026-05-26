@@ -41,7 +41,7 @@ export default async function HomePage({
           <Card className="border-[#D9D5C9] bg-white/90 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
             <HomeHeader />
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5F6868]">
-              市场雷达由多条来源聚合为 Insight；主文案为 AI 解读，每条至少 2 个可点击来源。登录用户推荐会结合叙事热度与关注列表。
+              每天为你筛出值得关注的市场变化：优先展示多来源验证的 AI 解读，也可切换查看原始信号流。
             </p>
             {activeNarrative ? (
               <p className="mt-2 text-sm text-[#102A2C]">
@@ -85,8 +85,8 @@ export default async function HomePage({
         </section>
         <aside className="hidden space-y-4 lg:block">
           <Card className="border-[#D9D5C9] bg-[#F7F5EE]">
-            <h2 className="text-sm font-semibold text-[#102A2C]">市场面板</h2>
-            <p className="mt-2 text-sm leading-6 text-[#5F6868]">BTC、ETH 与叙事信息。</p>
+            <h2 className="text-sm font-semibold text-[#102A2C]">市场快照</h2>
+            <p className="mt-2 text-sm leading-6 text-[#5F6868]">重点资产的 24h 表现，用于快速感知市场温度。</p>
             <div className="mt-4 space-y-2">
               {trending.tokens.slice(0, 5).map((item) => (
                 <div className="rounded-xl bg-white px-3 py-2 text-sm text-[#5F6868]" key={item.id}>

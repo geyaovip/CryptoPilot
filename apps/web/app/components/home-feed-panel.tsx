@@ -8,7 +8,7 @@ import { FeedCard } from "./feed-card";
 import { InsightCard } from "./insight-card";
 
 const tabs: Array<{ id: FeedTab; label: string }> = [
-  { id: "for_you", label: "推荐" },
+  { id: "for_you", label: "为你精选" },
   { id: "latest", label: "最新" },
   { id: "breaking", label: "突发" }
 ];
@@ -71,11 +71,11 @@ export function HomeFeedPanel({
   };
 
   const list = view === "signals" ? signalItems : insightItems;
-  const emptyTitle = view === "signals" ? "暂无聚合信号" : "暂无市场雷达信号";
+  const emptyTitle = view === "signals" ? "暂无可展示信号" : "暂无市场雷达更新";
   const emptyDesc =
     view === "signals"
-      ? "暂无满足条件的 Feed 簇。请确认已采集中文源（Admin → 数据源），或执行 cd apps/api && pnpm db:refresh-content。"
-      : "暂无已发布的 Insight（需至少 2 个来源）。可执行 seed 或等待聚类任务。";
+      ? "当前筛选条件下还没有新的市场信号。你可以切换到最新动态，或稍后回来查看。"
+      : "当前还没有足够可靠的多来源更新。我们会在市场出现更明确变化时展示。";
 
   return (
     <section className="space-y-4">
@@ -87,7 +87,7 @@ export function HomeFeedPanel({
           onClick={() => switchView("insight")}
           type="button"
         >
-          市场雷达
+          AI 解读
         </button>
         <button
           className={`rounded-full px-4 py-2 text-sm ${
@@ -96,7 +96,7 @@ export function HomeFeedPanel({
           onClick={() => switchView("signals")}
           type="button"
         >
-          信号流（聚合）
+          信号流
         </button>
       </div>
 

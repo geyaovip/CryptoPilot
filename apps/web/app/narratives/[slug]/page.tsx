@@ -38,13 +38,13 @@ export default async function NarrativeDetailPage({ params }: { params: Promise<
             className="mt-4 inline-block text-sm font-medium text-[#102A2C] underline"
             href={`/home?narrative=${narrative.slug}`}
           >
-            在首页查看该叙事相关 Feed →
+            查看该叙事的最新动态 →
           </Link>
         </Card>
 
         {narrative.top_tokens.length > 0 ? (
           <Card className="border-[#D9D5C9] p-6">
-            <h2 className="text-sm font-semibold text-[#102A2C]">Top Tokens</h2>
+            <h2 className="text-sm font-semibold text-[#102A2C]">相关资产</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {narrative.top_tokens.map((token) => (
                 <span
@@ -82,7 +82,7 @@ export default async function NarrativeDetailPage({ params }: { params: Promise<
 
         {narrative.top_sources.length > 0 ? (
           <Card className="border-[#D9D5C9] p-6">
-            <h2 className="text-sm font-semibold text-[#102A2C]">Top Sources</h2>
+            <h2 className="text-sm font-semibold text-[#102A2C]">主要来源</h2>
             <ul className="mt-3 space-y-2 text-sm text-[#5F6868]">
               {narrative.top_sources.map((source) => (
                 <li className="flex justify-between gap-4" key={source.source_name}>
@@ -95,7 +95,7 @@ export default async function NarrativeDetailPage({ params }: { params: Promise<
         ) : null}
 
         <Card className="border-[#D9D5C9] p-6">
-          <h2 className="text-sm font-semibold text-[#102A2C]">相关 Feed</h2>
+          <h2 className="text-sm font-semibold text-[#102A2C]">相关动态</h2>
           {narrative.related_feed.length > 0 ? (
             <div className="mt-4 space-y-3">
               {narrative.related_feed.map((item) => (
@@ -106,7 +106,7 @@ export default async function NarrativeDetailPage({ params }: { params: Promise<
             <div className="mt-4">
               <EmptyState
                 description="该叙事下暂无已发布 Feed，可稍后再看或从首页浏览全站动态。"
-                title="暂无相关报道"
+                title="暂无相关动态"
               />
             </div>
           )}

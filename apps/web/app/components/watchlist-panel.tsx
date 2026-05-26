@@ -15,6 +15,13 @@ import {
 
 type Tab = "all" | "token" | "narrative" | "kol";
 
+const tabLabels: Record<Tab, string> = {
+  all: "全部",
+  token: "资产",
+  narrative: "叙事",
+  kol: "观点源"
+};
+
 export function WatchlistPanel({ initialItems }: { initialItems: WatchlistItemView[] }) {
   const [items, setItems] = useState(initialItems);
   const [tab, setTab] = useState<Tab>("all");
@@ -70,8 +77,8 @@ export function WatchlistPanel({ initialItems }: { initialItems: WatchlistItemVi
     return (
       <EmptyState
         title="还没有关注对象"
-        description="可从 Token、叙事或 KOL 开始添加关注，便于在首页获得更相关的 Feed 排序。"
-        actionLabel={busy ? "处理中..." : "添加示例叙事"}
+        description="关注资产或市场叙事后，首页会优先展示更相关的市场变化。"
+        actionLabel={busy ? "处理中..." : "添加热门叙事"}
         onAction={() => void quickAdd("narrative")}
       />
     );
@@ -89,7 +96,7 @@ export function WatchlistPanel({ initialItems }: { initialItems: WatchlistItemVi
             onClick={() => setTab(value)}
             type="button"
           >
-            {value === "all" ? "全部" : value}
+            {tabLabels[value]}
           </button>
         ))}
       </div>
@@ -97,7 +104,7 @@ export function WatchlistPanel({ initialItems }: { initialItems: WatchlistItemVi
         <Card className="border-[#D9D5C9] p-5" key={item.id}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-wide text-[#5F6868]">{item.target_type}</p>
+              <p className="text-xs tracking-wide text-[#5F6868]">{tabLabels[item.target_type]}</p>
               <h2 className="text-lg font-semibold text-[#102A2C]">{item.name}</h2>
               {item.subtitle ? <p className="text-sm text-[#5F6868]">{item.subtitle}</p> : null}
               {item.latest_update ? <p className="mt-2 text-sm text-[#5F6868]">{item.latest_update}</p> : null}
@@ -105,7 +112,7 @@ export function WatchlistPanel({ initialItems }: { initialItems: WatchlistItemVi
             </div>
             <div className="text-right text-sm text-[#5F6868]">
               {item.change_24h !== null ? <p>24h {item.change_24h}</p> : null}
-              <p className="mt-1">{item.notifications_enabled ? "通知开" : "通知关"}</p>
+              <p className="mt-1">{item.notifications_enabled ? "已开启提醒" : "未开启提醒"}</p>
             </div>
           </div>
           <div className="mt-4 flex gap-2">

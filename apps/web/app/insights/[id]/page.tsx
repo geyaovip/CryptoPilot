@@ -40,7 +40,9 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
           </Card>
           <Card className="border-[#D9D5C9] bg-white/95 p-5">
             <h2 className="text-sm font-semibold">市场影响</h2>
-            <p className="mt-3 text-sm text-[#5F6868]">{insight.market_impact ?? "暂无"}</p>
+            <p className="mt-3 text-sm text-[#5F6868]">
+              {insight.market_impact ?? "当前来源还不足以形成稳定判断，建议结合后续更新继续观察。"}
+            </p>
           </Card>
         </div>
 
@@ -59,7 +61,7 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
         </Card>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">信号（Feed Items）</h2>
+          <h2 className="text-lg font-semibold">相关市场信号</h2>
           {insight.signals.map((signal) => (
             <FeedCard feed={signal} key={signal.id} />
           ))}

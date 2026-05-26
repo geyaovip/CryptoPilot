@@ -13,7 +13,7 @@ export function NarrativeListCard({ item }: { item: NarrativeListItem }) {
           <Link className="text-lg font-semibold text-[#102A2C] hover:underline" href={`/narratives/${item.slug}`}>
             {item.name}
           </Link>
-          <p className="mt-2 text-sm leading-6 text-[#5F6868]">{item.ai_summary ?? "暂无 AI 摘要"}</p>
+          <p className="mt-2 text-sm leading-6 text-[#5F6868]">{item.ai_summary ?? "这条叙事正在整理中，稍后会补充更多背景。"}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <span className="rounded-full bg-[#F7F5EE] px-2 py-1 text-xs text-[#5F6868]">热度 {item.heat_score}</span>
@@ -27,7 +27,7 @@ export function NarrativeListCard({ item }: { item: NarrativeListItem }) {
       </div>
       <div className="mt-3 flex flex-wrap gap-2 text-xs text-[#5F6868]">
         <span>24h +{item.trend_score_24h}</span>
-        <span>讨论 {item.feed_count_24h}</span>
+        <span>近 24h {item.feed_count_24h} 条更新</span>
         <span>{item.sentiment}</span>
       </div>
       {item.top_tokens.length > 0 ? (

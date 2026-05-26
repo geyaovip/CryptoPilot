@@ -99,7 +99,7 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
             className="ml-1 font-medium text-[#20808D]"
             href={`/search?q=${encodeURIComponent(`关于「${summary.slice(0, 80)}」的背景与影响？`)}`}
           >
-            去 Ask AI
+            去 AI 研究
           </Link>
         </p>
       </article>

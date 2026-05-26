@@ -20,7 +20,7 @@ export default async function NarrativesPage({
       <div className="space-y-5">
         <Card className="border-[#D9D5C9] bg-white/90 p-6">
           <h1 className="text-2xl font-semibold text-[#102A2C]">市场叙事</h1>
-          <p className="mt-2 text-sm text-[#5F6868]">按热度、增速与讨论量浏览叙事线索（非投资建议）。</p>
+          <p className="mt-2 text-sm text-[#5F6868]">追踪正在被市场反复讨论的主题，按热度、升温速度与讨论量排序。</p>
           <div className="mt-4">
             <NarrativeSortTabs active={sort} />
           </div>
