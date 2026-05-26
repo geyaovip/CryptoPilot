@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { MobileBottomNav } from "./mobile-bottom-nav";
 
 export type NavItem = {
   label: string;
@@ -52,40 +53,7 @@ export function AppShell({ title, navItems, children, className, renderSidebarFo
         </aside>
         <main className={cn("flex-1 p-4 pb-24 md:p-6", className)}>{children}</main>
       </div>
-      <nav
-        className={cn(
-          "fixed inset-x-0 bottom-0 grid grid-cols-4 border-t px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden",
-          isPerplexity
-            ? "border-[#D9D5C9] bg-[#FCFCF9]/95 shadow-[0_-10px_30px_rgba(16,42,44,0.07)] backdrop-blur"
-            : "border-slate-200 bg-white"
-        )}
-      >
-        {navItems.slice(0, 4).map((item) => (
-          <a
-            className={cn(
-              "flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-center text-[11px] font-medium transition",
-              isPerplexity
-                ? "text-[#5F6868] hover:bg-[#F7F5EE] hover:text-[#102A2C]"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
-            )}
-            href={item.href}
-            key={item.href}
-          >
-            {item.icon ? (
-              <span
-                aria-hidden
-                className={cn(
-                  "flex h-6 w-6 items-center justify-center rounded-full",
-                  isPerplexity ? "text-[#20808D]" : "text-slate-700"
-                )}
-              >
-                {item.icon}
-              </span>
-            ) : null}
-            <span>{item.label}</span>
-          </a>
-        ))}
-      </nav>
+      <MobileBottomNav navItems={navItems} variant={variant} />
     </div>
   );
 }
