@@ -267,7 +267,7 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
 
 export async function getAiMonitor() {
   const response = await apiFetch(`${apiUrl}/api/admin/ai-monitor`, { cache: "no-store", headers: adminHeaders() });
-  if (!response.ok) throw new Error("AI Monitor 加载失败");
+  if (!response.ok) throw new Error("AI 监控数据加载失败");
   const body = (await response.json()) as AiMonitorResponse;
   return body.data;
 }
@@ -293,7 +293,7 @@ export async function getAdminNarratives() {
 
 export async function getAdminTokens() {
   const response = await apiFetch(`${apiUrl}/api/admin/tokens`, { cache: "no-store", headers: adminHeaders() });
-  if (!response.ok) throw new Error("Token 管理数据加载失败");
+  if (!response.ok) throw new Error("资产管理数据加载失败");
   const body = (await response.json()) as {
     data: { items: { id: string; symbol: string; name: string; is_active: boolean }[] };
   };
@@ -302,7 +302,7 @@ export async function getAdminTokens() {
 
 export async function getAdminKols() {
   const response = await apiFetch(`${apiUrl}/api/admin/kols`, { cache: "no-store", headers: adminHeaders() });
-  if (!response.ok) throw new Error("KOL 管理数据加载失败");
+  if (!response.ok) throw new Error("观点源管理数据加载失败");
   const body = (await response.json()) as {
     data: { items: { id: string; name: string; handle: string; is_active: boolean }[] };
   };

@@ -7,7 +7,7 @@ export function AdminAiMonitorPanel({ stats }: { stats: AiMonitorStats }) {
   return (
     <div className="space-y-4">
       <Card className="p-4">
-        <h1 className="text-lg font-semibold text-slate-900">AI Monitor</h1>
+        <h1 className="text-lg font-semibold text-slate-900">AI 监控</h1>
         <p className="mt-1 text-sm text-slate-600">今日 LLM 调用与成本概览。</p>
       </Card>
 
@@ -19,7 +19,7 @@ export function AdminAiMonitorPanel({ stats }: { stats: AiMonitorStats }) {
       </div>
 
       <Card className="p-4">
-        <p className="text-sm text-slate-700">Provider 错误率：{(stats.provider_error_rate * 100).toFixed(1)}%</p>
+        <p className="text-sm text-slate-700">模型服务错误率：{(stats.provider_error_rate * 100).toFixed(1)}%</p>
         <h2 className="mt-4 text-sm font-semibold text-slate-900">Prompt 调用分布</h2>
         <ul className="mt-2 space-y-1 text-sm text-slate-700">
           {stats.prompt_distribution.map((item) => (

@@ -110,67 +110,71 @@ export function AdminFeedClustersPanel({
       </Card>
 
       {items.length === 0 ? (
-        <Card className="p-6 text-sm text-slate-500">暂无 ≥2 条的 Feed 簇。可点击「重新自动聚类」或执行根目录 `pnpm db:cluster-assign`。</Card>
+        <Card className="p-6 text-sm text-slate-500">
+          暂无满足多来源聚合条件的 Feed 簇。可点击「重新自动聚类」刷新聚合结果。
+        </Card>
       ) : (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
           <Card className="overflow-hidden p-0">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-500">
-                <tr>
-                  {["簇", "成员", "叙事", "代表来源", "热度", "发布时间", "操作"].map((column) => (
-                    <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((cluster) => {
-                  const active = selectedCluster?.cluster_id === cluster.cluster_id;
-                  return (
-                    <tr
-                      className={active ? "border-b border-slate-100 bg-[#20808D]/5 align-top" : "border-b border-slate-100 align-top"}
-                      key={cluster.cluster_id}
-                    >
-                      <td className="px-4 py-3">
-                        <button
-                          className="font-mono text-xs text-[#20808D] hover:underline"
-                          onClick={() => setSelectedId(cluster.cluster_id)}
-                          type="button"
-                        >
-                          {cluster.cluster_id.slice(0, 8)}
-                        </button>
-                        {active ? <p className="mt-1 text-[11px] text-[#20808D]">当前查看</p> : null}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">{cluster.member_count}</td>
-                      <td className="max-w-[180px] px-4 py-3 text-slate-700">
-                        {cluster.narrative_names.length > 0 ? cluster.narrative_names.join("、") : "未打叙事标签"}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">{cluster.representative.source_name}</td>
-                      <td className="px-4 py-3 text-slate-700">{cluster.representative.heat_score}</td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {new Date(cluster.representative.publish_time).toLocaleString("zh-CN")}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
-                          <button className="text-[#20808D]" onClick={() => setSelectedId(cluster.cluster_id)} type="button">
-                            查看
-                          </button>
+            <div className="overflow-x-auto">
+              <table className="min-w-[920px] text-left text-sm">
+                <thead className="bg-slate-50 text-slate-500">
+                  <tr>
+                    {["簇", "成员", "叙事", "代表来源", "热度", "发布时间", "操作"].map((column) => (
+                      <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
+                        {column}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((cluster) => {
+                    const active = selectedCluster?.cluster_id === cluster.cluster_id;
+                    return (
+                      <tr
+                        className={active ? "border-b border-slate-100 bg-[#20808D]/5 align-top" : "border-b border-slate-100 align-top"}
+                        key={cluster.cluster_id}
+                      >
+                        <td className="px-4 py-3">
                           <button
-                            className="text-red-600"
-                            disabled={pending}
-                            onClick={() => run(() => dissolveAdminFeedCluster(cluster.cluster_id), "簇已解散")}
+                            className="font-mono text-xs text-[#20808D] hover:underline"
+                            onClick={() => setSelectedId(cluster.cluster_id)}
                             type="button"
                           >
-                            解散
+                            {cluster.cluster_id.slice(0, 8)}
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                          {active ? <p className="mt-1 text-[11px] text-[#20808D]">当前查看</p> : null}
+                        </td>
+                        <td className="px-4 py-3 text-slate-700">{cluster.member_count}</td>
+                        <td className="max-w-[180px] px-4 py-3 text-slate-700">
+                          {cluster.narrative_names.length > 0 ? cluster.narrative_names.join("、") : "未打叙事标签"}
+                        </td>
+                        <td className="px-4 py-3 text-slate-700">{cluster.representative.source_name}</td>
+                        <td className="px-4 py-3 text-slate-700">{cluster.representative.heat_score}</td>
+                        <td className="px-4 py-3 text-slate-700">
+                          {new Date(cluster.representative.publish_time).toLocaleString("zh-CN")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            <button className="text-[#20808D]" onClick={() => setSelectedId(cluster.cluster_id)} type="button">
+                              查看
+                            </button>
+                            <button
+                              className="text-red-600"
+                              disabled={pending}
+                              onClick={() => run(() => dissolveAdminFeedCluster(cluster.cluster_id), "簇已解散")}
+                              type="button"
+                            >
+                              解散
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
               <p className="text-sm text-slate-600">
                 共 {total} 个簇 · 第 {page}/{totalPages || 1} 页

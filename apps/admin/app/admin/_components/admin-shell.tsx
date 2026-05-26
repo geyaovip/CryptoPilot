@@ -7,10 +7,10 @@ const navItems: NavItem[] = [
   { label: "Feed 管理", href: "/admin/feed" },
   { label: "Feed 簇", href: "/admin/feed-clusters" },
   { label: "Prompt 管理", href: "/admin/prompts" },
-  { label: "AI Monitor", href: "/admin/ai-monitor" },
-  { label: "Narrative", href: "/admin/narratives" },
-  { label: "Token", href: "/admin/tokens" },
-  { label: "KOL", href: "/admin/kols" },
+  { label: "AI 监控", href: "/admin/ai-monitor" },
+  { label: "叙事管理", href: "/admin/narratives" },
+  { label: "资产管理", href: "/admin/tokens" },
+  { label: "观点源", href: "/admin/kols" },
   { label: "数据源", href: "/admin/sources" },
   { label: "用户管理", href: "/admin/users" },
   { label: "日志中心", href: "/admin/logs" },
@@ -23,6 +23,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       className="bg-white"
       title="CryptoPilot 管理后台"
       navItems={navItems}
+      mobileNavMode="drawer"
       renderSidebarFooter={() => <AdminUserMenu />}
     >
       {children}

@@ -83,7 +83,7 @@ export function AdminDashboardPanel({ data }: AdminDashboardPanelProps) {
         <p className="text-sm text-slate-600">
           更详细的 LLM 调用与错误列表请查看{" "}
           <Link className="text-[#20808D] hover:underline" href="/admin/ai-monitor">
-            AI Monitor
+            AI 监控
           </Link>
           ；系统日志请查看{" "}
           <Link className="text-[#20808D] hover:underline" href="/admin/logs">

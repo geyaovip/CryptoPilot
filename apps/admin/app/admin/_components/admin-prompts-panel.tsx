@@ -113,7 +113,11 @@ export function AdminPromptsPanel({ items }: AdminPromptsPanelProps) {
                 void run(async () => {
                   const target = latestDraft ?? active;
                   if (!target) return;
-                  const result = await testPrompt(target.id, { query: "ETH", context: "demo", sources: "demo" });
+                  const result = await testPrompt(target.id, {
+                    query: "ETH",
+                    context: "latest market context",
+                    sources: "source: CryptoPilot"
+                  });
                   setMessage(`测试渲染成功（${result.rendered.length} 字符）`);
                 }, "测试完成")
               }

@@ -10,7 +10,7 @@ export default async function AdminKolsPage() {
   return (
     <AdminShell>
       <div className="space-y-4">
-        <h1 className="text-2xl font-semibold text-slate-950">KOL 管理</h1>
+        <h1 className="text-2xl font-semibold text-slate-950">观点源管理</h1>
         <AdminKolActions items={data.items} />
         {data.items.map((item) => (
           <Card className="p-4" key={item.id}>

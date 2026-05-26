@@ -10,7 +10,7 @@ export default async function AdminTokensPage() {
   return (
     <AdminShell>
       <div className="space-y-4">
-        <h1 className="text-2xl font-semibold text-slate-950">Token 管理</h1>
+        <h1 className="text-2xl font-semibold text-slate-950">资产管理</h1>
         <AdminTokenActions items={data.items} />
         {data.items.map((item) => (
           <Card className="p-4" key={item.id}>

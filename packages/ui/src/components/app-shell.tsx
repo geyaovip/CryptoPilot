@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { MobileBottomNav } from "./mobile-bottom-nav";
+import { MobileDrawerNav } from "./mobile-drawer-nav";
 
 export type NavItem = {
   label: string;
@@ -17,13 +18,25 @@ type AppShellProps = {
   /** 工厂函数：桌面与移动端各渲染一份，避免同一 React 节点被挂载两次。 */
   renderSidebarFooter?: () => ReactNode;
   variant?: "default" | "perplexity";
+  mobileNavMode?: "bottom" | "drawer" | "none";
 };
 
-export function AppShell({ title, navItems, children, className, renderSidebarFooter, variant = "default" }: AppShellProps) {
+export function AppShell({
+  title,
+  navItems,
+  children,
+  className,
+  renderSidebarFooter,
+  variant = "default",
+  mobileNavMode = "bottom"
+}: AppShellProps) {
   const isPerplexity = variant === "perplexity";
 
   return (
     <div className={cn("min-h-screen", isPerplexity ? "bg-[#FCFCF9] text-[#102A2C]" : "bg-white text-slate-950")}>
+      {mobileNavMode === "drawer" ? (
+        <MobileDrawerNav navItems={navItems} renderFooter={renderSidebarFooter} title={title} variant={variant} />
+      ) : null}
       <div className="mx-auto flex min-h-screen w-full max-w-7xl">
         <aside
           className={cn(
@@ -52,9 +65,9 @@ export function AppShell({ title, navItems, children, className, renderSidebarFo
             <div className="mt-auto hidden shrink-0 pt-4 md:block">{renderSidebarFooter()}</div>
           ) : null}
         </aside>
-        <main className={cn("flex-1 p-4 pb-24 md:p-6", className)}>{children}</main>
+        <main className={cn("flex-1 p-4 md:p-6", mobileNavMode === "bottom" ? "pb-24" : "pb-6", className)}>{children}</main>
       </div>
-      <MobileBottomNav navItems={navItems} variant={variant} />
+      {mobileNavMode === "bottom" ? <MobileBottomNav navItems={navItems} variant={variant} /> : null}
     </div>
   );
 }
