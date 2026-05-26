@@ -34,6 +34,7 @@ function row(
     feedItemTokens: [],
     feedItemNarratives: [
       {
+        narrativeId: "n1",
         narrative: { id: "n1", name: slug, slug, heatScore: 50, weight: 50 }
       }
     ]

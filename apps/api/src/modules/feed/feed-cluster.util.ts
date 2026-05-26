@@ -22,8 +22,14 @@ export type ClusterFeedRow = {
   status: string;
   isPinned: boolean;
   source: { name: string; contentLocale?: string };
-  feedItemTokens: { token: { id: string; symbol: string; name: string; priceUsd: unknown; priceChange24h: unknown } }[];
-  feedItemNarratives: { narrative: { id: string; name: string; slug: string; heatScore: number; weight: number } }[];
+  feedItemTokens: {
+    tokenId: string;
+    token: { id: string; symbol: string; name: string; priceUsd: unknown; priceChange24h: unknown };
+  }[];
+  feedItemNarratives: {
+    narrativeId: string;
+    narrative: { id: string; name: string; slug: string; heatScore: number; weight: number };
+  }[];
 };
 
 export function clusterBucketKey(feed: ClusterFeedRow): string {

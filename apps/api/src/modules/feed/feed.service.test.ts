@@ -60,6 +60,7 @@ describe("FeedService", () => {
     const result = await service.list({ limit: 10, entity: "feed_item", tab: "latest" });
 
     expect(result.entity).toBe("feed_item");
+    if (result.entity !== "feed_item") throw new Error("Expected feed_item response");
     expect(result.aggregation).toBe("cluster");
     expect(result.items).toHaveLength(1);
     expect(result.items[0].related_source_count).toBe(2);

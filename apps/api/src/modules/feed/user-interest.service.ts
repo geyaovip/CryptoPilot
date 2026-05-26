@@ -1,5 +1,4 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
 export type FeedInterestContext = {
@@ -43,13 +42,11 @@ export class UserInterestService {
   }
 
   scoreFeed(
-    feed: Prisma.FeedItemGetPayload<{
-      include: {
-        source: true;
-        feedItemTokens: { include: { token: true } };
-        feedItemNarratives: { include: { narrative: true } };
-      };
-    }>,
+    feed: {
+      source: { name: string };
+      feedItemTokens: { tokenId: string }[];
+      feedItemNarratives: { narrativeId: string }[];
+    },
     context: FeedInterestContext | null
   ): number {
     if (!context) return 0;

@@ -108,7 +108,7 @@ export class NarrativesService {
       followedIds,
       watchlistMap,
       heatChart: { h24, d7, d30 },
-      relatedFeed: related.map(toFeedSummary),
+      relatedFeed: related,
       topSources
     });
     return {
