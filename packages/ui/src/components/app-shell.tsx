@@ -6,6 +6,7 @@ export type NavItem = {
   label: string;
   href: string;
   icon?: ReactNode;
+  activeIcon?: ReactNode;
 };
 
 type AppShellProps = {

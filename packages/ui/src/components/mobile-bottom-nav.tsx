@@ -40,23 +40,17 @@ function MobileNavLink({ currentPath, isPerplexity, item }: { currentPath: strin
     <a
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-center text-[11px] font-medium transition",
+        "flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-center text-[11px] font-medium transition",
         isPerplexity
           ? isActive
-            ? "bg-[#E7F3F1] text-[#102A2C] shadow-[inset_0_0_0_1px_rgba(32,128,141,0.16)]"
+            ? "text-[#102A2C]"
             : "text-[#5F6868] hover:bg-[#F7F5EE] hover:text-[#102A2C]"
           : isActive
-            ? "bg-slate-100 text-slate-950"
+            ? "text-slate-950"
             : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
       )}
       href={item.href}
     >
-      {isActive ? (
-        <span
-          aria-hidden
-          className={cn("absolute top-1 h-1 w-1 rounded-full", isPerplexity ? "bg-[#20808D]" : "bg-slate-900")}
-        />
-      ) : null}
       {item.icon ? (
         <span
           aria-hidden
@@ -65,7 +59,7 @@ function MobileNavLink({ currentPath, isPerplexity, item }: { currentPath: strin
             isPerplexity ? (isActive ? "text-[#186A73]" : "text-[#20808D]") : isActive ? "text-slate-950" : "text-slate-700"
           )}
         >
-          {item.icon}
+          {isActive && item.activeIcon ? item.activeIcon : item.icon}
         </span>
       ) : null}
       <span>{item.label}</span>
