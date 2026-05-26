@@ -1,5 +1,8 @@
 import { Suspense } from "react";
+import { noIndexMetadata } from "../lib/seo";
 import { LoginForm } from "./login-form";
+
+export const metadata = noIndexMetadata;
 
 export default function LoginPage() {
   return (

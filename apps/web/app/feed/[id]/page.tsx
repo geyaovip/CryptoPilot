@@ -1,11 +1,35 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@cryptopilot/ui";
 import { FeedCardActions } from "../../components/feed-card-actions";
 import { FeedTypeBadge } from "../../components/feed-type-badge";
+import { JsonLd } from "../../components/json-ld";
 import { RelatedSourcesList } from "../../components/related-sources-list";
 import { getFeedDetail } from "../../lib/api";
+import { articleJsonLd, publicPageMetadata, seoTitle } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const feed = await getFeedDetail(id);
+    const title = feed.narrative_hook?.trim() || feed.title;
+    return publicPageMetadata({
+      title: seoTitle(title),
+      description: feed.ai_summary || feed.content || feed.title,
+      path: `/feed/${feed.id}`,
+      type: "article"
+    });
+  } catch {
+    return publicPageMetadata({
+      title: "市场动态 | CryptoPilot",
+      description: "查看加密市场动态、来源、关键原因和 AI 摘要。",
+      path: `/feed/${id}`,
+      type: "article"
+    });
+  }
+}
 
 export default async function FeedDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -16,8 +40,17 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <main className="min-h-screen bg-[#FCFCF9] px-4 py-6 text-[#102A2C]">
+      <JsonLd
+        data={articleJsonLd({
+          headline: hook,
+          description: summary,
+          path: `/feed/${feed.id}`,
+          datePublished: feed.publish_time,
+          authorName: feed.source_name
+        })}
+      />
       <article className="mx-auto max-w-4xl space-y-5">
-        <a className="text-sm font-medium text-[#20808D]" href="/home">
+        <a className="text-sm font-medium text-[#20808D]" href="/">
           返回首页
         </a>
         <Card className="border-[#D9D5C9] bg-white/95 p-6 shadow-[0_18px_70px_rgba(16,42,44,0.08)]">

@@ -34,7 +34,7 @@ export function LoginForm() {
         };
         if (!response.ok) throw new Error(body.message ?? "登录链接无效");
         setAccessToken(body.data?.access_token ?? null);
-        router.replace("/home");
+        router.replace("/");
         router.refresh();
       })
       .catch((err) => setError(err instanceof Error ? err.message : "登录失败"))
@@ -81,7 +81,7 @@ export function LoginForm() {
       };
       if (!response.ok) throw new Error(body.message ?? "登录失败");
       setAccessToken(body.data?.access_token ?? null);
-      router.push("/home");
+      router.push("/");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "登录失败");

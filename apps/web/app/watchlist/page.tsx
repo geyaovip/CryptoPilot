@@ -1,8 +1,10 @@
 import { WebShell } from "../_components/web-shell";
 import { WatchlistPanel } from "../components/watchlist-panel";
 import { getWatchlist } from "../lib/api";
+import { noIndexMetadata } from "../lib/seo";
 
 export const dynamic = "force-dynamic";
+export const metadata = noIndexMetadata;
 
 export default async function WatchlistPage() {
   const data = await getWatchlist();

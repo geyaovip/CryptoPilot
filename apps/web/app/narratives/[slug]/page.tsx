@@ -1,11 +1,34 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, EmptyState } from "@cryptopilot/ui";
 import { FeedCard } from "../../components/feed-card";
 import { FollowButton } from "../../components/follow-button";
 import { WebShell } from "../../_components/web-shell";
 import { getNarrativeDetail } from "../../lib/api";
+import { publicPageMetadata } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const narrative = await getNarrativeDetail(slug);
+    return publicPageMetadata({
+      title: `${narrative.name} 叙事 | CryptoPilot`,
+      description:
+        narrative.ai_summary ??
+        narrative.description ??
+        `跟踪 ${narrative.name} 在加密市场中的热度、相关资产、来源和最新动态。`,
+      path: `/narratives/${narrative.slug}`
+    });
+  } catch {
+    return publicPageMetadata({
+      title: "市场叙事 | CryptoPilot",
+      description: "跟踪加密市场叙事热度、相关资产、来源和最新动态。",
+      path: `/narratives/${slug}`
+    });
+  }
+}
 
 export default async function NarrativeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -36,7 +59,7 @@ export default async function NarrativeDetailPage({ params }: { params: Promise<
           </div>
           <Link
             className="mt-4 inline-block text-sm font-medium text-[#102A2C] underline"
-            href={`/home?narrative=${narrative.slug}`}
+            href={`/narratives/${narrative.slug}`}
           >
             查看该叙事的最新动态 →
           </Link>

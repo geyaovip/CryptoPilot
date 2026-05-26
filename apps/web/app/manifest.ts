@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "CryptoPilot",
     short_name: "CryptoPilot",
     description: "AI 加密市场情报终端",
-    start_url: "/home",
+    start_url: "/",
     display: "standalone",
     background_color: "#FCFCF9",
     theme_color: "#20808D",

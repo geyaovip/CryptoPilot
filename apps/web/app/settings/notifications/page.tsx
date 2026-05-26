@@ -1,5 +1,8 @@
 import { Card } from "@cryptopilot/ui";
 import { WebShell } from "../../_components/web-shell";
+import { noIndexMetadata } from "../../lib/seo";
+
+export const metadata = noIndexMetadata;
 
 export default function NotificationSettingsPage() {
   return (

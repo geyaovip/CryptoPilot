@@ -1,11 +1,34 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@cryptopilot/ui";
 import { FeedCard } from "../../components/feed-card";
 import { FeedTypeBadge } from "../../components/feed-type-badge";
 import { InsightCardActions } from "../../components/insight-card-actions";
+import { JsonLd } from "../../components/json-ld";
 import { getInsightDetail } from "../../lib/api";
+import { articleJsonLd, publicPageMetadata, seoTitle } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const insight = await getInsightDetail(id);
+    return publicPageMetadata({
+      title: seoTitle(insight.ai_insight),
+      description: insight.ai_summary,
+      path: `/insights/${insight.id}`,
+      type: "article"
+    });
+  } catch {
+    return publicPageMetadata({
+      title: "AI 市场解读 | CryptoPilot",
+      description: "查看带来源的加密市场 AI 解读、关键原因和相关市场信号。",
+      path: `/insights/${id}`,
+      type: "article"
+    });
+  }
+}
 
 export default async function InsightDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,8 +36,16 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
 
   return (
     <main className="min-h-screen bg-[#FCFCF9] px-4 py-6 text-[#102A2C]">
+      <JsonLd
+        data={articleJsonLd({
+          headline: insight.ai_insight,
+          description: insight.ai_summary,
+          path: `/insights/${insight.id}`,
+          datePublished: insight.sources[0]?.published_at
+        })}
+      />
       <article className="mx-auto max-w-4xl space-y-5">
-        <a className="text-sm font-medium text-[#20808D]" href="/home">
+        <a className="text-sm font-medium text-[#20808D]" href="/">
           返回市场雷达
         </a>
         <Card className="border-[#D9D5C9] bg-white/95 p-6">

@@ -75,7 +75,7 @@ export function FeedCard({ feed }: { feed: FeedItemSummary }) {
           .map((narrative) => (
             <Link
               className="rounded-full bg-[#F7F5EE] px-2.5 py-1 text-xs text-[#5F6868] hover:bg-[#EDE8DA]"
-              href={`/home?narrative=${narrative.slug}`}
+              href={`/narratives/${narrative.slug}`}
               key={narrative.id}
             >
               {narrative.name}

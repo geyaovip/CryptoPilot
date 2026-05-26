@@ -3,6 +3,13 @@ import { WebShell } from "../_components/web-shell";
 import { NarrativeListCard } from "../components/narrative-list-card";
 import { NarrativeSortTabs } from "../components/narrative-sort-tabs";
 import { getNarratives } from "../lib/api";
+import { publicPageMetadata } from "../lib/seo";
+
+export const metadata = publicPageMetadata({
+  title: "市场叙事 | CryptoPilot",
+  description: "追踪加密市场正在升温的叙事主题、相关资产、热度趋势和多来源动态。",
+  path: "/narratives"
+});
 
 export const dynamic = "force-dynamic";
 

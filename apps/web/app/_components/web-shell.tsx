@@ -7,7 +7,7 @@ const navIconClass = "h-[18px] w-[18px] stroke-[1.9]";
 export const webNavItems: NavItem[] = [
   {
     label: "首页",
-    href: "/home",
+    href: "/",
     icon: (
       <svg className={navIconClass} viewBox="0 0 24 24" fill="none">
         <path d="M4.5 10.5 12 4l7.5 6.5V20a1 1 0 0 1-1 1h-4.25v-6h-4.5v6H5.5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />

@@ -1,103 +1,12 @@
-import type { MarketInsightSummary } from "@cryptopilot/types";
-import Link from "next/link";
-import { Card } from "@cryptopilot/ui";
-import { WebShell } from "../_components/web-shell";
-import { HomeFeedPanel } from "../components/home-feed-panel";
-import { HomeHeader } from "../components/home-header";
-import { MarketHeatBar } from "../components/market-heat-bar";
-import { getFeed, getTrending } from "../lib/api";
+import { CryptoPilotHomePage } from "./home-page";
+import { defaultDescription, publicPageMetadata } from "../lib/seo";
+
+export const metadata = publicPageMetadata({
+  title: "CryptoPilot | AI 加密市场雷达",
+  description: defaultDescription,
+  path: "/"
+});
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage({
-  searchParams
-}: {
-  searchParams: Promise<{ narrative?: string }>;
-}) {
-  const params = await searchParams;
-  const narrativeSlug = params.narrative?.trim() || undefined;
-  let loadError: string | null = null;
-  let feed: Awaited<ReturnType<typeof getFeed>> = { entity: "insight", items: [], next_cursor: null };
-  let trending: Awaited<ReturnType<typeof getTrending>> = { tokens: [], narratives: [] };
-  try {
-    [feed, trending] = await Promise.all([
-      getFeed("for_you", undefined, narrativeSlug),
-      getTrending()
-    ]);
-  } catch (error) {
-    loadError = error instanceof Error ? error.message : "首页数据加载失败";
-  }
-  const activeNarrative = narrativeSlug
-    ? trending.narratives.find((item) => item.slug === narrativeSlug)
-    : undefined;
-
-  return (
-    <WebShell>
-      <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
-        <section className="space-y-5">
-          {loadError ? (
-            <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</Card>
-          ) : null}
-          <Card className="border-[#D9D5C9] bg-white/90 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
-            <HomeHeader />
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5F6868]">
-              每天为你筛出值得关注的市场变化：优先展示多来源验证的 AI 解读，也可切换查看原始信号流。
-            </p>
-            {activeNarrative ? (
-              <p className="mt-2 text-sm text-[#102A2C]">
-                当前筛选叙事：
-                <Link className="ml-1 underline" href={`/narratives/${activeNarrative.slug}`}>
-                  {activeNarrative.name}
-                </Link>
-                <Link className="ml-3 text-[#5F6868]" href="/home">
-                  清除筛选
-                </Link>
-              </p>
-            ) : null}
-            <div className="mt-5">
-              <MarketHeatBar tokens={trending.tokens} />
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2" data-testid="topic-chips">
-              {trending.narratives.slice(0, 8).map((item) => {
-                const active = narrativeSlug === item.slug;
-                return (
-                  <Link
-                    className={
-                      active
-                        ? "rounded-full bg-[#20808D] px-3 py-1 text-xs font-medium text-white"
-                        : "rounded-full bg-[#F7F5EE] px-3 py-1 text-xs text-[#5F6868] hover:bg-[#EDE8DA]"
-                    }
-                    href={active ? "/home" : `/home?narrative=${item.slug}`}
-                    key={item.id}
-                  >
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </div>
-          </Card>
-          <HomeFeedPanel
-            initialCursor={feed.next_cursor}
-            initialItems={(feed.entity === "insight" ? feed.items : []) as MarketInsightSummary[]}
-            initialTab="for_you"
-            narrativeSlug={narrativeSlug}
-          />
-        </section>
-        <aside className="hidden space-y-4 lg:block">
-          <Card className="border-[#D9D5C9] bg-[#F7F5EE]">
-            <h2 className="text-sm font-semibold text-[#102A2C]">市场快照</h2>
-            <p className="mt-2 text-sm leading-6 text-[#5F6868]">重点资产的 24h 表现，用于快速感知市场温度。</p>
-            <div className="mt-4 space-y-2">
-              {trending.tokens.slice(0, 5).map((item) => (
-                <div className="rounded-xl bg-white px-3 py-2 text-sm text-[#5F6868]" key={item.id}>
-                  <span className="font-medium text-[#102A2C]">{item.symbol}</span>
-                  <span className="ml-2">{item.price_change_24h?.toFixed(2) ?? "0.00"}%</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </aside>
-      </div>
-    </WebShell>
-  );
-}
+export default CryptoPilotHomePage;
