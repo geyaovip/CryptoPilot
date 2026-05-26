@@ -8,11 +8,11 @@ import type { NavItem } from "./app-shell";
 type MobileDrawerNavProps = {
   navItems: NavItem[];
   title: string;
-  renderFooter?: () => ReactNode;
+  footer?: ReactNode;
   variant?: "default" | "perplexity";
 };
 
-export function MobileDrawerNav({ navItems, title, renderFooter, variant = "default" }: MobileDrawerNavProps) {
+export function MobileDrawerNav({ navItems, title, footer, variant = "default" }: MobileDrawerNavProps) {
   const [open, setOpen] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
   const isPerplexity = variant === "perplexity";
@@ -80,10 +80,10 @@ export function MobileDrawerNav({ navItems, title, renderFooter, variant = "defa
                 );
               })}
             </nav>
-            {renderFooter ? (
+            {footer ? (
               <div className="mt-4 shrink-0 border-t border-slate-200 pt-4">
                 <p className="mb-2 text-xs font-medium text-slate-500">当前账号</p>
-                {renderFooter()}
+                {footer}
               </div>
             ) : null}
           </aside>

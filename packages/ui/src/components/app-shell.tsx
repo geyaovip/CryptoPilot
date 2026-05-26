@@ -31,11 +31,12 @@ export function AppShell({
   mobileNavMode = "bottom"
 }: AppShellProps) {
   const isPerplexity = variant === "perplexity";
+  const mobileDrawerFooter = mobileNavMode === "drawer" ? renderSidebarFooter?.() : null;
 
   return (
     <div className={cn("min-h-screen", isPerplexity ? "bg-[#FCFCF9] text-[#102A2C]" : "bg-white text-slate-950")}>
       {mobileNavMode === "drawer" ? (
-        <MobileDrawerNav navItems={navItems} renderFooter={renderSidebarFooter} title={title} variant={variant} />
+        <MobileDrawerNav footer={mobileDrawerFooter} navItems={navItems} title={title} variant={variant} />
       ) : null}
       <div className="mx-auto flex min-h-screen w-full max-w-7xl">
         <aside
