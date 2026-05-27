@@ -4,8 +4,7 @@ import { Button, Card } from "@cryptopilot/ui";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../lib/auth-store";
-
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
+import { getApiUrl } from "../lib/api-url";
 const betaDevLogin = process.env.NEXT_PUBLIC_BETA_DEV_LOGIN === "true";
 
 export function LoginForm() {
@@ -22,6 +21,7 @@ export function LoginForm() {
     const token = searchParams.get("token");
     if (!token) return;
     setLoading(true);
+    const apiUrl = getApiUrl();
     void fetch(`${apiUrl}/api/auth/callback`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -47,6 +47,7 @@ export function LoginForm() {
     setInfo(null);
     setMagicLinkUrl(null);
     try {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/auth/magic-link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -70,6 +71,7 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
     try {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

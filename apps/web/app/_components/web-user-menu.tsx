@@ -4,8 +4,7 @@ import { SidebarUserMenu } from "@cryptopilot/ui";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../lib/auth-store";
-
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
+import { getApiUrl } from "../lib/api-url";
 
 const LOGGED_IN_ITEMS = [
   { label: "个人中心", href: "/me" },
@@ -33,6 +32,7 @@ export function WebUserMenu() {
       setUser(null);
       return;
     }
+    const apiUrl = getApiUrl();
     void fetch(`${apiUrl}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })

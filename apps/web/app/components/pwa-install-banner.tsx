@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getApiUrl } from "../lib/api-url";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -13,7 +14,7 @@ export function PwaInstallBanner() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    void fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002/api"}/system/public-config`)
+    void fetch(`${getApiUrl()}/api/system/public-config`)
       .then((res) => res.json())
       .then((body: { data?: { feature_flags?: { pwa_install?: boolean } } }) => {
         setEnabled(Boolean(body.data?.feature_flags?.pwa_install));

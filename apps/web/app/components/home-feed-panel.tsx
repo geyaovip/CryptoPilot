@@ -37,13 +37,13 @@ export function HomeFeedPanel({
   const [error, setError] = useState("");
 
   const load = async (nextView: HomeView, nextTab: FeedTab, nextCursor?: string) => {
+    setView(nextView);
+    setTab(nextTab);
     setLoading(true);
     setError("");
     try {
       const entity = nextView === "signals" ? "feed_item" : "insight";
       const data = await getFeed(nextTab, nextCursor, narrativeSlug, entity);
-      setView(nextView);
-      setTab(nextTab);
       if (entity === "feed_item") {
         if (nextCursor) {
           setSignalItems((current) => [...current, ...(data.items as FeedItemSummary[])]);
@@ -65,12 +65,14 @@ export function HomeFeedPanel({
 
   const loadTab = (nextTab: FeedTab) => load(view, nextTab);
   const switchView = (nextView: HomeView) => load(nextView, tab);
+  const retry = () => load(view, tab);
   const loadMore = () => {
     if (!cursor) return;
     void load(view, tab, cursor);
   };
 
   const list = view === "signals" ? signalItems : insightItems;
+  const hasItems = list.length > 0;
   const emptyTitle = view === "signals" ? "暂无可展示信号" : "暂无市场雷达更新";
   const emptyDesc =
     view === "signals"
@@ -115,10 +117,13 @@ export function HomeFeedPanel({
         ))}
       </div>
 
-      {loading && list.length === 0 ? <LoadingState title="加载中" /> : null}
-      {error ? <EmptyState actionLabel="重试" description={error} title="加载失败" /> : null}
+      {loading && !hasItems ? <LoadingState title="加载中" /> : null}
+      {error && !hasItems ? (
+        <EmptyState actionLabel="重试" description={error} onAction={retry} title="加载失败" />
+      ) : null}
+      {error && hasItems ? <p className="text-sm text-red-700">{error}</p> : null}
 
-      {!loading && !error && list.length === 0 ? (
+      {!loading && !error && !hasItems ? (
         <EmptyState description={emptyDesc} title={emptyTitle} />
       ) : null}
 

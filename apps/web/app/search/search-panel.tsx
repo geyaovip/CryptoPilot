@@ -4,8 +4,8 @@ import { Button, Card } from "@cryptopilot/ui";
 import type { AiSearchResponse, ApiError } from "@cryptopilot/types";
 import { DEMO_USER_ID } from "@cryptopilot/types";
 import { useEffect, useRef, useState } from "react";
+import { getApiUrl } from "../lib/api-url";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 const demoUserId = process.env.NEXT_PUBLIC_DEMO_USER_ID ?? DEMO_USER_ID;
 
 const suggestions = [
@@ -43,6 +43,7 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
     setError(null);
     setResult(null);
     try {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/ai/search`, {
         method: "POST",
         headers: {

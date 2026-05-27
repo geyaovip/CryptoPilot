@@ -13,8 +13,7 @@ import type {
 } from "@cryptopilot/types";
 import { apiFetch } from "./api-fetch";
 import { buildUserHeaders } from "./api-headers";
-
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? "http://localhost:3002";
+import { getApiUrl } from "./api-url";
 
 export async function getFeed(
   tab: FeedTab = "for_you",
@@ -29,6 +28,7 @@ export async function getFeed(
     params.set("entity", "feed_item");
     params.set("locale", "zh");
   }
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/feed?${params.toString()}`, {
     cache: "no-store",
     headers: buildUserHeaders()
@@ -39,6 +39,7 @@ export async function getFeed(
 }
 
 export async function getInsightDetail(id: string): Promise<InsightDetailResponse["data"]> {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/insights/${id}`, { cache: "no-store" });
   if (!response.ok) throw new Error("Insight 详情加载失败");
   const body = (await response.json()) as InsightDetailResponse;
@@ -46,6 +47,7 @@ export async function getInsightDetail(id: string): Promise<InsightDetailRespons
 }
 
 export async function getFeedDetail(id: string): Promise<FeedDetailResponse["data"]> {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/feed/${id}`, { cache: "no-store" });
   if (!response.ok) throw new Error("Feed 详情加载失败");
   const body = (await response.json()) as FeedDetailResponse;
@@ -53,6 +55,7 @@ export async function getFeedDetail(id: string): Promise<FeedDetailResponse["dat
 }
 
 export async function getTrending(): Promise<TrendingResponse["data"]> {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/trending`, { cache: "no-store" });
   if (!response.ok) throw new Error("趋势数据加载失败");
   const body = (await response.json()) as TrendingResponse;
@@ -60,6 +63,7 @@ export async function getTrending(): Promise<TrendingResponse["data"]> {
 }
 
 export async function createBookmark(feedItemId: string) {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/bookmarks`, {
     method: "POST",
     headers: buildUserHeaders({ "Content-Type": "application/json" }),
@@ -69,6 +73,7 @@ export async function createBookmark(feedItemId: string) {
 }
 
 export async function createInsightBookmark(insightId: string) {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/bookmarks`, {
     method: "POST",
     headers: buildUserHeaders({ "Content-Type": "application/json" }),
@@ -78,6 +83,7 @@ export async function createInsightBookmark(insightId: string) {
 }
 
 export async function deleteBookmark(feedItemId: string) {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/bookmarks/${feedItemId}`, {
     method: "DELETE",
     headers: buildUserHeaders()
@@ -86,6 +92,7 @@ export async function deleteBookmark(feedItemId: string) {
 }
 
 export async function getNarratives(sort: "hottest" | "rising" | "discussed" = "hottest") {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/narratives?sort=${sort}`, {
     cache: "no-store",
     headers: buildUserHeaders()
@@ -96,6 +103,7 @@ export async function getNarratives(sort: "hottest" | "rising" | "discussed" = "
 }
 
 export async function getNarrativeDetail(slug: string) {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/narratives/${slug}`, {
     cache: "no-store",
     headers: buildUserHeaders()
@@ -106,6 +114,7 @@ export async function getNarrativeDetail(slug: string) {
 }
 
 export async function getWatchlist() {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/watchlist`, {
     cache: "no-store",
     headers: buildUserHeaders()
@@ -116,6 +125,7 @@ export async function getWatchlist() {
 }
 
 export async function addWatchlist(targetType: WatchlistTargetType, targetId: string) {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/watchlist`, {
     method: "POST",
     headers: buildUserHeaders({ "Content-Type": "application/json" }),
@@ -127,6 +137,7 @@ export async function addWatchlist(targetType: WatchlistTargetType, targetId: st
 }
 
 export async function patchWatchlistNotification(id: string, enabled: boolean) {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/watchlist/${id}/notification`, {
     method: "PATCH",
     headers: buildUserHeaders({ "Content-Type": "application/json" }),
@@ -138,6 +149,7 @@ export async function patchWatchlistNotification(id: string, enabled: boolean) {
 }
 
 export async function removeWatchlist(id: string) {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/watchlist/${id}`, {
     method: "DELETE",
     headers: buildUserHeaders()
@@ -146,6 +158,7 @@ export async function removeWatchlist(id: string) {
 }
 
 export async function getTokens() {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/tokens`, { cache: "no-store" });
   if (!response.ok) throw new Error("Token 列表加载失败");
   const body = (await response.json()) as TokenListResponse;
@@ -153,6 +166,7 @@ export async function getTokens() {
 }
 
 export async function getKols() {
+  const apiUrl = getApiUrl();
   const response = await apiFetch(`${apiUrl}/api/kols`, { cache: "no-store" });
   if (!response.ok) throw new Error("KOL 列表加载失败");
   const body = (await response.json()) as KolListResponse;
