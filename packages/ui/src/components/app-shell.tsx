@@ -14,6 +14,7 @@ type AppShellProps = {
   title: string;
   navItems: NavItem[];
   children: ReactNode;
+  brandMark?: ReactNode;
   className?: string;
   /** 工厂函数：桌面与移动端各渲染一份，避免同一 React 节点被挂载两次。 */
   renderSidebarFooter?: () => ReactNode;
@@ -25,6 +26,7 @@ export function AppShell({
   title,
   navItems,
   children,
+  brandMark,
   className,
   renderSidebarFooter,
   variant = "default",
@@ -45,7 +47,9 @@ export function AppShell({
             isPerplexity ? "border-[#D9D5C9] bg-[#F7F5EE]" : "border-slate-200 bg-slate-50"
           )}
         >
-          <p className={cn("shrink-0 text-sm font-semibold", isPerplexity ? "text-[#102A2C]" : "text-slate-950")}>{title}</p>
+          {brandMark ?? (
+            <p className={cn("shrink-0 text-sm font-semibold", isPerplexity ? "text-[#102A2C]" : "text-slate-950")}>{title}</p>
+          )}
           <nav className="mt-6 min-h-0 flex-1 space-y-1 overflow-y-auto">
             {navItems.map((item) => (
               <a

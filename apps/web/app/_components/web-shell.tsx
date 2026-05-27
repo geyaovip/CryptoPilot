@@ -1,5 +1,6 @@
 import { AppShell, type NavItem } from "@cryptopilot/ui";
 import type { ReactNode } from "react";
+import { CryptoPilotLogo } from "../components/cryptopilot-logo";
 import { WebUserMenu } from "./web-user-menu";
 
 const navIconClass = "h-[18px] w-[18px] stroke-[1.9]";
@@ -70,7 +71,13 @@ export const webNavItems: NavItem[] = [
 
 export function WebShell({ children }: { children: ReactNode }) {
   return (
-    <AppShell title="CryptoPilot" navItems={webNavItems} variant="perplexity" renderSidebarFooter={() => <WebUserMenu />}>
+    <AppShell
+      title="CryptoPilot"
+      brandMark={<CryptoPilotLogo markClassName="h-9 w-9 text-[#111111]" />}
+      navItems={webNavItems}
+      variant="perplexity"
+      renderSidebarFooter={() => <WebUserMenu />}
+    >
       {children}
     </AppShell>
   );

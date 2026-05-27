@@ -9,7 +9,7 @@ import { defaultDescription, publicPageMetadata, siteName, siteUrl } from "./lib
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   ...publicPageMetadata({
-    title: "CryptoPilot | AI 加密市场情报终端",
+    title: "CryptoPilot | AI Market Intelligence",
     description: defaultDescription,
     path: "/"
   }),
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#20808D"
+  themeColor: "#111111"
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

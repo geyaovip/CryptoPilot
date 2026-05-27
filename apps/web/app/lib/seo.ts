@@ -4,8 +4,10 @@ export const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://cryp
 
 export const siteName = "CryptoPilot";
 
+export const siteTagline = "AI Market Intelligence";
+
 export const defaultDescription =
-  "CryptoPilot 是 AI 加密市场情报终端，聚合多来源新闻、市场叙事与资产信号，帮助研究者快速跟踪加密市场变化。";
+  "CryptoPilot 是面向加密市场研究者的 AI Market Intelligence 工具，聚合多来源新闻、市场叙事、资产信号与 AI 解读，帮助你快速跟踪市场变化。";
 
 export function absoluteUrl(path: string): string {
   return new URL(path, siteUrl).toString();
@@ -35,19 +37,34 @@ export function publicPageMetadata(input: {
   return {
     title: input.title,
     description,
+    keywords: ["CryptoPilot", "AI Market Intelligence", "加密市场", "Crypto", "Web3", "市场叙事", "AI 解读"],
     alternates: { canonical: input.path },
+    icons: {
+      icon: "/icon.svg",
+      shortcut: "/icon.svg",
+      apple: "/icon-192.svg"
+    },
     openGraph: {
       title: input.title,
       description,
       url,
       siteName,
       locale: "zh_CN",
-      type: input.type ?? "website"
+      type: input.type ?? "website",
+      images: [
+        {
+          url: absoluteUrl("/og-image.svg"),
+          width: 1200,
+          height: 630,
+          alt: "CryptoPilot AI Market Intelligence"
+        }
+      ]
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: input.title,
-      description
+      description,
+      images: [absoluteUrl("/og-image.svg")]
     }
   };
 }
@@ -67,6 +84,7 @@ export function websiteJsonLd() {
     name: siteName,
     url: absoluteUrl("/"),
     description: defaultDescription,
+    alternateName: siteTagline,
     inLanguage: "zh-CN",
     potentialAction: {
       "@type": "SearchAction",
@@ -82,7 +100,9 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: siteName,
     url: absoluteUrl("/"),
-    description: defaultDescription
+    description: defaultDescription,
+    logo: absoluteUrl("/logo.svg"),
+    sameAs: [absoluteUrl("/")]
   };
 }
 
@@ -109,7 +129,11 @@ export function articleJsonLd(input: {
     },
     publisher: {
       "@type": "Organization",
-      name: siteName
+      name: siteName,
+      logo: {
+        "@type": "ImageObject",
+        url: absoluteUrl("/logo.svg")
+      }
     },
     inLanguage: "zh-CN",
     isAccessibleForFree: true
