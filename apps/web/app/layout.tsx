@@ -9,7 +9,7 @@ import { defaultDescription, publicPageMetadata, siteName, siteUrl } from "./lib
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   ...publicPageMetadata({
-    title: "CryptoPilot | AI Market Intelligence",
+    title: "CryptoPilot | AI 加密市场情报终端",
     description: defaultDescription,
     path: "/"
   }),

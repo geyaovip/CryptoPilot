@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "CryptoPilot",
     short_name: "CryptoPilot",
-    description: "CryptoPilot 是面向加密市场研究者的 AI Market Intelligence 工具，聚合多来源新闻、市场叙事、资产信号与 AI 解读。",
+    description: "CryptoPilot 聚合多来源加密新闻、市场叙事、资产信号与 AI 解读，帮助研究者快速跟踪 Web3 市场变化。",
     id: "/",
     start_url: "/",
     scope: "/",

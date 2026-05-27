@@ -2,7 +2,7 @@ import { CryptoPilotHomePage } from "./home-page";
 import { defaultDescription, publicPageMetadata } from "../lib/seo";
 
 export const metadata = publicPageMetadata({
-  title: "CryptoPilot | AI Market Intelligence",
+  title: "CryptoPilot | AI 加密市场情报终端",
   description: defaultDescription,
   path: "/"
 });

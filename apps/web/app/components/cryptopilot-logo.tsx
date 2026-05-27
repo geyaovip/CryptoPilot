@@ -15,7 +15,7 @@ export function CryptoPilotLogo({
       {showText ? (
         <div className="leading-tight">
           <p className="text-base font-semibold text-[#111111]">CryptoPilot</p>
-          <p className="text-xs text-[#6B7280]">AI Market Intelligence</p>
+          <p className="text-xs text-[#6B7280]">AI 加密市场情报终端</p>
         </div>
       ) : null}
     </div>

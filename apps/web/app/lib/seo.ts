@@ -4,10 +4,10 @@ export const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://cryp
 
 export const siteName = "CryptoPilot";
 
-export const siteTagline = "AI Market Intelligence";
+export const siteTagline = "AI 加密市场情报终端";
 
 export const defaultDescription =
-  "CryptoPilot 是面向加密市场研究者的 AI Market Intelligence 工具，聚合多来源新闻、市场叙事、资产信号与 AI 解读，帮助你快速跟踪市场变化。";
+  "CryptoPilot 聚合多来源加密新闻、市场叙事、资产信号与 AI 解读，帮助研究者快速跟踪 Web3 市场变化。仅供研究参考，不提供投资建议。";
 
 export const siteKeywords = [
   "CryptoPilot",
@@ -78,7 +78,7 @@ export function publicPageMetadata(input: {
           url: absoluteUrl("/og-image.svg"),
           width: 1200,
           height: 630,
-          alt: "CryptoPilot AI Market Intelligence"
+          alt: "CryptoPilot AI 加密市场情报终端"
         }
       ]
     },
