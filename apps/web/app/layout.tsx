@@ -14,7 +14,11 @@ export const metadata: Metadata = {
     path: "/"
   }),
   applicationName: siteName,
-  appleWebApp: { capable: true, title: siteName },
+  appleWebApp: {
+    capable: true,
+    title: siteName,
+    statusBarStyle: "default"
+  },
   robots: {
     index: true,
     follow: true,
@@ -30,7 +34,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#111111"
+  themeColor: "#111111",
+  colorScheme: "light"
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

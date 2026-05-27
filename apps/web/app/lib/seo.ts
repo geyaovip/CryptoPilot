@@ -9,6 +9,18 @@ export const siteTagline = "AI Market Intelligence";
 export const defaultDescription =
   "CryptoPilot 是面向加密市场研究者的 AI Market Intelligence 工具，聚合多来源新闻、市场叙事、资产信号与 AI 解读，帮助你快速跟踪市场变化。";
 
+export const siteKeywords = [
+  "CryptoPilot",
+  "AI Market Intelligence",
+  "加密市场",
+  "Crypto",
+  "Web3",
+  "市场叙事",
+  "AI 解读",
+  "加密新闻",
+  "市场雷达"
+];
+
 export function absoluteUrl(path: string): string {
   return new URL(path, siteUrl).toString();
 }
@@ -37,12 +49,22 @@ export function publicPageMetadata(input: {
   return {
     title: input.title,
     description,
-    keywords: ["CryptoPilot", "AI Market Intelligence", "加密市场", "Crypto", "Web3", "市场叙事", "AI 解读"],
+    keywords: siteKeywords,
+    authors: [{ name: siteName, url: absoluteUrl("/") }],
+    creator: siteName,
+    publisher: siteName,
+    generator: "Next.js",
+    referrer: "origin-when-cross-origin",
     alternates: { canonical: input.path },
     icons: {
       icon: "/icon.svg",
       shortcut: "/icon.svg",
       apple: "/icon-192.svg"
+    },
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false
     },
     openGraph: {
       title: input.title,
@@ -99,9 +121,15 @@ export function organizationJsonLd() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteName,
+    alternateName: siteTagline,
     url: absoluteUrl("/"),
     description: defaultDescription,
-    logo: absoluteUrl("/logo.svg"),
+    logo: {
+      "@type": "ImageObject",
+      url: absoluteUrl("/cryptopilot-social-avatar.svg"),
+      width: 512,
+      height: 512
+    },
     sameAs: [absoluteUrl("/")]
   };
 }
