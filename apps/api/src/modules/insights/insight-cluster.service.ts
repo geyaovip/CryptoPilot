@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
+import { BackgroundJobsService } from "../common/background-jobs.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { pickPrimaryNarrative } from "../feed/feed-narrative.util";
 import { buildSourcesFromSignals } from "./insight.mapper";
@@ -17,11 +18,13 @@ export class InsightClusterService {
 
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(InsightSynthesisService) private readonly synthesis: InsightSynthesisService
+    @Inject(InsightSynthesisService) private readonly synthesis: InsightSynthesisService,
+    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService
   ) {}
 
   @Cron("*/20 * * * *")
   async clusterScheduled(): Promise<void> {
+    if (!this.jobs.enabled) return;
     await this.clusterPending(8).catch((error) => {
       this.logger.warn(error instanceof Error ? error.message : "cluster failed");
     });

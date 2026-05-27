@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { FeedAiService } from "../ai/feed-ai.service";
+import { BackgroundJobsService } from "../common/background-jobs.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { ingestSourceItems } from "./ingest-source.util";
 
@@ -8,11 +9,13 @@ import { ingestSourceItems } from "./ingest-source.util";
 export class IngestionService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(FeedAiService) private readonly feedAiService: FeedAiService
+    @Inject(FeedAiService) private readonly feedAiService: FeedAiService,
+    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService
   ) {}
 
   @Cron("*/5 * * * *")
   async ingestActiveRssSources(): Promise<void> {
+    if (!this.jobs.enabled) return;
     const sources = await this.prisma.source.findMany({
       where: { type: "RSS", status: "ACTIVE", deletedAt: null }
     });
@@ -24,6 +27,7 @@ export class IngestionService {
 
   @Cron("* * * * *")
   async syncCoinGeckoPrices(): Promise<void> {
+    if (!this.jobs.enabled) return;
     const tokens = await this.prisma.token.findMany({
       where: { coingeckoId: { not: null }, deletedAt: null }
     });

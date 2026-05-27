@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
+import { BackgroundJobsService } from "../common/background-jobs.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { applyClusterPlans, clusterFeedInclude, planClusterAssignments, type ClusterFeedRow } from "./feed-cluster.util";
 
@@ -7,10 +8,14 @@ import { applyClusterPlans, clusterFeedInclude, planClusterAssignments, type Clu
 export class FeedClusterService {
   private readonly logger = new Logger(FeedClusterService.name);
 
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService
+  ) {}
 
   @Cron("*/30 * * * *")
   async clusterScheduled(): Promise<void> {
+    if (!this.jobs.enabled) return;
     await this.assignClusters().catch((error) => {
       this.logger.warn(error instanceof Error ? error.message : "cluster assign failed");
     });

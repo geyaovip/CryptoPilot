@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
+import { BackgroundJobsService } from "../common/background-jobs.service";
 import { AppHttpException } from "../common/app-http.exception";
 import { LlmService } from "../llm/llm.service";
 import { PromptService } from "../prompt/prompt.service";
@@ -15,10 +16,12 @@ export class FeedAiService {
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(PromptService) private readonly promptService: PromptService,
     @Inject(LlmService) private readonly llm: LlmService,
-    @Inject(EmbeddingService) private readonly embeddingService: EmbeddingService
+    @Inject(EmbeddingService) private readonly embeddingService: EmbeddingService,
+    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService
   ) {}
 
   queueGeneration(feedItemId: string): void {
+    if (!this.jobs.enabled) return;
     void this.generateForFeed(feedItemId).catch((error) => {
       this.logger.warn(`Feed AI 生成失败 ${feedItemId}: ${error instanceof Error ? error.message : "unknown"}`);
     });
@@ -26,6 +29,7 @@ export class FeedAiService {
 
   @Cron("*/2 * * * *")
   async processPending(): Promise<void> {
+    if (!this.jobs.enabled) return;
     const pending = await this.prisma.feedItem.findMany({
       where: { aiGeneratedAt: null, deletedAt: null, status: "PUBLISHED" },
       orderBy: { createdAt: "asc" },

@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
+import { BackgroundJobsService } from "../common/background-jobs.service";
 import { LlmService } from "../llm/llm.service";
 import { PromptService } from "../prompt/prompt.service";
 import { PrismaService } from "../prisma/prisma.service";
@@ -12,11 +13,13 @@ export class NarrativeAiService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(PromptService) private readonly promptService: PromptService,
-    @Inject(LlmService) private readonly llm: LlmService
+    @Inject(LlmService) private readonly llm: LlmService,
+    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService
   ) {}
 
   @Cron("*/15 * * * *")
   async processStaleSummaries(): Promise<void> {
+    if (!this.jobs.enabled) return;
     const staleBefore = new Date(Date.now() - 6 * 60 * 60 * 1000);
     const narratives = await this.prisma.narrative.findMany({
       where: {

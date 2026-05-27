@@ -1,6 +1,7 @@
 import { AppShell, type NavItem } from "@cryptopilot/ui";
 import type { ReactNode } from "react";
 import { AdminUserMenu } from "./admin-user-menu";
+import { CryptoPilotMark } from "./cryptopilot-mark";
 
 const navItems: NavItem[] = [
   { label: "仪表盘", href: "/admin/dashboard" },
@@ -22,6 +23,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <AppShell
       className="bg-white"
       title="CryptoPilot 管理后台"
+      brandMark={<CryptoPilotMark showText />}
       navItems={navItems}
       mobileNavMode="drawer"
       renderSidebarFooter={() => <AdminUserMenu />}

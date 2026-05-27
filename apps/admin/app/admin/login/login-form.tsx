@@ -4,6 +4,7 @@ import { Button, Card } from "@cryptopilot/ui";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAdminAuthStore } from "../../lib/auth-store";
+import { CryptoPilotMark } from "../_components/cryptopilot-mark";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 
@@ -95,7 +96,7 @@ export function AdminLoginForm() {
 
   return (
     <Card className="w-full max-w-md">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">CryptoPilot 管理后台</p>
+      <CryptoPilotMark className="h-10 w-10" showText />
       <h1 className="mt-2 text-2xl font-semibold text-slate-950">管理员登录</h1>
       <p className="mt-2 text-sm text-slate-500">使用管理员邮箱获取 Magic Link，或开发环境快速登录。</p>
       <input
