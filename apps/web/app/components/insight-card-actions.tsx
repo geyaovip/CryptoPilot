@@ -39,7 +39,7 @@ export function InsightCardActions({ insightId, askQuery }: InsightCardActionsPr
         问 AI
       </Link>
       <Link className="font-medium text-[#5F6868] hover:text-[#20808D]" href={sharePath}>
-        Drill Down
+        查看详情
       </Link>
     </div>
   );
