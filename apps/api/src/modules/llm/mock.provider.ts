@@ -51,29 +51,102 @@ export class MockLlmProvider implements LlmProvider {
   private mockSearchJson(user: string): AiSearchOutput {
     const query = extractBetween(user, "用户问题:", "\n") ?? user.slice(0, 80);
     const now = new Date().toISOString();
+    const context = parseSearchContext(user);
+    const sources = context.slice(0, 6).map((item) => ({
+      source_name: item.sourceName,
+      source_type: "news",
+      url: item.sourceUrl,
+      published_at: now
+    }));
+    const tokens = inferTokens(`${query}\n${context.map((item) => item.title).join("\n")}`);
+    const narratives = inferNarratives(`${query}\n${context.map((item) => `${item.title}\n${item.summary}`).join("\n")}`);
+    const keyReasons = context.slice(0, 4).map((item) => {
+      const summary = item.summary || item.title;
+      return `${item.sourceName} 报道：${trimSentence(summary, 72)}`;
+    });
+    const primary = context[0];
+    const secondary = context[1];
+
     return {
-      answer: `关于「${query.trim()}」：根据检索到的 Feed 来源，市场叙事仍在演化。以下为基于已收录来源的研究摘要，不构成投资建议。`,
-      key_reasons: ["检索到多条可引用来源", "回答仅基于上下文中的报道", "未覆盖链上实时数据"],
-      market_impact: "短期可能影响相关代币关注度，需继续跟踪后续报道。",
-      related_tokens: ["BTC", "ETH"],
-      related_narratives: ["ETF 资金流"],
+      answer: primary
+        ? `关于「${query.trim()}」：已检索到 ${context.length} 条相关来源。${primary.sourceName} 关注「${trimSentence(primary.title, 54)}」${secondary ? `，${secondary.sourceName} 则补充了「${trimSentence(secondary.title, 42)}」` : ""}。整体来看，当前信息更适合作为背景梳理，仍需要结合后续来源交叉确认。`
+        : `关于「${query.trim()}」：当前检索上下文不足以形成高置信度结论。建议换一个更具体的问题，或稍后等待更多来源入库。`,
+      key_reasons: keyReasons.length >= 2 ? keyReasons : ["检索到的来源数量有限", "回答仅基于已收录内容生成"],
+      market_impact: buildMarketImpact(tokens, narratives),
+      related_tokens: tokens,
+      related_narratives: narratives,
       sentiment: "neutral",
-      sources: [
-        {
-          source_name: "CoinDesk",
-          source_type: "news",
-          url: "https://example.com/feed/mock-1",
-          published_at: now
-        },
-        {
-          source_name: "Decrypt",
-          source_type: "news",
-          url: "https://example.com/feed/mock-2",
-          published_at: now
-        }
-      ]
+      sources:
+        sources.length >= 2
+          ? sources
+          : [
+              {
+                source_name: "CryptoPilot",
+                source_type: "news",
+                url: "https://cryptopilot.chat",
+                published_at: now
+              },
+              {
+                source_name: "CryptoPilot Archive",
+                source_type: "news",
+                url: "https://cryptopilot.chat/home",
+                published_at: now
+              }
+            ]
     };
   }
+}
+
+type SearchContext = {
+  title: string;
+  sourceName: string;
+  sourceUrl: string;
+  summary: string;
+};
+
+function parseSearchContext(prompt: string): SearchContext[] {
+  const context = extractBetween(prompt, "检索上下文:", "\n\n可用来源:") ?? "";
+  return context
+    .split(/\n(?=\[\d+\]\s)/)
+    .map((block) => {
+      const title = block.match(/^\[\d+\]\s*(.+)$/m)?.[1]?.trim();
+      const sourceName = block.match(/^来源:\s*(.+)$/m)?.[1]?.trim();
+      const sourceUrl = block.match(/^链接:\s*(.+)$/m)?.[1]?.trim();
+      const summary = block.match(/^摘要:\s*([\s\S]+)$/m)?.[1]?.trim();
+      if (!title || !sourceName || !sourceUrl) return null;
+      return { title, sourceName, sourceUrl, summary: summary ?? "" };
+    })
+    .filter((item): item is SearchContext => item !== null);
+}
+
+function inferTokens(text: string): string[] {
+  const candidates = ["BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "NEAR", "AI", "ETF"];
+  return candidates.filter((token) => new RegExp(`(^|[^A-Za-z])${token}([^A-Za-z]|$)`, "i").test(text)).slice(0, 8);
+}
+
+function inferNarratives(text: string): string[] {
+  const map: [RegExp, string][] = [
+    [/ETF|资金流|fund flow/i, "ETF 资金流"],
+    [/AI|人工智能|算力|模型/i, "AI"],
+    [/Meme|迷因/i, "Meme"],
+    [/Solana|SOL/i, "Solana 生态"],
+    [/监管|SEC|法院|合规/i, "监管"],
+    [/黑客|漏洞|攻击|安全/i, "安全事件"],
+    [/DeFi|流动性|借贷|DEX/i, "DeFi"]
+  ];
+  const narratives = map.filter(([pattern]) => pattern.test(text)).map(([, label]) => label);
+  return [...new Set(narratives)].slice(0, 5);
+}
+
+function trimSentence(value: string, maxLength: number): string {
+  const compact = value.replace(/\s+/g, " ").trim();
+  return compact.length > maxLength ? `${compact.slice(0, maxLength - 1)}…` : compact;
+}
+
+function buildMarketImpact(tokens: string[], narratives: string[]): string {
+  const tokenText = tokens.length ? `相关资产（${tokens.join("、")}）` : "相关资产";
+  const narrativeText = narratives.length ? `与「${narratives.join(" / ")}」叙事` : "与当前市场叙事";
+  return `这些来源可能提升${tokenText}${narrativeText}的关注度，但现阶段更适合用于信息跟踪和风险核验，不构成投资建议。`;
 }
 
 function extractBetween(text: string, start: string, end: string): string | null {

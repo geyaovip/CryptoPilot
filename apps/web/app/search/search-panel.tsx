@@ -15,6 +15,12 @@ const suggestions = [
   "哪些叙事正在升温？"
 ];
 
+const sentimentLabels = {
+  bullish: "偏积极",
+  neutral: "中性",
+  bearish: "偏谨慎"
+} as const;
+
 type SearchPanelProps = {
   initialQuery?: string;
   initialInsightId?: string;
@@ -131,7 +137,14 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
         <Card className="space-y-5 border-[#D9D5C9] bg-white/95 p-5 shadow-[0_12px_40px_rgba(16,42,44,0.05)]">
           <div>
             <p className="text-xs font-medium text-[#20808D]">AI Research Brief</p>
-            <p className="mt-1 text-xs text-[#8A918C]">更新于 {new Date(result.updated_at).toLocaleString("zh-CN")}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#8A918C]">
+              <span>基于本次问题动态生成</span>
+              <span>·</span>
+              <span>更新于 {new Date(result.updated_at).toLocaleString("zh-CN")}</span>
+              <span className="rounded-full bg-[#F2EEE3] px-2 py-0.5 text-[#5F6868]">
+                {sentimentLabels[result.sentiment]}
+              </span>
+            </div>
           </div>
           <p className="text-base leading-8 text-[#102A2C]">{result.answer}</p>
           <div>
@@ -146,12 +159,35 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
             <h2 className="text-sm font-semibold text-[#102A2C]">市场影响</h2>
             <p className="mt-2 text-sm text-[#5F6868]">{result.market_impact}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {result.related_tokens.map((token) => (
-              <span className="rounded-full bg-[#E8F4F6] px-2 py-1 text-xs text-[#20808D]" key={token}>
-                {token}
-              </span>
-            ))}
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <h2 className="text-sm font-semibold text-[#102A2C]">相关资产</h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {result.related_tokens.length ? (
+                  result.related_tokens.map((token) => (
+                    <span className="rounded-full bg-[#E8F4F6] px-2 py-1 text-xs text-[#20808D]" key={token}>
+                      {token}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-[#8A918C]">暂无明确资产标签</span>
+                )}
+              </div>
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-[#102A2C]">相关叙事</h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {result.related_narratives.length ? (
+                  result.related_narratives.map((narrative) => (
+                    <span className="rounded-full bg-[#F2EEE3] px-2 py-1 text-xs text-[#5F6868]" key={narrative}>
+                      {narrative}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-[#8A918C]">暂无明确叙事标签</span>
+                )}
+              </div>
+            </div>
           </div>
           <div>
             <h2 className="text-sm font-semibold text-[#102A2C]">来源</h2>
