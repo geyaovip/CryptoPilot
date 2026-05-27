@@ -7,6 +7,7 @@ import { PrismaModule } from "../prisma/prisma.module";
 import { PromptModule } from "../prompt/prompt.module";
 import { AiController } from "./ai.controller";
 import { AiSearchService } from "./ai-search.service";
+import { AiSuggestionsService } from "./ai-suggestions.service";
 import { EmbeddingService } from "./embedding.service";
 import { FeedAiService } from "./feed-ai.service";
 import { RagService } from "./rag.service";
@@ -14,7 +15,7 @@ import { RagService } from "./rag.service";
 @Module({
   imports: [PrismaModule, AuthModule, SystemModule, LlmModule, PromptModule],
   controllers: [AiController],
-  providers: [AiSearchService, EmbeddingService, RagService, FeedAiService, AiRateLimitGuard],
+  providers: [AiSearchService, AiSuggestionsService, EmbeddingService, RagService, FeedAiService, AiRateLimitGuard],
   exports: [FeedAiService, EmbeddingService]
 })
 export class AiModule {}

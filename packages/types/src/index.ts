@@ -260,6 +260,15 @@ export type AiSearchResult = {
 
 export type AiSearchResponse = ApiSuccess<AiSearchResult>;
 
+export type AiSearchSuggestion = {
+  question: string;
+  source: "feed" | "narrative" | "token" | "fallback";
+};
+
+export type AiSearchSuggestionsResponse = ApiSuccess<{
+  items: AiSearchSuggestion[];
+}>;
+
 export type PromptSummary = {
   id: string;
   prompt_key: MvpPromptKey;

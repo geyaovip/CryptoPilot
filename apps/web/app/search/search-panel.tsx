@@ -1,18 +1,20 @@
 "use client";
 
 import { Button, Card } from "@cryptopilot/ui";
-import type { AiSearchResponse, ApiError } from "@cryptopilot/types";
+import type { AiSearchResponse, AiSearchSuggestionsResponse, ApiError } from "@cryptopilot/types";
 import { DEMO_USER_ID } from "@cryptopilot/types";
 import { useEffect, useRef, useState } from "react";
 import { getApiUrl } from "../lib/api-url";
 
 const demoUserId = process.env.NEXT_PUBLIC_DEMO_USER_ID ?? DEMO_USER_ID;
 
-const suggestions = [
-  "今天 ETH 为什么波动？",
-  "BTC ETF 资金流有什么变化？",
-  "Solana 生态最近有哪些热点？",
-  "哪些叙事正在升温？"
+const fallbackSuggestions = [
+  "BTC 今天的波动主要受哪些事件影响？",
+  "过去 24 小时，哪些 Token 出现明显异动？",
+  "最近升温最快的 Crypto 叙事是什么？",
+  "ETH 近期有哪些值得关注的事件或风险？",
+  "Meme 板块现在是情绪升温，还是短线噪音？",
+  "今天市场里最需要留意的风险信号是什么？"
 ];
 
 const sentimentLabels = {
@@ -31,7 +33,28 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AiSearchResponse["data"] | null>(null);
+  const [suggestions, setSuggestions] = useState(fallbackSuggestions);
   const prefilledRan = useRef(false);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadSuggestions() {
+      try {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/ai/suggestions`, { cache: "no-store" });
+        const body = (await response.json()) as AiSearchSuggestionsResponse | ApiError;
+        if (!response.ok || !("data" in body)) return;
+        const questions = body.data.items.map((item) => item.question).filter(Boolean);
+        if (mounted && questions.length) setSuggestions(questions);
+      } catch {
+        // Keep curated fallback questions when the API is unavailable.
+      }
+    }
+    void loadSuggestions();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!initialQuery.trim() || prefilledRan.current) return;
