@@ -1,4 +1,5 @@
 import type {
+  BookmarkListResponse,
   FeedDetailResponse,
   FeedListResponse,
   FeedTab,
@@ -89,6 +90,17 @@ export async function deleteBookmark(feedItemId: string) {
     headers: buildUserHeaders()
   });
   if (!response.ok) throw new Error("取消收藏失败");
+}
+
+export async function getBookmarks(): Promise<BookmarkListResponse["data"]> {
+  const apiUrl = getApiUrl();
+  const response = await apiFetch(`${apiUrl}/api/bookmarks`, {
+    cache: "no-store",
+    headers: buildUserHeaders()
+  });
+  if (!response.ok) throw new Error("收藏列表加载失败");
+  const body = (await response.json()) as BookmarkListResponse;
+  return body.data;
 }
 
 export async function getNarratives(sort: "hottest" | "rising" | "discussed" = "hottest") {

@@ -1,21 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createInsightBookmark, deleteBookmark } from "../lib/api";
+import { useBookmarkStore } from "../lib/bookmark-store";
 
 export function InsightBookmarkButton({ insightId }: { insightId: string }) {
-  const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
+  const loadBookmarks = useBookmarkStore((state) => state.load);
+  const saved = useBookmarkStore((state) => state.isSaved(insightId));
+  const markSaved = useBookmarkStore((state) => state.markSaved);
+  const markRemoved = useBookmarkStore((state) => state.markRemoved);
+
+  useEffect(() => {
+    void loadBookmarks();
+  }, [loadBookmarks]);
 
   const toggle = async () => {
     setPending(true);
     try {
       if (saved) {
         await deleteBookmark(insightId);
-        setSaved(false);
+        markRemoved(insightId);
       } else {
         await createInsightBookmark(insightId);
-        setSaved(true);
+        markSaved(insightId);
       }
     } catch {
       // keep UI state unchanged on error
@@ -26,7 +34,7 @@ export function InsightBookmarkButton({ insightId }: { insightId: string }) {
 
   return (
     <button
-      className="rounded-full border border-[#D9D5C9] px-3 py-1 text-sm text-[#5F6868] disabled:opacity-60"
+      className="font-medium text-[#5F6868] hover:text-[#20808D] disabled:opacity-60"
       disabled={pending}
       onClick={() => void toggle()}
       type="button"

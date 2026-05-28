@@ -178,6 +178,14 @@ export type NarrativeDetailResponse = ApiSuccess<NarrativeDetail>;
 export type WatchlistListResponse = ApiSuccess<{ items: WatchlistItemView[] }>;
 export type TokenListResponse = ApiSuccess<{ items: TokenListItem[] }>;
 export type KolListResponse = ApiSuccess<{ items: KolSummary[] }>;
+export type BookmarkListItem =
+  | { kind: "insight"; item: MarketInsightSummary }
+  | { kind: "feed_item"; item: FeedItemSummary };
+export type BookmarkListResponse = ApiSuccess<{
+  entity: "mixed";
+  items: BookmarkListItem[];
+  next_cursor: string | null;
+}>;
 
 export type FeedRelatedSourceRef = {
   feed_item_id: string;
