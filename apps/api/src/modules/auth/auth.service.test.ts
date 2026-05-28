@@ -16,6 +16,7 @@ describe("AuthService", () => {
       user: {
         findFirst: vi.fn().mockResolvedValue({
           id: "u1",
+          shortUid: "CP-7K2M9QX4",
           email: "user@example.com",
           name: "User",
           role: "USER"

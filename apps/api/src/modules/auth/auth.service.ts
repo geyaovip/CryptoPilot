@@ -1,11 +1,14 @@
 import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { signAuthToken, verifyAuthToken } from "./auth-token.util";
 import { createMagicLinkRawToken, hashMagicLinkToken } from "./magic-link.util";
 import { MagicLinkDto } from "./dto/magic-link.dto";
 
 const MAGIC_LINK_TTL_MS = 15 * 60 * 1000;
+const SHORT_UID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const SHORT_UID_LENGTH = 8;
 
 @Injectable()
 export class AuthService {
@@ -20,6 +23,7 @@ export class AuthService {
     return {
       user: {
         id: user.id,
+        uid: user.shortUid,
         email: user.email,
         name: user.name,
         role: user.role.toLowerCase() as "user" | "admin"
@@ -87,9 +91,7 @@ export class AuthService {
       throw new UnauthorizedException("用户不存在或已禁用");
     }
 
-    user = await this.prisma.user.create({
-      data: { email: normalized, name: normalized.split("@")[0], role: "USER" }
-    });
+    user = await this.createUserWithShortUid(normalized);
     return user;
   }
 
@@ -103,7 +105,7 @@ export class AuthService {
     return this.config.get<string>("NODE_ENV") !== "production";
   }
 
-  private issueSession(user: { id: string; email: string | null; name: string | null; role: string }) {
+  private issueSession(user: { id: string; shortUid: string; email: string | null; name: string | null; role: string }) {
     const secret = this.config.get<string>("AUTH_SECRET") ?? "";
     const access_token = signAuthToken({
       userId: user.id,
@@ -114,6 +116,7 @@ export class AuthService {
       access_token,
       user: {
         id: user.id,
+        uid: user.shortUid,
         email: user.email,
         name: user.name,
         role: user.role.toLowerCase()
@@ -131,4 +134,30 @@ export class AuthService {
     if (legacyUserId) return this.prisma.user.findUnique({ where: { id: legacyUserId } });
     return null;
   }
+
+  private async createUserWithShortUid(email: string) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const shortUid = createShortUid();
+      const existing = await this.prisma.user.findUnique({ where: { shortUid } });
+      if (existing) continue;
+
+      try {
+        return await this.prisma.user.create({
+          data: { email, shortUid, name: email.split("@")[0], role: "USER" }
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") continue;
+        throw error;
+      }
+    }
+    throw new UnauthorizedException("用户 UID 生成失败，请重试");
+  }
+}
+
+export function createShortUid(): string {
+  let value = "";
+  for (let index = 0; index < SHORT_UID_LENGTH; index += 1) {
+    value += SHORT_UID_ALPHABET[Math.floor(Math.random() * SHORT_UID_ALPHABET.length)];
+  }
+  return `CP-${value}`;
 }

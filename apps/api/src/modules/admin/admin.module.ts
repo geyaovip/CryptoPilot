@@ -20,6 +20,7 @@ import { AdminNarrativeService } from "./admin-narrative.service";
 import { AdminPromptService } from "./admin-prompt.service";
 import { AdminSourceService } from "./admin-source.service";
 import { AdminTokenService } from "./admin-token.service";
+import { AdminUserService } from "./admin-user.service";
 
 @Module({
   imports: [
@@ -45,7 +46,8 @@ import { AdminTokenService } from "./admin-token.service";
     AdminNarrativeService,
     AdminTokenService,
     AdminKolService,
-    AdminInsightService
+    AdminInsightService,
+    AdminUserService
   ]
 })
 export class AdminModule {}

@@ -8,6 +8,7 @@ describe("AuthService magic link", () => {
       user: {
         findFirst: vi.fn().mockResolvedValue({
           id: "u1",
+          shortUid: "CP-7K2M9QX4",
           email: "user@cryptopilot.local",
           name: "User",
           role: "USER"
@@ -43,6 +44,7 @@ describe("AuthService magic link", () => {
       user: {
         findFirst: vi.fn().mockResolvedValue({
           id: "u1",
+          shortUid: "CP-7K2M9QX4",
           email: "user@cryptopilot.local",
           name: "User",
           role: "USER"

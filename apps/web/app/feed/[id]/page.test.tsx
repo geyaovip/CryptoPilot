@@ -54,7 +54,7 @@ describe("FeedDetailPage", () => {
     render(await FeedDetailPage({ params: Promise.resolve({ id: "feed-1" }) }));
 
     expect(screen.getByTestId("feed-detail-hook").textContent).toContain("Layer2");
-    expect(screen.getByText("AI Summary")).toBeTruthy();
+    expect(screen.getByText("AI 已为你提炼")).toBeTruthy();
     expect(screen.getByText("来源摘录")).toBeTruthy();
     expect(screen.getByText("相关来源")).toBeTruthy();
     expect(screen.getByText("The Block")).toBeTruthy();

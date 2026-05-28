@@ -8,6 +8,7 @@ import { useBookmarkStore } from "../lib/bookmark-store";
 
 type MeUser = {
   id: string;
+  uid: string;
   email: string | null;
   name: string | null;
   role: string;
@@ -74,7 +75,7 @@ export function MePanel() {
       <Card className="max-w-xl border-[#D9D5C9] bg-white/95 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
         <h1 className="text-xl font-semibold text-[#102A2C]">{user.name ?? "用户"}</h1>
         <p className="mt-2 text-sm text-[#5F6868]">{user.email}</p>
-        <p className="mt-1 text-xs text-[#8A918C]">角色：{user.role}</p>
+        <p className="mt-1 font-mono text-xs text-[#8A918C]">UID：{user.uid}</p>
         <Button className="mt-6 border-[#D9D5C9] bg-white text-[#102A2C] hover:bg-[#F7F5EE]" onClick={logout}>
           退出登录
         </Button>

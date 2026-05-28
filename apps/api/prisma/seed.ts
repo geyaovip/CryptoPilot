@@ -65,8 +65,8 @@ async function main() {
   }
   await prisma.user.upsert({
     where: { id: adminUserId },
-    update: { email: adminEmail, name: "管理员", role: "ADMIN" },
-    create: { id: adminUserId, email: adminEmail, name: "管理员", role: "ADMIN" }
+    update: { email: adminEmail, name: "管理员", role: "ADMIN", shortUid: "CP-A7K9Q2M4" },
+    create: { id: adminUserId, shortUid: "CP-A7K9Q2M4", email: adminEmail, name: "管理员", role: "ADMIN" }
   });
   const demoUserId = "00000000-0000-0000-0000-000000000002";
   const demoEmail = "user@cryptopilot.local";
@@ -76,15 +76,16 @@ async function main() {
   }
   await prisma.user.upsert({
     where: { id: demoUserId },
-    update: { email: demoEmail, name: "示例用户", role: "USER" },
-    create: { id: demoUserId, email: demoEmail, name: "示例用户", role: "USER" }
+    update: { email: demoEmail, name: "示例用户", role: "USER", shortUid: "CP-D3X8N6P1" },
+    create: { id: demoUserId, shortUid: "CP-D3X8N6P1", email: demoEmail, name: "示例用户", role: "USER" }
   });
 
-  for (const [id, email, name] of extraUsers) {
+  for (const [index, [id, email, name]] of extraUsers.entries()) {
+    const shortUid = index === 0 ? "CP-B4T7L2Z9" : "CP-X6N3Q8R5";
     await prisma.user.upsert({
       where: { id },
-      update: { email, name, role: "USER" },
-      create: { id, email, name, role: "USER" }
+      update: { email, name, role: "USER", shortUid },
+      create: { id, email, name, role: "USER", shortUid }
     });
   }
 

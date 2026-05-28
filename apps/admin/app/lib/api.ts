@@ -309,6 +309,24 @@ export async function getAdminKols() {
   return body.data;
 }
 
+export type AdminUserItem = {
+  id: string;
+  uid: string;
+  email: string | null;
+  name: string | null;
+  role: "user" | "admin";
+  disabled_at: string | null;
+  daily_ai_search_count: number;
+  created_at: string;
+};
+
+export async function getAdminUsers() {
+  const response = await apiFetch(`${apiUrl}/api/admin/users`, { cache: "no-store", headers: adminHeaders() });
+  if (!response.ok) throw new Error("用户列表加载失败");
+  const body = (await response.json()) as { data: { items: AdminUserItem[] } };
+  return body.data;
+}
+
 export async function createAdminNarrative(input: {
   name: string;
   slug: string;

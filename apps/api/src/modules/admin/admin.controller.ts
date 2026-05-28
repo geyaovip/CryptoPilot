@@ -15,6 +15,7 @@ import { AdminNarrativeService } from "./admin-narrative.service";
 import { AdminPromptService } from "./admin-prompt.service";
 import { AdminSourceService } from "./admin-source.service";
 import { AdminTokenService } from "./admin-token.service";
+import { AdminUserService } from "./admin-user.service";
 import { CreateAdminKolDto, UpdateAdminKolDto } from "./dto/admin-kol.dto";
 import { CreateAdminNarrativeDto, MergeAdminNarrativeDto, UpdateAdminNarrativeDto } from "./dto/admin-narrative.dto";
 import { UpdateAdminTokenDto } from "./dto/admin-token.dto";
@@ -40,12 +41,18 @@ export class AdminController {
     @Inject(AdminNarrativeService) private readonly adminNarrativeService: AdminNarrativeService,
     @Inject(AdminTokenService) private readonly adminTokenService: AdminTokenService,
     @Inject(AdminKolService) private readonly adminKolService: AdminKolService,
-    @Inject(AdminInsightService) private readonly adminInsightService: AdminInsightService
+    @Inject(AdminInsightService) private readonly adminInsightService: AdminInsightService,
+    @Inject(AdminUserService) private readonly adminUserService: AdminUserService
   ) {}
 
   @Get("dashboard")
   async dashboard() {
     return ok(await this.adminDashboardService.getOverview());
+  }
+
+  @Get("users")
+  async users() {
+    return ok(await this.adminUserService.list());
   }
 
   @Get("feed")

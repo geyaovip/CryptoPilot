@@ -1,5 +1,16 @@
 export type UserRole = "user" | "admin";
 export type AuthProvider = "google" | "email";
+
+export function formatShortUid(id: string): string {
+  if (/^CP-[0-9A-Z]{8}$/.test(id)) return id;
+  const source = id.trim() || "cryptopilot";
+  let hash = 2166136261;
+  for (let index = 0; index < source.length; index += 1) {
+    hash ^= source.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `CP-${(hash >>> 0).toString(36).toUpperCase().padStart(8, "0").slice(0, 8)}`;
+}
 export type SourceType = "rss" | "twitter" | "reddit" | "coingecko" | "manual";
 export type SourceStatus = "active" | "paused" | "error";
 export type FeedType =
@@ -87,6 +98,7 @@ export type ApiError = {
 
 export type CurrentUser = {
   id: string;
+  uid: string;
   email: string | null;
   name: string | null;
   role: UserRole;
