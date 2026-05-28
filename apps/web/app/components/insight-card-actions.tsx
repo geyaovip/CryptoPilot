@@ -7,9 +7,10 @@ import { InsightBookmarkButton } from "./insight-bookmark-button";
 type InsightCardActionsProps = {
   insightId: string;
   askQuery: string;
+  showDetailLink?: boolean;
 };
 
-export function InsightCardActions({ insightId, askQuery }: InsightCardActionsProps) {
+export function InsightCardActions({ insightId, askQuery, showDetailLink = true }: InsightCardActionsProps) {
   const [copied, setCopied] = useState(false);
   const sharePath = `/insights/${insightId}`;
   const askHref = `/search?q=${encodeURIComponent(askQuery)}&insight_id=${insightId}`;
@@ -38,9 +39,11 @@ export function InsightCardActions({ insightId, askQuery }: InsightCardActionsPr
       <Link className="font-medium text-[#20808D]" href={askHref}>
         问 AI
       </Link>
-      <Link className="font-medium text-[#5F6868] hover:text-[#20808D]" href={sharePath}>
-        查看详情
-      </Link>
+      {showDetailLink ? (
+        <Link className="font-medium text-[#5F6868] hover:text-[#20808D]" href={sharePath}>
+          查看详情
+        </Link>
+      ) : null}
     </div>
   );
 }

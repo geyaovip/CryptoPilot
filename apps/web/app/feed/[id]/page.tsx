@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const title = feed.narrative_hook?.trim() || feed.title;
     return publicPageMetadata({
       title: seoTitle(title),
-      description: feed.ai_summary || feed.content || feed.title,
+      description: feed.ai_summary || feed.title,
       path: `/feed/${feed.id}`,
       type: "article"
     });
@@ -37,6 +37,10 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
   const hook = feed.narrative_hook?.trim() || feed.ai_summary?.trim() || "叙事动态更新中…";
   const summary = feed.ai_summary?.trim() || "AI 摘要生成中，请稍后刷新。";
   const feedType = feed.feed_type ?? feed.type;
+  const sourceExcerpt = normalizeSourceExcerpt(feed.content);
+  const sourcePreview = getSourcePreview(sourceExcerpt);
+  const shouldShowSourceExcerpt = Boolean(sourceExcerpt) && sourceExcerpt !== summary && sourceExcerpt !== hook;
+  const hasLongSourceExcerpt = sourceExcerpt.length > sourcePreview.length;
 
   return (
     <main className="min-h-screen bg-[#FCFCF9] px-4 py-6 text-[#102A2C]">
@@ -75,6 +79,10 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
             原文标题：
             <span className="text-[#5F6868]"> {feed.title}</span>
           </p>
+          <div className="mt-5 rounded-2xl border border-[#D9D5C9] bg-[#F7F5EE] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8A918C]">AI Summary</p>
+            <p className="mt-2 text-base leading-7 text-[#334143]">{summary}</p>
+          </div>
           <div className="mt-5 flex flex-wrap gap-2">
             {feed.related_tokens.map((token) => (
               <span className="rounded-full border border-[#D9D5C9] bg-[#FCFCF9] px-2.5 py-1 text-xs text-[#5F6868]" key={token.id}>
@@ -87,7 +95,27 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
               </span>
             ))}
           </div>
-          <div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-[#5F6868]">{feed.content}</div>
+          {shouldShowSourceExcerpt ? (
+            <section className="mt-5 rounded-2xl border border-[#E8E2D4] bg-[#FCFCF9] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold text-[#102A2C]">来源摘录</h2>
+                <span className="rounded-full bg-white px-2.5 py-1 text-xs text-[#8A918C]">原始内容，非 AI 改写</span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-[#8A918C]">
+                这里保留原始来源的关键信息，完整报道建议打开原文查看。
+              </p>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[#5F6868]">
+                {sourcePreview}
+                {hasLongSourceExcerpt ? "…" : ""}
+              </p>
+              {hasLongSourceExcerpt ? (
+                <details className="mt-3 rounded-xl border border-[#D9D5C9] bg-white px-3 py-2">
+                  <summary className="cursor-pointer text-sm font-medium text-[#20808D]">展开完整原始摘录</summary>
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[#5F6868]">{sourceExcerpt}</p>
+                </details>
+              ) : null}
+            </section>
+          ) : null}
           <div className="mt-5 flex flex-wrap items-center gap-4">
             <a className="text-sm font-medium text-[#20808D]" href={feed.source_url} rel="noopener noreferrer" target="_blank">
               打开原文
@@ -138,4 +166,20 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
       </article>
     </main>
   );
+}
+
+function normalizeSourceExcerpt(content: string): string {
+  return content
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function getSourcePreview(content: string): string {
+  const maxLength = 420;
+  if (content.length <= maxLength) return content;
+  const sentenceEnd = content.slice(0, maxLength).search(/[。！？.!?](?!.*[。！？.!?])/);
+  if (sentenceEnd > 180) return content.slice(0, sentenceEnd + 1);
+  return content.slice(0, maxLength).trimEnd();
 }

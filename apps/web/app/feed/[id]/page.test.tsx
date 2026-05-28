@@ -10,7 +10,8 @@ vi.mock("../../lib/api", () => ({
     narrative_hook: "Layer2 叙事再度升温",
     primary_narrative: { id: "n1", name: "Layer2", slug: "layer2" },
     feed_type: "narrative_shift",
-    content: "详情正文",
+    content:
+      "详情正文第一段，包含原始来源信息。第二句继续补充背景。\n\n这是一段更长的原始内容，用来验证详情页不会把全文直接作为主阅读内容展示。",
     source_name: "Cointelegraph",
     source_url: "https://example.com",
     publish_time: new Date().toISOString(),
@@ -53,6 +54,8 @@ describe("FeedDetailPage", () => {
     render(await FeedDetailPage({ params: Promise.resolve({ id: "feed-1" }) }));
 
     expect(screen.getByTestId("feed-detail-hook").textContent).toContain("Layer2");
+    expect(screen.getByText("AI Summary")).toBeTruthy();
+    expect(screen.getByText("来源摘录")).toBeTruthy();
     expect(screen.getByText("相关来源")).toBeTruthy();
     expect(screen.getByText("The Block")).toBeTruthy();
     expect(screen.getByText("关键原因")).toBeTruthy();
