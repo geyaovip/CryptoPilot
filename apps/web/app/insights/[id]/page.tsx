@@ -32,7 +32,35 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function InsightDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const insight = await getInsightDetail(id);
+  let insight: Awaited<ReturnType<typeof getInsightDetail>> | null = null;
+  try {
+    insight = await getInsightDetail(id);
+  } catch {
+    return (
+      <main className="min-h-screen bg-[#FCFCF9] px-4 py-6 text-[#102A2C]">
+        <section className="mx-auto max-w-2xl">
+          <a className="text-sm font-medium text-[#20808D]" href="/me">
+            返回个人中心
+          </a>
+          <Card className="mt-5 border-[#D9D5C9] bg-white/95 p-6 shadow-[0_18px_70px_rgba(16,42,44,0.08)]">
+            <p className="text-sm font-medium text-[#20808D]">Insight 暂不可查看</p>
+            <h1 className="mt-3 text-2xl font-semibold leading-snug">这条收藏的来源信息不足</h1>
+            <p className="mt-3 text-sm leading-7 text-[#5F6868]">
+              CryptoPilot 只会展示至少包含 2 个可核验来源的 Insight。你可以返回首页或个人中心，继续查看其它收藏内容。
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <a className="rounded-full bg-[#20808D] px-4 py-2 text-sm font-medium text-white" href="/">
+                返回首页
+              </a>
+              <a className="rounded-full border border-[#D9D5C9] px-4 py-2 text-sm font-medium text-[#5F6868]" href="/me">
+                查看我的收藏
+              </a>
+            </div>
+          </Card>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#FCFCF9] px-4 py-6 text-[#102A2C]">

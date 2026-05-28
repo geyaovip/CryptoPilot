@@ -2,7 +2,7 @@ import { ConflictException, Inject, Injectable, NotFoundException, UnauthorizedE
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { toFeedSummary } from "../feed/feed.mapper";
-import { toInsightSummary } from "../insights/insight.mapper";
+import { parseSourcesJson, toInsightSummary } from "../insights/insight.mapper";
 
 const feedInclude = {
   source: true,
@@ -38,7 +38,7 @@ export class BookmarksService {
             include: insightInclude
           })
         : [];
-    const insightMap = new Map(insights.map((row) => [row.id, row]));
+    const insightMap = new Map(insights.filter((row) => parseSourcesJson(row.sourcesJson).length >= 2).map((row) => [row.id, row]));
 
     const items = bookmarks
       .map((bookmark) => {
