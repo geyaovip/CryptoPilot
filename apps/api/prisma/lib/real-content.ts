@@ -234,10 +234,7 @@ export async function rebuildInsightsFromFeeds(prisma: PrismaClient) {
 
     const label = primary?.name ?? (tokenLabel ? `${tokenLabel} 相关` : "市场");
     const headline = `${label} 雷达：${batch[0].title.slice(0, 72)}`;
-    const summary = batch
-      .map((signal) => signal.aiSummary)
-      .join(" ")
-      .slice(0, 280);
+    const summary = buildInsightSummary(label, batch);
 
     const sources = batch.map((signal) => ({
       feed_item_id: signal.id,
@@ -259,8 +256,8 @@ export async function rebuildInsightsFromFeeds(prisma: PrismaClient) {
         primaryNarrativeId: primary?.id ?? null,
         rankScore: heatScore + heatVelocity,
         sourcesJson: sources,
-        keyReasons: batch.map((signal) => signal.title).slice(0, 3),
-        marketImpact: "多来源报道同一主题线索，建议结合原文交叉阅读。",
+        keyReasons: buildInsightReasons(batch),
+        marketImpact: "多来源信号正在指向同一主题，适合继续跟踪叙事热度、来源更新与后续数据变化。",
         status: "PUBLISHED",
         publishedAt: batch[0].publishTime
       }
@@ -274,4 +271,22 @@ export async function rebuildInsightsFromFeeds(prisma: PrismaClient) {
   }
 
   return { insights_created: created };
+}
+
+function buildInsightSummary(label: string, batch: Array<{ title: string; aiSummary: string; source: { name: string } }>): string {
+  const first = batch[0];
+  const second = batch[1];
+  const sourceNames = [...new Set(batch.map((signal) => signal.source.name))].slice(0, 3).join("、");
+  const firstText = compactText(first.aiSummary || first.title, 48);
+  const secondText = second ? `，同时「${compactText(second.aiSummary || second.title, 42)}」提供交叉背景` : "";
+  return `${batch.length} 个来源（${sourceNames}）正在共同指向 ${label} 相关信号：「${firstText}」${secondText}。该总结用于快速理解多来源动态，不构成投资建议。`;
+}
+
+function buildInsightReasons(batch: Array<{ title: string; source: { name: string } }>): string[] {
+  return batch.slice(0, 4).map((signal) => `${signal.source.name} 报道：${compactText(signal.title, 64)}`);
+}
+
+function compactText(value: string, maxLength: number): string {
+  const compact = value.replace(/\s+/g, " ").trim();
+  return compact.length > maxLength ? `${compact.slice(0, maxLength - 1)}…` : compact;
 }

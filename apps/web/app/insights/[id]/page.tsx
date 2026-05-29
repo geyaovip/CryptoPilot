@@ -61,6 +61,7 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
       </main>
     );
   }
+  const summary = insight.ai_summary.trim() || "AI 任务总结生成中，请稍后刷新。";
 
   return (
     <main className="min-h-screen bg-[#FCFCF9] px-4 py-6 text-[#102A2C]">
@@ -84,7 +85,10 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
           <h1 className="mt-3 text-2xl font-semibold leading-snug" data-testid="insight-detail-headline">
             {insight.ai_insight}
           </h1>
-          <p className="mt-3 text-sm leading-7 text-[#5F6868]">{insight.ai_summary}</p>
+          <div className="mt-4 rounded-2xl border border-[#E8E2D4] bg-[#F7F5EE] p-4">
+            <p className="text-xs font-semibold text-[#8A918C]">AI 任务总结</p>
+            <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-[#5F6868]">{summary}</p>
+          </div>
           <InsightCardActions askQuery={insight.ai_insight} insightId={insight.id} showDetailLink={false} />
         </Card>
 

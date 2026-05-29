@@ -80,7 +80,7 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
             <span className="text-[#5F6868]"> {feed.title}</span>
           </p>
           <div className="mt-5 rounded-2xl border border-[#D9D5C9] bg-[#F7F5EE] p-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-[#8A918C]">AI 已为你提炼</p>
+            <p className="text-xs font-semibold text-[#8A918C]">AI 已为你提炼</p>
             <p className="mt-2 text-base leading-7 text-[#334143]">{summary}</p>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">

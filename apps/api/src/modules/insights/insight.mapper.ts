@@ -59,7 +59,7 @@ export function toInsightSummary(insight: InsightRecord): MarketInsightSummary {
   return {
     id: insight.id,
     ai_insight: insight.aiInsight,
-    ai_summary: insight.aiSummary,
+    ai_summary: normalizeInsightSummary(insight, sources),
     type: feedType,
     feed_type: feedType,
     sentiment: insight.sentiment.toLowerCase() as MarketInsightSummary["sentiment"],
@@ -160,4 +160,28 @@ function collectNarratives(
     }
   }
   return tags;
+}
+
+function normalizeInsightSummary(insight: InsightRecord, sources: InsightSourceRef[]): string {
+  const summary = insight.aiSummary.replace(/\s+/g, " ").trim();
+  const signals = insight.signals ?? [];
+  if (summary.length <= 190 || signals.length < 2) return summary;
+
+  const signalSummaries = signals
+    .map((signal) => signal.aiSummary?.replace(/\s+/g, " ").trim())
+    .filter((value): value is string => Boolean(value));
+  const looksConcatenated = signalSummaries.length >= 2 && signalSummaries.every((value) => summary.includes(value.slice(0, 24)));
+  if (!looksConcatenated && summary.length <= 260) return summary;
+
+  const topic = insight.primaryNarrative?.name ?? collectNarratives(signals, insight.primaryNarrative)[0]?.name ?? "市场";
+  const sourceNames = [...new Set(sources.map((source) => source.source_name).filter(Boolean))].slice(0, 3).join("、");
+  const firstTitle = compactText(sources[0]?.title || signals[0]?.title || "多来源市场信号", 44);
+  const secondTitle = sources[1]?.title || signals[1]?.title;
+  const secondClause = secondTitle ? `，并由「${compactText(secondTitle, 38)}」提供交叉背景` : "";
+  return `${sources.length || signals.length} 个来源${sourceNames ? `（${sourceNames}）` : ""}正在共同指向 ${topic} 相关动态：「${firstTitle}」${secondClause}。该总结用于快速理解多来源信号，不构成投资建议。`;
+}
+
+function compactText(value: string, maxLength: number): string {
+  const compact = value.replace(/\s+/g, " ").trim();
+  return compact.length > maxLength ? `${compact.slice(0, maxLength - 1)}…` : compact;
 }
