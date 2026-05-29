@@ -165,13 +165,13 @@ function collectNarratives(
 function normalizeInsightSummary(insight: InsightRecord, sources: InsightSourceRef[]): string {
   const summary = insight.aiSummary.replace(/\s+/g, " ").trim();
   const signals = insight.signals ?? [];
-  if (summary.length <= 190 || signals.length < 2) return summary;
+  if (summary.length <= 120 || signals.length < 2) return summary;
 
   const signalSummaries = signals
     .map((signal) => signal.aiSummary?.replace(/\s+/g, " ").trim())
     .filter((value): value is string => Boolean(value));
   const looksConcatenated = signalSummaries.length >= 2 && signalSummaries.every((value) => summary.includes(value.slice(0, 24)));
-  if (!looksConcatenated && summary.length <= 260) return summary;
+  if (!looksConcatenated && summary.length <= 140) return summary;
 
   const topic = insight.primaryNarrative?.name ?? collectNarratives(signals, insight.primaryNarrative)[0]?.name ?? "市场";
   const sourceNames = [...new Set(sources.map((source) => source.source_name).filter(Boolean))].slice(0, 3).join("、");
