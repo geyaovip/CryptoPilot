@@ -66,7 +66,7 @@ export class AuthService {
     return {
       message: exposeLink
         ? "开发环境：点击下方链接完成登录；若已配置邮件服务，也会同步发送至邮箱。"
-        : "若该邮箱已注册，登录链接已发送，请查收邮件。",
+        : "登录链接已发送，请查收邮件。",
       ...(exposeLink ? { magic_link_url: magicLinkUrl } : {})
     };
   }

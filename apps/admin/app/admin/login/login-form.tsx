@@ -79,7 +79,7 @@ export function AdminLoginForm() {
         message?: string;
       };
       if (!response.ok) throw new Error(body.message ?? "发送失败");
-      setInfo(body.data?.message ?? "登录链接已发送，请查收邮箱。");
+      setInfo(body.data?.message ?? "登录链接已发送，请查收邮件。");
       if (body.data?.magic_link_url) setMagicLinkUrl(body.data.magic_link_url);
     } catch (err) {
       setInfo(null);
