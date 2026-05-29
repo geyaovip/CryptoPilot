@@ -13,8 +13,9 @@ export function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setAccessToken = useAdminAuthStore((state) => state.setAccessToken);
-  const [email, setEmail] = useState("admin@cryptopilot.local");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [magicLinkUrl, setMagicLinkUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +34,7 @@ export function AdminLoginForm() {
     const token = searchParams.get("token");
     if (!token) return;
     setLoading(true);
+    setInfo("正在验证登录链接...");
     const apiUrl = getApiUrl();
     void fetch(`${apiUrl}/api/auth/callback`, {
       method: "POST",
@@ -49,27 +51,38 @@ export function AdminLoginForm() {
         await finishLogin(body.data?.access_token ?? "");
       })
       .catch((err) => setError(err instanceof Error ? err.message : "登录失败"))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setInfo(null);
+        setLoading(false);
+      });
   }, [searchParams, setAccessToken, router]);
 
   async function handleMagicLink() {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (loading || !normalizedEmail) {
+      setError("请输入管理员邮箱");
+      return;
+    }
     setLoading(true);
     setError(null);
+    setInfo("正在发送登录邮件...");
     setMagicLinkUrl(null);
     try {
       const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/auth/magic-link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, redirect_path: "/admin/login" })
+        body: JSON.stringify({ email: normalizedEmail, redirect_path: "/admin/login" })
       });
       const body = (await response.json()) as {
-        data?: { magic_link_url?: string };
+        data?: { message?: string; magic_link_url?: string };
         message?: string;
       };
       if (!response.ok) throw new Error(body.message ?? "发送失败");
+      setInfo(body.data?.message ?? "登录链接已发送，请查收邮箱。");
       if (body.data?.magic_link_url) setMagicLinkUrl(body.data.magic_link_url);
     } catch (err) {
+      setInfo(null);
       setError(err instanceof Error ? err.message : "发送失败");
     } finally {
       setLoading(false);
@@ -77,8 +90,10 @@ export function AdminLoginForm() {
   }
 
   async function handleQuickLogin() {
+    if (loading) return;
     setLoading(true);
     setError(null);
+    setInfo("正在登录...");
     try {
       const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/auth/login`, {
@@ -94,6 +109,7 @@ export function AdminLoginForm() {
       if (body.data?.user?.role !== "admin") throw new Error("该账号不是管理员");
       await finishLogin(body.data?.access_token ?? "");
     } catch (err) {
+      setInfo(null);
       setError(err instanceof Error ? err.message : "登录失败");
     } finally {
       setLoading(false);
@@ -107,18 +123,24 @@ export function AdminLoginForm() {
       <p className="mt-2 text-sm text-slate-500">使用管理员邮箱获取 Magic Link，完成后台登录。</p>
       <input
         className="mt-4 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"
+        placeholder="you@example.com"
         type="email"
         value={email}
-        onChange={(event) => setEmail(event.target.value)}
+        onChange={(event) => {
+          setEmail(event.target.value);
+          setError(null);
+          setInfo(null);
+        }}
       />
       {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+      {info ? <p className="mt-2 text-sm text-emerald-700">{info}</p> : null}
       {magicLinkUrl ? (
         <a className="mt-2 block break-all text-sm text-slate-700 underline" href={magicLinkUrl}>
           点此完成管理员登录（开发环境）
         </a>
       ) : null}
-      <Button className="mt-4 w-full" disabled={loading} onClick={() => void handleMagicLink()}>
-        发送 Magic Link
+      <Button className="mt-4 w-full" disabled={loading || !email.trim()} onClick={() => void handleMagicLink()}>
+        {loading ? "处理中..." : "发送 Magic Link"}
       </Button>
       {betaDevLogin ? (
         <Button
