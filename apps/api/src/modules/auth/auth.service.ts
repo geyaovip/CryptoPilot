@@ -2,6 +2,7 @@ import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { MailService } from "../mail/mail.service";
 import { signAuthToken, verifyAuthToken } from "./auth-token.util";
 import { createMagicLinkRawToken, hashMagicLinkToken } from "./magic-link.util";
 import { MagicLinkDto } from "./dto/magic-link.dto";
@@ -14,7 +15,8 @@ const SHORT_UID_LENGTH = 8;
 export class AuthService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(ConfigService) private readonly config: ConfigService
+    @Inject(ConfigService) private readonly config: ConfigService,
+    @Inject(MailService) private readonly mailService: MailService
   ) {}
 
   async getCurrentUser(authorization?: string, legacyUserId?: string) {
@@ -32,6 +34,9 @@ export class AuthService {
   }
 
   async loginWithEmail(email: string) {
+    if (!this.isDevLoginAllowed()) {
+      throw new UnauthorizedException("请使用邮箱登录链接登录");
+    }
     const user = await this.findOrCreateUser(email);
     return this.issueSession(user);
   }
@@ -51,10 +56,15 @@ export class AuthService {
     const appUrl = this.config.get<string>("APP_URL") ?? "http://localhost:3000";
     const magicLinkUrl = `${appUrl}/login?token=${encodeURIComponent(raw)}`;
     const exposeLink = this.shouldExposeMagicLink();
+    await this.mailService.sendMagicLink({
+      to: email,
+      magicLinkUrl,
+      expiresInMinutes: Math.floor(MAGIC_LINK_TTL_MS / 60_000)
+    });
 
     return {
       message: exposeLink
-        ? "开发环境：点击下方链接完成登录（生产环境将发送至邮箱）。"
+        ? "开发环境：点击下方链接完成登录；若已配置邮件服务，也会同步发送至邮箱。"
         : "若该邮箱已注册，登录链接已发送，请查收邮件。",
       ...(exposeLink ? { magic_link_url: magicLinkUrl } : {})
     };
@@ -102,6 +112,11 @@ export class AuthService {
 
   private shouldExposeMagicLink(): boolean {
     if (this.config.get<string>("MAGIC_LINK_EXPOSE") === "true") return true;
+    return this.config.get<string>("NODE_ENV") !== "production";
+  }
+
+  private isDevLoginAllowed(): boolean {
+    if (this.config.get<string>("BETA_DEV_LOGIN") === "true") return true;
     return this.config.get<string>("NODE_ENV") !== "production";
   }
 

@@ -55,7 +55,9 @@ export class ApiExceptionFilter implements ExceptionFilter {
         method: request.method,
         path: request.url,
         status_code: status,
-        error_code: body.code
+        error_code: body.code,
+        exception_type: exception instanceof Error ? exception.name : typeof exception,
+        exception_message: exception instanceof Error ? exception.message : "Unknown error"
       });
     }
 

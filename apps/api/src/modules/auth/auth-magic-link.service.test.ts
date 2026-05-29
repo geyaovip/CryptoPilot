@@ -3,6 +3,8 @@ import { AuthService } from "./auth.service";
 import { hashMagicLinkToken } from "./magic-link.util";
 
 describe("AuthService magic link", () => {
+  const mailService = { sendMagicLink: vi.fn().mockResolvedValue(undefined) };
+
   it("returns magic link url in non-production", async () => {
     const prisma = {
       user: {
@@ -23,10 +25,13 @@ describe("AuthService magic link", () => {
         return undefined;
       }
     };
-    const service = new AuthService(prisma as never, config as never);
+    const service = new AuthService(prisma as never, config as never, mailService as never);
     const result = await service.requestMagicLink({ email: "user@cryptopilot.local" });
     expect(result.magic_link_url).toContain("/login?token=");
     expect(prisma.magicLinkToken.create).toHaveBeenCalled();
+    expect(mailService.sendMagicLink).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "user@cryptopilot.local" })
+    );
   });
 
   it("consumes valid token and issues session", async () => {
@@ -52,7 +57,7 @@ describe("AuthService magic link", () => {
       }
     };
     const config = { get: (key: string) => (key === "AUTH_SECRET" ? "test-secret-at-least-16" : undefined) };
-    const service = new AuthService(prisma as never, config as never);
+    const service = new AuthService(prisma as never, config as never, mailService as never);
     const result = await service.consumeMagicLink(raw);
     expect(result.access_token).toBeTruthy();
     expect(prisma.magicLinkToken.update).toHaveBeenCalled();
