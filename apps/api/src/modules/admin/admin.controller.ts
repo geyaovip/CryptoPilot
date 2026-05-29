@@ -24,6 +24,7 @@ import { CreatePromptDto, PromptQueryDto, TestPromptDto, UpdatePromptDto } from 
 import { UpdateSourceDto } from "./dto/admin-source.dto";
 import { PatchAdminConfigDto } from "./dto/admin-config.dto";
 import { AdminLogsQueryDto } from "./dto/admin-logs-query.dto";
+import { UpdateAdminUserDto } from "./dto/admin-user.dto";
 
 @Controller("admin")
 @UseGuards(AdminGuard)
@@ -53,6 +54,15 @@ export class AdminController {
   @Get("users")
   async users() {
     return ok(await this.adminUserService.list());
+  }
+
+  @Patch("users/:id")
+  async updateUser(
+    @Req() req: { user: { id: string } },
+    @Param("id") id: string,
+    @Body() dto: UpdateAdminUserDto
+  ) {
+    return ok(await this.adminUserService.update(id, dto, req.user.id));
   }
 
   @Get("feed")

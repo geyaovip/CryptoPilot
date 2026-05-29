@@ -328,6 +328,15 @@ export async function getAdminUsers() {
   return body.data;
 }
 
+export async function updateAdminUser(id: string, input: { role?: "user" | "admin"; disabled?: boolean }) {
+  const response = await apiFetch(`${apiUrl}/api/admin/users/${id}`, {
+    method: "PATCH",
+    headers: await adminHeaders(),
+    body: JSON.stringify(input)
+  });
+  if (!response.ok) throw new Error("更新用户失败");
+}
+
 export async function createAdminNarrative(input: {
   name: string;
   slug: string;
