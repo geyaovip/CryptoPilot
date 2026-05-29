@@ -12,7 +12,7 @@ const navItems: NavItem[] = [
   { label: "AI 监控", href: "/admin/ai-monitor" },
   { label: "叙事管理", href: "/admin/narratives" },
   { label: "资产管理", href: "/admin/tokens" },
-  { label: "观点源", href: "/admin/kols" },
+  { label: "KOL 源", href: "/admin/kols" },
   { label: "数据源", href: "/admin/sources" },
   { label: "用户管理", href: "/admin/users" },
   { label: "日志中心", href: "/admin/logs" },
