@@ -46,7 +46,15 @@ vi.mock("../lib/api", () => ({
   }),
   getTrending: async () => ({
     tokens: [],
-    narratives: [{ id: "n1", name: "AI", slug: "ai" }]
+    narratives: [{ id: "n1", name: "AI", slug: "ai" }],
+    fear_greed_index: {
+      value: 72,
+      classification: "Greed",
+      updated_at: new Date().toISOString(),
+      next_update_seconds: 3600,
+      source_name: "Alternative.me",
+      source_url: "https://alternative.me/crypto/fear-and-greed-index/"
+    }
   })
 }));
 
@@ -55,6 +63,7 @@ describe("HomePage", () => {
     render(await HomePage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByText("AI 市场雷达")).toBeTruthy();
+    expect(screen.getByText(/恐惧贪婪指数：72 贪婪/)).toBeTruthy();
     expect(screen.getByTestId("insight-card-headline").textContent).toContain("叙事升温");
     expect(screen.getByText("2 个可点击来源")).toBeTruthy();
   });

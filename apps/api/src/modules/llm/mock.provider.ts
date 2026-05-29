@@ -39,7 +39,7 @@ export class MockLlmProvider implements LlmProvider {
   private mockFeedSummary(user: string): FeedSummaryOutput {
     const title = extractBetween(user, "标题:", "\n") ?? "市场动态";
     return {
-      summary: `${title}：基于已收录来源的简要摘要，供研究参考，不构成投资建议。`,
+      summary: `${title}：相关来源已收录，建议结合原文继续核验。`,
       key_reasons: ["来源已收录并可追溯", "叙事与代币关联已在上下文中列出", "情绪判断仅反映报道语气"],
       market_impact: "可能提升相关叙事关注度，需结合更多来源交叉验证。",
       related_tokens: [],

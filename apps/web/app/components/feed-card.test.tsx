@@ -50,4 +50,18 @@ describe("FeedCard", () => {
     expect(screen.getByText("叙事变化")).toBeTruthy();
     expect(screen.getByRole("link", { name: /🔥 AI/ })).toBeTruthy();
   });
+
+  it("cleans disclaimer-style fallback summaries from headline", () => {
+    render(
+      <FeedCard
+        feed={{
+          ...baseFeed,
+          narrative_hook: "",
+          ai_summary: "BTC ETF 资金流入：基于已收录来源的简要摘要，供研究参考，不构成投资建议。"
+        }}
+      />
+    );
+
+    expect(screen.getByTestId("feed-card-hook").textContent).toBe("BTC ETF 资金流入");
+  });
 });

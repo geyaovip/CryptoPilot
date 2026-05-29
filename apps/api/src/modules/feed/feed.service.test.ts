@@ -6,7 +6,7 @@ describe("FeedService", () => {
     const insightService = {
       list: vi.fn().mockResolvedValue({ entity: "insight", items: [], next_cursor: null })
     };
-    const service = new FeedService({} as never, {} as never, insightService as never);
+    const service = new FeedService({} as never, {} as never, insightService as never, {} as never);
 
     await service.list({ limit: 2 });
 
@@ -55,7 +55,7 @@ describe("FeedService", () => {
     const findMany = vi.fn().mockResolvedValue(rows);
     const userInterest = { loadContext: vi.fn().mockResolvedValue(null), scoreFeed: vi.fn().mockReturnValue(0) };
     const insightService = { list: vi.fn() };
-    const service = new FeedService({ feedItem: { findMany } } as never, userInterest as never, insightService as never);
+    const service = new FeedService({ feedItem: { findMany } } as never, userInterest as never, insightService as never, {} as never);
 
     const result = await service.list({ limit: 10, entity: "feed_item", tab: "latest" });
 

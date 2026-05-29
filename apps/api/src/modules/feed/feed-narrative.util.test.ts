@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildNarrativeHook, narrativeImportanceScore, pickPrimaryNarrative } from "./feed-narrative.util";
+import { buildNarrativeHook, cleanFeedDisplayText, narrativeImportanceScore, pickPrimaryNarrative } from "./feed-narrative.util";
 
 const baseFeed = {
   type: "NARRATIVE_SHIFT",
@@ -22,5 +22,11 @@ describe("feed-narrative.util", () => {
 
   it("scores narrative importance from heat and weight", () => {
     expect(narrativeImportanceScore(baseFeed)).toBeGreaterThan(10);
+  });
+
+  it("removes mock disclaimer from feed display text", () => {
+    expect(cleanFeedDisplayText("BTC ETF 资金流入：基于已收录来源的简要摘要，供研究参考，不构成投资建议。")).toBe(
+      "BTC ETF 资金流入"
+    );
   });
 });

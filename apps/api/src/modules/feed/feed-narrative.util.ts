@@ -28,7 +28,7 @@ export function buildNarrativeHook(feed: FeedWithNarratives): string {
   const stored = feed.narrativeHook?.trim();
   if (stored) return stored;
 
-  const chinese = pickChineseDisplayText([feed.aiSummary, feed.title]);
+  const chinese = pickChineseDisplayText([cleanFeedDisplayText(feed.aiSummary), feed.title]);
   if (chinese) return chinese.slice(0, 120);
 
   const primary = pickPrimaryNarrative(feed);
@@ -49,6 +49,13 @@ export function buildNarrativeHook(feed: FeedWithNarratives): string {
     default:
       return primary ? `${name} 持续受到关注` : "市场动态更新";
   }
+}
+
+export function cleanFeedDisplayText(value?: string | null): string {
+  const text = value?.replace(/\s+/g, " ").trim() ?? "";
+  if (!text) return "";
+  const disclaimerPattern = /[:：]\s*基于已收录来源的简要摘要.*?(不构成投资建议。?)?$/;
+  return text.replace(disclaimerPattern, "").trim();
 }
 
 export function narrativeImportanceScore(feed: FeedWithNarratives): number {

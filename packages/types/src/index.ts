@@ -342,6 +342,14 @@ export type InsightDetailResponse = ApiSuccess<MarketInsightDetail>;
 export type TrendingResponse = ApiSuccess<{
   tokens: TokenSummary[];
   narratives: NarrativeSummary[];
+  fear_greed_index: {
+    value: number;
+    classification: string;
+    updated_at: string;
+    next_update_seconds: number | null;
+    source_name: "Alternative.me";
+    source_url: string;
+  } | null;
 }>;
 
 export type ContentLocale = "zh" | "en";

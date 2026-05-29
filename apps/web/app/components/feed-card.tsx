@@ -4,13 +4,15 @@ import { Card } from "@cryptopilot/ui";
 import { FeedCardActions } from "./feed-card-actions";
 import { FeedTypeBadge } from "./feed-type-badge";
 
+const DISCLAIMER_SUMMARY_PATTERN = /[:：]\s*基于已收录来源的简要摘要.*?(不构成投资建议。?)?$/;
+
 function isHot(heatScore: number) {
   return heatScore >= 85;
 }
 
 export function FeedCard({ feed }: { feed: FeedItemSummary }) {
-  const hook = feed.narrative_hook?.trim() || feed.ai_summary?.trim() || "叙事动态更新中…";
-  const summary = feed.ai_summary?.trim() || "AI 摘要生成中，请稍后刷新。";
+  const hook = cleanFeedText(feed.narrative_hook) || cleanFeedText(feed.ai_summary) || "叙事动态更新中…";
+  const summary = cleanFeedText(feed.ai_summary) || "AI 摘要生成中，请稍后刷新。";
   const sources = feed.related_sources ?? [];
   const sourceLabel =
     feed.related_source_count > 1 ? `${feed.related_source_count} 个相关来源` : "1 个来源";
@@ -40,7 +42,7 @@ export function FeedCard({ feed }: { feed: FeedItemSummary }) {
         </span>
       </div>
       <a
-        className="mt-3 block text-lg font-semibold leading-7 text-[#102A2C] hover:text-[#20808D]"
+        className="mt-3 line-clamp-3 block text-lg font-semibold leading-7 text-[#102A2C] hover:text-[#20808D]"
         data-testid="feed-card-hook"
         href={`/feed/${feed.id}`}
       >
@@ -55,11 +57,11 @@ export function FeedCard({ feed }: { feed: FeedItemSummary }) {
       {sources.length > 1 ? (
         <ul className="mt-2 space-y-1 text-xs text-[#5F6868]">
           {sources.slice(0, 3).map((source) => (
-            <li key={source.feed_item_id}>
+            <li className="flex gap-1" key={source.feed_item_id}>
               <a className="text-[#20808D] hover:underline" href={source.source_url} rel="noopener noreferrer" target="_blank">
                 {source.source_name}
               </a>
-              <span className="text-[#8A918C]"> · {source.title.slice(0, 48)}</span>
+              <span className="line-clamp-1 min-w-0 flex-1 text-[#8A918C]"> · {source.title}</span>
             </li>
           ))}
         </ul>
@@ -90,4 +92,8 @@ export function FeedCard({ feed }: { feed: FeedItemSummary }) {
       </div>
     </Card>
   );
+}
+
+function cleanFeedText(value?: string | null): string {
+  return value?.replace(/\s+/g, " ").trim().replace(DISCLAIMER_SUMMARY_PATTERN, "").trim() ?? "";
 }

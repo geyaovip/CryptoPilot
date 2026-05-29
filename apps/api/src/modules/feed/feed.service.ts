@@ -12,6 +12,7 @@ import {
   type ClusterFeedRow
 } from "./feed-cluster.util";
 import { toFeedDetail, toFeedSummary } from "./feed.mapper";
+import { FearGreedService } from "./fear-greed.service";
 import { UserInterestService } from "./user-interest.service";
 
 @Injectable()
@@ -19,7 +20,8 @@ export class FeedService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(UserInterestService) private readonly userInterest: UserInterestService,
-    @Inject(InsightService) private readonly insightService: InsightService
+    @Inject(InsightService) private readonly insightService: InsightService,
+    @Inject(FearGreedService) private readonly fearGreed: FearGreedService
   ) {}
 
   async list(query: FeedQueryDto, userId?: string) {
@@ -99,7 +101,7 @@ export class FeedService {
   }
 
   async trending() {
-    const [tokens, narratives] = await Promise.all([
+    const [tokens, narratives, fearGreedIndex] = await Promise.all([
       this.prisma.token.findMany({
         where: { deletedAt: null },
         orderBy: [{ priceChange24h: "desc" }, { symbol: "asc" }],
@@ -109,7 +111,8 @@ export class FeedService {
         where: { deletedAt: null, isActive: true, mergedIntoId: null },
         orderBy: [{ heatScore: "desc" }, { updatedAt: "desc" }],
         take: 8
-      })
+      }),
+      this.fearGreed.getIndex()
     ]);
 
     return {
@@ -124,7 +127,8 @@ export class FeedService {
         id: narrative.id,
         name: narrative.name,
         slug: narrative.slug
-      }))
+      })),
+      fear_greed_index: fearGreedIndex
     };
   }
 
