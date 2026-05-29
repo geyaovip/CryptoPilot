@@ -1,5 +1,7 @@
 import { AppShell, type NavItem } from "@cryptopilot/ui";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { hasAdminSession } from "../../lib/admin-session";
 import { AdminUserMenu } from "./admin-user-menu";
 import { CryptoPilotMark } from "./cryptopilot-mark";
 
@@ -18,7 +20,11 @@ const navItems: NavItem[] = [
   { label: "系统设置", href: "/admin/config" }
 ];
 
-export function AdminShell({ children }: { children: ReactNode }) {
+export async function AdminShell({ children }: { children: ReactNode }) {
+  if (!(await hasAdminSession())) {
+    redirect("/admin/login");
+  }
+
   return (
     <AppShell
       className="bg-white"
