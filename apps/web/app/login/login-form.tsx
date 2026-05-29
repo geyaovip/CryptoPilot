@@ -11,7 +11,7 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
-  const [email, setEmail] = useState("user@cryptopilot.local");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [magicLinkUrl, setMagicLinkUrl] = useState<string | null>(null);
@@ -21,6 +21,7 @@ export function LoginForm() {
     const token = searchParams.get("token");
     if (!token) return;
     setLoading(true);
+    setInfo("正在验证登录链接...");
     const apiUrl = getApiUrl();
     void fetch(`${apiUrl}/api/auth/callback`, {
       method: "POST",
@@ -38,20 +39,28 @@ export function LoginForm() {
         router.refresh();
       })
       .catch((err) => setError(err instanceof Error ? err.message : "登录失败"))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setInfo(null);
+        setLoading(false);
+      });
   }, [router, searchParams, setAccessToken]);
 
   async function handleMagicLink() {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (loading || !normalizedEmail) {
+      setError("请输入邮箱地址");
+      return;
+    }
     setLoading(true);
     setError(null);
-    setInfo(null);
+    setInfo("正在发送登录邮件...");
     setMagicLinkUrl(null);
     try {
       const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/auth/magic-link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email: normalizedEmail })
       });
       const body = (await response.json()) as {
         data?: { message: string; magic_link_url?: string };
@@ -61,6 +70,7 @@ export function LoginForm() {
       setInfo(body.data?.message ?? "请查收登录链接");
       if (body.data?.magic_link_url) setMagicLinkUrl(body.data.magic_link_url);
     } catch (err) {
+      setInfo(null);
       setError(err instanceof Error ? err.message : "发送失败");
     } finally {
       setLoading(false);
@@ -68,8 +78,10 @@ export function LoginForm() {
   }
 
   async function handleDevLogin() {
+    if (loading) return;
     setLoading(true);
     setError(null);
+    setInfo("正在登录...");
     try {
       const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/auth/login`, {
@@ -86,6 +98,7 @@ export function LoginForm() {
       router.push("/");
       router.refresh();
     } catch (err) {
+      setInfo(null);
       setError(err instanceof Error ? err.message : "登录失败");
     } finally {
       setLoading(false);
@@ -97,7 +110,7 @@ export function LoginForm() {
       <p className="text-xs font-medium uppercase tracking-wide text-[#20808D]">CryptoPilot</p>
       <h1 className="mt-2 text-2xl font-semibold text-[#102A2C]">登录</h1>
       <p className="mt-2 text-sm leading-6 text-[#5F6868]">
-        输入邮箱获取 Magic Link。Beta 新用户可使用 <code className="text-xs">*@cryptopilot.local</code> 自动注册。
+        输入邮箱获取 Magic Link，完成登录。
       </p>
       <div className="mt-6 space-y-3">
         <input
@@ -105,7 +118,11 @@ export function LoginForm() {
           placeholder="you@example.com"
           type="email"
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setError(null);
+            setInfo(null);
+          }}
         />
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         {info ? <p className="text-sm text-[#20808D]">{info}</p> : null}
@@ -116,7 +133,7 @@ export function LoginForm() {
         ) : null}
         <Button
           className="w-full rounded-2xl border-[#20808D] bg-[#20808D] text-white hover:bg-[#186A73]"
-          disabled={loading}
+          disabled={loading || !email.trim()}
           onClick={() => void handleMagicLink()}
         >
           {loading ? "处理中…" : "发送 Magic Link"}

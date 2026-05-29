@@ -20,6 +20,10 @@ export async function POST(request: Request) {
 
 export async function DELETE() {
   const cookieStore = await cookies();
-  cookieStore.delete(ADMIN_AUTH_COOKIE_NAME);
+  cookieStore.set(ADMIN_AUTH_COOKIE_NAME, "", {
+    ...adminAuthCookieOptions(),
+    httpOnly: true,
+    maxAge: 0
+  });
   return NextResponse.json({ ok: true });
 }
