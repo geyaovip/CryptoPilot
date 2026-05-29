@@ -9,7 +9,7 @@ export class AdminLogsService {
   async list(query: AdminLogsQueryDto) {
     const from = query.from ? new Date(query.from) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const to = query.to ? new Date(query.to) : new Date();
-    const take = query.limit ?? 50;
+    const take = normalizeLimit(query.limit);
 
     const [apiErrors, ingestionErrors, llmErrors, pushErrors, audits] = await Promise.all([
       query.type && query.type !== "api" ? [] : this.apiErrors(from, to, take),
@@ -106,4 +106,10 @@ export class AdminLogsService {
       detail: { admin_user_id: row.adminUserId }
     }));
   }
+}
+
+function normalizeLimit(limit: AdminLogsQueryDto["limit"]): number {
+  const parsed = Number(limit ?? 50);
+  if (!Number.isFinite(parsed)) return 50;
+  return Math.min(Math.max(Math.trunc(parsed), 1), 100);
 }
