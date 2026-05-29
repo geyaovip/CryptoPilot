@@ -68,7 +68,7 @@ export async function CryptoPilotHomePage({
                         ? "rounded-full bg-[#20808D] px-3 py-1 text-xs font-medium text-white"
                         : "rounded-full bg-[#F7F5EE] px-3 py-1 text-xs text-[#5F6868] hover:bg-[#EDE8DA]"
                     }
-                    href={active ? "/" : `/narratives/${item.slug}`}
+                    href={active ? "/" : `/?narrative=${item.slug}`}
                     key={item.id}
                   >
                     {item.name}

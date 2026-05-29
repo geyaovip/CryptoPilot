@@ -11,8 +11,27 @@ export class AdminFeedQueryDto {
   source_id?: string;
 
   @IsOptional()
-  @IsIn(["news", "narrative", "market_move", "social_trend", "breaking"])
-  type?: "news" | "narrative" | "market_move" | "social_trend" | "breaking";
+  @IsIn([
+    "news",
+    "narrative",
+    "market_move",
+    "social_trend",
+    "breaking",
+    "narrative_shift",
+    "sentiment_spike",
+    "market_rotation",
+    "kol_signal"
+  ])
+  type?:
+    | "news"
+    | "narrative"
+    | "market_move"
+    | "social_trend"
+    | "breaking"
+    | "narrative_shift"
+    | "sentiment_spike"
+    | "market_rotation"
+    | "kol_signal";
 
   @IsOptional()
   @IsString()

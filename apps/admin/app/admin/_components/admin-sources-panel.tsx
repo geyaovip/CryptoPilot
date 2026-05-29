@@ -5,9 +5,21 @@ import { Button, Card } from "@cryptopilot/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getSourceLogs, retryAdminSource, updateAdminSource } from "../../lib/api";
+import { AdminPagination } from "./admin-pagination";
 
-export function AdminSourcesPanel({ items }: { items: SourceSummary[] }) {
+type SourceListData = {
+  items: SourceSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  has_prev: boolean;
+  has_next: boolean;
+};
+
+export function AdminSourcesPanel({ data }: { data: SourceListData }) {
   const router = useRouter();
+  const items = data.items;
   const [logs, setLogs] = useState<IngestionLogSummary[]>([]);
   const [activeSource, setActiveSource] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -45,7 +57,9 @@ export function AdminSourcesPanel({ items }: { items: SourceSummary[] }) {
     <div className="space-y-4">
       <Card className="p-4">
         <h1 className="text-lg font-semibold text-slate-950">数据源</h1>
-        <p className="mt-1 text-sm text-slate-500">支持启停、手动重试和查看最近 50 条采集日志。</p>
+        <p className="mt-1 text-sm text-slate-500">
+          支持启停、手动重试和查看最近 50 条采集日志；连续失败 5 次会自动标记为 error，避免异常源反复影响采集。
+        </p>
         {message ? <p className="mt-2 text-sm text-[#20808D]">{message}</p> : null}
       </Card>
 
@@ -53,7 +67,7 @@ export function AdminSourcesPanel({ items }: { items: SourceSummary[] }) {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
-              {["名称", "语言", "类型", "状态", "最近成功", "最近错误", "间隔(秒)", "操作"].map((column) => (
+              {["名称", "语言", "类型", "状态", "失败次数", "最近成功", "最近错误", "间隔(秒)", "操作"].map((column) => (
                 <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
                   {column}
                 </th>
@@ -69,6 +83,7 @@ export function AdminSourcesPanel({ items }: { items: SourceSummary[] }) {
                 </td>
                 <td className="px-4 py-3 text-slate-700">{source.type}</td>
                 <td className="px-4 py-3 text-slate-700">{source.status}</td>
+                <td className="px-4 py-3 text-slate-700">{source.consecutive_failures}</td>
                 <td className="px-4 py-3 text-slate-700">
                   {source.last_success_at ? new Date(source.last_success_at).toLocaleString("zh-CN") : "-"}
                 </td>
@@ -104,6 +119,16 @@ export function AdminSourcesPanel({ items }: { items: SourceSummary[] }) {
           </tbody>
         </table>
       </Card>
+
+      <AdminPagination
+        basePath="/admin/sources"
+        hasNext={data.has_next}
+        hasPrev={data.has_prev}
+        limit={data.limit}
+        page={data.page}
+        total={data.total}
+        totalPages={data.total_pages}
+      />
 
       {activeSource ? (
         <Card className="p-4">

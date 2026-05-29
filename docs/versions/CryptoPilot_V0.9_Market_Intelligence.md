@@ -5,6 +5,12 @@
 依赖版本：**V0.8 Narrative Feed** 已完成。  
 产品依据：原「AI Narrative Feed 重方案」收敛至本版本，避免 MVP 复杂度爆炸。
 
+当前实现状态（2026-05）：
+
+- `market_insights`、`feed_items.insight_id`、Insight 列表/详情 API、Admin 重合成、Bookmark/AI Search 的 `insight_id` 已进入代码实现。
+- Insight 来源已按 URL 去重；去重后不足 2 个来源不发布、不在前台展示。
+- 仍需继续补齐完整 Heat Strip、运营级 Insight CRUD、性能/质量监控与 KOL Signal 子阶段。
+
 ---
 
 ## 1. 为什么在本阶段才做
@@ -28,6 +34,7 @@
 - 字段：`ai_insight`, `ai_summary`, `type`, `sentiment`, `heat_score`, `heat_velocity`, `heat_label`, `primary_narrative_id`, `rank_score`, `sources_json`。
 - Prompt：`insight_synthesis_prompt` + Schema 校验。
 - Embedding：`entity_type = insight`。
+- 发布门槛：`sources_json` 必须为去重后的可点击来源数组，长度 >= 2。
 
 ### 2.2 API
 
@@ -70,7 +77,7 @@
 ## 5. 验收标准
 
 - 首页主文案为 **ai_insight**。
-- 每条 Insight >= 2 个可点击 sources。
+- 每条 Insight >= 2 个去重后的可点击 sources。
 - For You 含 `heat_velocity` 或等价动态信号。
 - Ask AI、Save、Drill Down 完整。
 - 无投资建议；LLM 日志完整。

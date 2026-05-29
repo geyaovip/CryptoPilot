@@ -20,6 +20,7 @@ MVP：
 - 中文源 `source_weight` 更高；列表 API 支持 `locale=zh` 提升中文条目排序。
 - 英文条目经 `feed_summary_prompt` 生成 **中文 headline + summary**（卡片主文案为中文）。
 - Admin → 数据源 可查看「语言」列；可在库中追加可用中文 RSS URL（部分国内站点无公开 RSS，需 API 或运营录入）。
+- 当前实现状态：RSS 与 CoinGecko 已接入；Twitter/X、Reddit 仍为规划源，正式接入前不得在 UI 中暗示其已稳定运行。
 
 ## 2. 采集频率
 
@@ -54,7 +55,9 @@ MVP：
 失败重试：
 
 - 单次任务失败最多重试 2 次。
-- 连续失败 5 次将 source 标记为 error。
+- `sources.consecutive_failures` 记录连续失败次数。
+- 采集成功必须将 `consecutive_failures` 清零。
+- 连续失败 5 次将 source 标记为 error，并在 `error_message` 中说明自动降级原因。
 - error 状态 source 不自动采集，等待 Admin 手动恢复。
 
 ## 5. 降级
@@ -80,5 +83,5 @@ Twitter/X 不可用时：
 - CoinGecko 可定时更新。
 - 失败有日志。
 - Source 状态可在 Admin 查看。
+- Admin 可查看连续失败次数。
 - 采集任务不会重复创建同 URL Feed。
-

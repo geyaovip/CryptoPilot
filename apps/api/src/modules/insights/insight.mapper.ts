@@ -24,6 +24,7 @@ type SignalFeed = Parameters<typeof toFeedSummary>[0];
 
 export function parseSourcesJson(value: unknown): InsightSourceRef[] {
   if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
   return value
     .map((row) => {
       if (!row || typeof row !== "object") return null;
@@ -35,11 +36,14 @@ export function parseSourcesJson(value: unknown): InsightSourceRef[] {
       ) {
         return null;
       }
+      const key = item.source_url.trim();
+      if (!key || seen.has(key)) return null;
+      seen.add(key);
       return {
         feed_item_id: item.feed_item_id,
         title: typeof item.title === "string" ? item.title : "",
         source_name: item.source_name,
-        source_url: item.source_url,
+        source_url: key,
         published_at: typeof item.published_at === "string" ? item.published_at : new Date().toISOString()
       };
     })
@@ -95,13 +99,21 @@ export function buildSourcesFromSignals(
     source: { name: string };
   }>
 ): InsightSourceRef[] {
-  return signals.map((signal) => ({
-    feed_item_id: signal.id,
-    title: signal.title,
-    source_name: signal.source.name,
-    source_url: signal.sourceUrl,
-    published_at: signal.publishTime.toISOString()
-  }));
+  const seen = new Set<string>();
+  const sources: InsightSourceRef[] = [];
+  for (const signal of signals) {
+    const sourceUrl = signal.sourceUrl.trim();
+    if (!sourceUrl || seen.has(sourceUrl)) continue;
+    seen.add(sourceUrl);
+    sources.push({
+      feed_item_id: signal.id,
+      title: signal.title,
+      source_name: signal.source.name,
+      source_url: sourceUrl,
+      published_at: signal.publishTime.toISOString()
+    });
+  }
+  return sources;
 }
 
 function parseStringArray(value: unknown): string[] {

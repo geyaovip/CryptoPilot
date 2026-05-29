@@ -24,6 +24,7 @@ import { CreatePromptDto, PromptQueryDto, TestPromptDto, UpdatePromptDto } from 
 import { UpdateSourceDto } from "./dto/admin-source.dto";
 import { PatchAdminConfigDto } from "./dto/admin-config.dto";
 import { AdminLogsQueryDto } from "./dto/admin-logs-query.dto";
+import { AdminPaginationDto } from "./dto/admin-pagination.dto";
 import { UpdateAdminUserDto } from "./dto/admin-user.dto";
 
 @Controller("admin")
@@ -129,8 +130,8 @@ export class AdminController {
   }
 
   @Get("sources")
-  async sources() {
-    return ok(await this.adminSourceService.list());
+  async sources(@Query() query: AdminPaginationDto) {
+    return ok(await this.adminSourceService.list(query));
   }
 
   @Patch("sources/:id")
@@ -235,8 +236,8 @@ export class AdminController {
   }
 
   @Get("tokens")
-  async tokens() {
-    return ok(await this.adminTokenService.list());
+  async tokens(@Query() query: AdminPaginationDto) {
+    return ok(await this.adminTokenService.list(query));
   }
 
   @Patch("tokens/:id")
@@ -254,8 +255,8 @@ export class AdminController {
   }
 
   @Get("kols")
-  async kols() {
-    return ok(await this.adminKolService.list());
+  async kols(@Query() query: AdminPaginationDto) {
+    return ok(await this.adminKolService.list(query));
   }
 
   @Post("kols")

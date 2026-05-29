@@ -33,12 +33,18 @@ MVP 必须包含：
 - `/admin/feed`
 - `/admin/narratives`
 - `/admin/prompts`
-- `/admin/push`
+- `/admin/feed-clusters`
+- `/admin/kols`
 - `/admin/sources`
 - `/admin/users`
 - `/admin/ai-monitor`
+- `/admin/insights` 或等价 Insight 管理入口（V0.9）
 - `/admin/config`
 - `/admin/logs`
+
+延后：
+
+- `/admin/push`：随 V0.5 Telegram Push 单独实现；当前只允许保留日志/配置占位。
 
 ## 4. Dashboard
 
@@ -98,6 +104,7 @@ MVP 必须包含：
 - status。
 - last_success_at。
 - last_error_at。
+- consecutive_failures。
 - error_message。
 - fetch_interval。
 
@@ -106,6 +113,7 @@ MVP 必须包含：
 - 启停。
 - 重试。
 - 查看日志。
+- 表格分页。
 
 ## 8. 用户管理
 
@@ -117,6 +125,32 @@ MVP 必须包含：
 - 禁用/恢复。
 - 查看 AI Search 使用量。
 - 查看 Telegram 绑定状态。
+
+## 8.1 KOL 源管理
+
+定位：
+
+- KOL 源是 KOL / 社交信号与用户 Watchlist 的账号画像库，不是 RSS/API 采集管道。
+- 完整 KOL Signal 采集属于 V0.9 Post-MVP 子阶段；未接入前后台需明确标注其用途。
+
+必须支持：
+
+- 创建 KOL。
+- 编辑 handle、platform、profile_url、influence_score。
+- 启用/停用。
+- 表格分页。
+
+## 8.2 Insight 管理
+
+适用版本：V0.9 起。
+
+必须支持：
+
+- 查看 Insight 列表与来源。
+- 查看关联 Signals。
+- 重新合成。
+- 写操作审计。
+- Insight 发布前必须满足去重后至少 2 个可点击来源。
 
 ## 9. 系统配置
 
@@ -145,4 +179,3 @@ MVP 必须包含：
 - 页面均有 Loading/Empty/Error。
 - 表格支持分页。
 - 所有页面为浅色主题。
-

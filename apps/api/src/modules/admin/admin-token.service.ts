@@ -1,6 +1,7 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { AuditService } from "../common/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { AdminPaginationDto, normalizeAdminPagination, pageMeta } from "./dto/admin-pagination.dto";
 import { UpdateAdminTokenDto } from "./dto/admin-token.dto";
 
 @Injectable()
@@ -10,12 +11,20 @@ export class AdminTokenService {
     @Inject(AuditService) private readonly audit: AuditService
   ) {}
 
-  async list() {
-    const items = await this.prisma.token.findMany({
-      where: { deletedAt: null },
-      orderBy: [{ displayOrder: "asc" }, { symbol: "asc" }]
-    });
+  async list(query: AdminPaginationDto = {}) {
+    const { page, limit, skip } = normalizeAdminPagination(query);
+    const where = { deletedAt: null };
+    const [total, items] = await this.prisma.$transaction([
+      this.prisma.token.count({ where }),
+      this.prisma.token.findMany({
+        where,
+        orderBy: [{ displayOrder: "asc" }, { symbol: "asc" }],
+        skip,
+        take: limit
+      })
+    ]);
     return {
+      ...pageMeta(total, page, limit),
       items: items.map((token) => ({
         id: token.id,
         symbol: token.symbol,

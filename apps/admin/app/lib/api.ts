@@ -25,7 +25,7 @@ export type AdminFeedFilters = {
   limit?: string;
 };
 
-function toQuery(filters: AdminFeedFilters) {
+function toQuery(filters: Record<string, string | undefined>) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value) params.set(key, value);
@@ -54,13 +54,30 @@ export async function getAdminFeed(filters: AdminFeedFilters = {}): Promise<Admi
   return body.data;
 }
 
-export async function getAdminSources(): Promise<SourceListResponse["data"]> {
-  const response = await apiFetch(`${apiUrl}/api/admin/sources`, {
+export type AdminPaginationFilters = {
+  page?: string;
+  limit?: string;
+};
+
+export type AdminListData<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  has_prev: boolean;
+  has_next: boolean;
+};
+
+export async function getAdminSources(
+  filters: AdminPaginationFilters = {}
+): Promise<AdminListData<SourceListResponse["data"]["items"][number]>> {
+  const response = await apiFetch(`${apiUrl}/api/admin/sources${toQuery(filters)}`, {
     cache: "no-store",
     headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("Source 数据加载失败");
-  const body = (await response.json()) as SourceListResponse;
+  const body = (await response.json()) as { data: AdminListData<SourceListResponse["data"]["items"][number]> };
   return body.data;
 }
 
@@ -292,21 +309,37 @@ export async function getAdminNarratives() {
   return body.data;
 }
 
-export async function getAdminTokens() {
-  const response = await apiFetch(`${apiUrl}/api/admin/tokens`, { cache: "no-store", headers: await adminHeaders() });
+export type AdminTokenItem = {
+  id: string;
+  symbol: string;
+  name: string;
+  is_active: boolean;
+  price_usd: number | null;
+  price_change_24h: number | null;
+  display_order: number;
+};
+
+export async function getAdminTokens(filters: AdminPaginationFilters = {}): Promise<AdminListData<AdminTokenItem>> {
+  const response = await apiFetch(`${apiUrl}/api/admin/tokens${toQuery(filters)}`, { cache: "no-store", headers: await adminHeaders() });
   if (!response.ok) throw new Error("资产管理数据加载失败");
-  const body = (await response.json()) as {
-    data: { items: { id: string; symbol: string; name: string; is_active: boolean }[] };
-  };
+  const body = (await response.json()) as { data: AdminListData<AdminTokenItem> };
   return body.data;
 }
 
-export async function getAdminKols() {
-  const response = await apiFetch(`${apiUrl}/api/admin/kols`, { cache: "no-store", headers: await adminHeaders() });
-  if (!response.ok) throw new Error("观点源管理数据加载失败");
-  const body = (await response.json()) as {
-    data: { items: { id: string; name: string; handle: string; is_active: boolean }[] };
-  };
+export type AdminKolItem = {
+  id: string;
+  name: string;
+  handle: string;
+  platform: string;
+  profile_url: string | null;
+  influence_score: number;
+  is_active: boolean;
+};
+
+export async function getAdminKols(filters: AdminPaginationFilters = {}): Promise<AdminListData<AdminKolItem>> {
+  const response = await apiFetch(`${apiUrl}/api/admin/kols${toQuery(filters)}`, { cache: "no-store", headers: await adminHeaders() });
+  if (!response.ok) throw new Error("KOL 源管理数据加载失败");
+  const body = (await response.json()) as { data: AdminListData<AdminKolItem> };
   return body.data;
 }
 

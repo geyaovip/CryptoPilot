@@ -24,24 +24,22 @@
 
 ## 2. 版本文档
 
-AI 必须按顺序执行（MVP 主线）：
+AI 按版本路线推进，但当前仓库已经进入 V0.8 轻聚合与 V0.9 Market Insight 的部分实现阶段。后续开发应以“补齐当前实现与验收差距”为主，不再把 V0.7–V0.9 视为禁止进入的未来能力。
 
 1. `docs/versions/CryptoPilot_V0.1_Skeleton.md`
 2. `docs/versions/CryptoPilot_V0.2_Feed.md`
 3. `docs/versions/CryptoPilot_V0.3_AI.md`
 4. `docs/versions/CryptoPilot_V0.4_Narrative_Watchlist.md`
-5. `docs/versions/CryptoPilot_V0.6_MVP_Beta.md` — MVP Beta（已知缺口可延后）
+5. `docs/versions/CryptoPilot_V0.6_MVP_Beta.md` — MVP Beta 收口（PWA、权限、日志、限流、测试、部署）
 6. `docs/versions/CryptoPilot_V0.7_AI_Curated_Feed.md` — Phase 1 Summary-first 首页体验
-7. `docs/versions/CryptoPilot_V0.8_Narrative_Feed.md` — Phase 2 Narrative Layer（方案 B 见 `docs/design/V0.8_feed_aggregation_decision.md`）
-8. `docs/versions/CryptoPilot_V0.9_Market_Intelligence.md` — Phase 3 Insight 实体与市场雷达
-9. `docs/versions/CryptoPilot_V0.6_MVP_Beta.md` — MVP Beta 收口（PWA、权限、日志、限流、测试、部署）
-10. `docs/versions/CryptoPilot_V0.8_Narrative_Feed.md` — **当前活跃版本**：方案 B 轻聚合（`cluster_id` + 信号流 Tab）
+7. `docs/versions/CryptoPilot_V0.8_Narrative_Feed.md` — **当前重点补齐**：Phase 2 Narrative Layer + 方案 B 轻聚合（`cluster_id` + 信号流 Tab）
+8. `docs/versions/CryptoPilot_V0.9_Market_Intelligence.md` — **当前部分实现，继续补齐**：Phase 3 Insight 实体与市场雷达
 
 **延后至 MVP 主线完成之后（单独版本，不插队）：**
 
-11. `docs/versions/CryptoPilot_V0.5_Telegram_Push.md` — Telegram 绑定与推送（最后做，不着急）
+9. `docs/versions/CryptoPilot_V0.5_Telegram_Push.md` — Telegram 绑定与推送（最后做，不着急）
 
-未完成前一版本验收前，不得开发后一版本。**禁止在 V0.4–V0.6 实现 Insight 主表或 Smart Money。**
+Smart Money、Pro 订阅、Native App、支付、交易等仍然禁止进入 MVP。Insight 已进入 V0.9 路线，相关功能应继续按 V0.9 验收补齐。
 
 ## 3. 产品路线与模块文档
 

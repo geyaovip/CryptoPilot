@@ -36,6 +36,7 @@ export class InsightSynthesisService {
     if (!insight || insight.signals.length < 2) return false;
 
     const sources = buildSourcesFromSignals(insight.signals);
+    if (sources.length < 2) return false;
     const template = await this.promptService.getActiveContent("insight_synthesis_prompt");
     const prompt = this.promptService.renderTemplate(template, {
       primary_narrative: insight.primaryNarrative?.name ?? "综合市场",

@@ -5,6 +5,8 @@ import { BackgroundJobsService } from "../common/background-jobs.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { ingestSourceItems } from "./ingest-source.util";
 
+const MAX_CONSECUTIVE_SOURCE_FAILURES = 5;
+
 @Injectable()
 export class IngestionService {
   constructor(
@@ -61,7 +63,12 @@ export class IngestionService {
 
       await this.prisma.source.update({
         where: { id: source.id },
-        data: { lastSuccessAt: new Date(), errorMessage: null, status: "ACTIVE" }
+        data: {
+          lastSuccessAt: new Date(),
+          consecutiveFailures: 0,
+          errorMessage: null,
+          status: "ACTIVE"
+        }
       });
       await this.prisma.ingestionLog.create({
         data: {
@@ -76,11 +83,18 @@ export class IngestionService {
 
       return result;
     } catch (error) {
+      const nextFailures = source.consecutiveFailures + 1;
+      const errorMessage = error instanceof Error ? error.message : "采集失败";
       await this.prisma.source.update({
         where: { id: source.id },
         data: {
           lastErrorAt: new Date(),
-          errorMessage: error instanceof Error ? error.message : "采集失败"
+          consecutiveFailures: nextFailures,
+          status: nextFailures >= MAX_CONSECUTIVE_SOURCE_FAILURES ? "ERROR" : source.status,
+          errorMessage:
+            nextFailures >= MAX_CONSECUTIVE_SOURCE_FAILURES
+              ? `${errorMessage}（连续失败 ${nextFailures} 次，已自动标记为 error）`
+              : errorMessage
         }
       });
       await this.prisma.ingestionLog.create({
@@ -89,7 +103,7 @@ export class IngestionService {
           startedAt,
           finishedAt: new Date(),
           status: "FAILED",
-          errorMessage: error instanceof Error ? error.message : "采集失败"
+          errorMessage
         }
       });
       throw error;

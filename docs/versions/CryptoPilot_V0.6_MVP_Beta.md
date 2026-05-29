@@ -27,8 +27,7 @@
 ## 2. 本版本禁止实现
 
 - 不新增长期功能。
-- 不实现 V0.7–V0.9 首页阶段能力（Summary-first 改版、Narrative Feed 类型、Insight 表）；见 `docs/design/Home_Feed_Evolution_Phases.md`。
-- 不实现 Market 模块。
+- V0.7–V0.9 首页阶段能力已进入后续路线；本文件只保留 V0.6 稳定性、权限、安全、观测、PWA、测试和部署要求，不再阻止后续首页/Insight 能力补齐。
 - 不实现 Smart Money。
 - 不实现 Pro 订阅。
 - 不实现 Native App。
@@ -191,4 +190,3 @@ V1.0 正式 MVP 必须基于真实试用反馈完成：
 - 数据源稳定性优化。
 - AI 输出质量优化。
 - 上线监控。
-

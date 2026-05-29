@@ -3,6 +3,7 @@ import { AuditService } from "../common/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { IngestionService } from "../ingestion/ingestion.service";
 import { UpdateSourceDto } from "./dto/admin-source.dto";
+import { AdminPaginationDto, normalizeAdminPagination, pageMeta } from "./dto/admin-pagination.dto";
 
 @Injectable()
 export class AdminSourceService {
@@ -12,14 +13,21 @@ export class AdminSourceService {
     @Inject(AuditService) private readonly audit: AuditService
   ) {}
 
-  async list() {
-    const sources = await this.prisma.source.findMany({
-      where: { deletedAt: null },
-      orderBy: { name: "asc" },
-      take: 50
-    });
+  async list(query: AdminPaginationDto = {}) {
+    const { page, limit, skip } = normalizeAdminPagination(query);
+    const where = { deletedAt: null };
+    const [total, sources] = await this.prisma.$transaction([
+      this.prisma.source.count({ where }),
+      this.prisma.source.findMany({
+        where,
+        orderBy: { name: "asc" },
+        skip,
+        take: limit
+      })
+    ]);
 
     return {
+      ...pageMeta(total, page, limit),
       items: sources.map((source) => ({
         id: source.id,
         name: source.name,
@@ -28,6 +36,7 @@ export class AdminSourceService {
         content_locale: source.contentLocale.toLowerCase() as "zh" | "en",
         last_success_at: source.lastSuccessAt?.toISOString() ?? null,
         last_error_at: source.lastErrorAt?.toISOString() ?? null,
+        consecutive_failures: source.consecutiveFailures,
         fetch_interval_seconds: source.fetchIntervalSeconds
       })),
       next_cursor: null
@@ -38,7 +47,11 @@ export class AdminSourceService {
     const before = await this.ensureSource(id);
     await this.prisma.source.update({
       where: { id },
-      data: { status: dto.status?.toUpperCase() as "ACTIVE" | "PAUSED" | "ERROR" | undefined }
+      data: {
+        status: dto.status?.toUpperCase() as "ACTIVE" | "PAUSED" | "ERROR" | undefined,
+        consecutiveFailures: dto.status === "active" ? 0 : undefined,
+        errorMessage: dto.status === "active" ? null : undefined
+      }
     });
     await this.audit.log({
       adminUserId,

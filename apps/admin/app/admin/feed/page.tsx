@@ -40,7 +40,15 @@ export default async function AdminFeedPage({
     has_prev: false,
     has_next: false
   };
-  let sources: Awaited<ReturnType<typeof getAdminSources>> = { items: [], next_cursor: null };
+  let sources: Awaited<ReturnType<typeof getAdminSources>> = {
+    items: [],
+    total: 0,
+    page: 1,
+    limit: 25,
+    total_pages: 1,
+    has_prev: false,
+    has_next: false
+  };
   try {
     [feed, sources] = await Promise.all([getAdminFeed(filters), getAdminSources()]);
   } catch (error) {

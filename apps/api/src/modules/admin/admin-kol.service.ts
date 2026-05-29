@@ -2,6 +2,7 @@ import { ConflictException, Inject, Injectable, NotFoundException } from "@nestj
 import { AuditService } from "../common/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateAdminKolDto, UpdateAdminKolDto } from "./dto/admin-kol.dto";
+import { AdminPaginationDto, normalizeAdminPagination, pageMeta } from "./dto/admin-pagination.dto";
 
 @Injectable()
 export class AdminKolService {
@@ -10,12 +11,20 @@ export class AdminKolService {
     @Inject(AuditService) private readonly audit: AuditService
   ) {}
 
-  async list() {
-    const items = await this.prisma.kol.findMany({
-      where: { deletedAt: null },
-      orderBy: [{ influenceScore: "desc" }, { name: "asc" }]
-    });
+  async list(query: AdminPaginationDto = {}) {
+    const { page, limit, skip } = normalizeAdminPagination(query);
+    const where = { deletedAt: null };
+    const [total, items] = await this.prisma.$transaction([
+      this.prisma.kol.count({ where }),
+      this.prisma.kol.findMany({
+        where,
+        orderBy: [{ influenceScore: "desc" }, { name: "asc" }],
+        skip,
+        take: limit
+      })
+    ]);
     return {
+      ...pageMeta(total, page, limit),
       items: items.map((kol) => ({
         id: kol.id,
         name: kol.name,
