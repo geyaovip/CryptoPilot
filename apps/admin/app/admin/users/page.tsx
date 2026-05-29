@@ -2,6 +2,8 @@ import { AdminShell } from "../_components/admin-shell";
 import { DataTable } from "../_components/data-table";
 import { getAdminUsers } from "../../lib/api";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminUsersPage() {
   const data = await getAdminUsers();
   return (
