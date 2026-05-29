@@ -1,6 +1,7 @@
 import { AdminFeedClustersPanel } from "../_components/admin-feed-clusters-panel";
 import { AdminShell } from "../_components/admin-shell";
 import { getAdminFeedClusters, type AdminFeedClusterFilters } from "../../lib/api";
+import { requireAdminSession } from "../../lib/admin-session";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ function pickParam(value: string | string[] | undefined): string | undefined {
 }
 
 export default async function AdminFeedClustersPage({ searchParams }: PageProps) {
+  await requireAdminSession();
   const params = await searchParams;
   const filters: AdminFeedClusterFilters = {
     page: pickParam(params.page),

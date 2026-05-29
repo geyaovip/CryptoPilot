@@ -2,10 +2,12 @@ import { EmptyState } from "@cryptopilot/ui";
 import { AdminDashboardPanel } from "../_components/admin-dashboard-panel";
 import { AdminShell } from "../_components/admin-shell";
 import { getAdminDashboard } from "../../lib/api";
+import { requireAdminSession } from "../../lib/admin-session";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  await requireAdminSession();
   let data: Awaited<ReturnType<typeof getAdminDashboard>> | null = null;
   let loadError: string | null = null;
 

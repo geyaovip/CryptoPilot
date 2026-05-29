@@ -2,10 +2,12 @@ import { Card } from "@cryptopilot/ui";
 import { AdminShell } from "../_components/admin-shell";
 import { AdminTokenActions } from "../_components/admin-token-actions";
 import { getAdminTokens } from "../../lib/api";
+import { requireAdminSession } from "../../lib/admin-session";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminTokensPage() {
+  await requireAdminSession();
   const data = await getAdminTokens();
   return (
     <AdminShell>

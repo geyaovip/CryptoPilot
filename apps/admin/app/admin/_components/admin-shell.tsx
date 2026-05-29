@@ -1,7 +1,6 @@
 import { AppShell, type NavItem } from "@cryptopilot/ui";
-import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { hasAdminSession } from "../../lib/admin-session";
+import { requireAdminSession } from "../../lib/admin-session";
 import { AdminUserMenu } from "./admin-user-menu";
 import { CryptoPilotMark } from "./cryptopilot-mark";
 
@@ -21,9 +20,7 @@ const navItems: NavItem[] = [
 ];
 
 export async function AdminShell({ children }: { children: ReactNode }) {
-  if (!(await hasAdminSession())) {
-    redirect("/admin/login");
-  }
+  await requireAdminSession();
 
   return (
     <AppShell

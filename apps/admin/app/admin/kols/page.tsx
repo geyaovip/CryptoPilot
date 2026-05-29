@@ -2,10 +2,12 @@ import { Card } from "@cryptopilot/ui";
 import { AdminKolActions } from "../_components/admin-kol-actions";
 import { AdminShell } from "../_components/admin-shell";
 import { getAdminKols } from "../../lib/api";
+import { requireAdminSession } from "../../lib/admin-session";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminKolsPage() {
+  await requireAdminSession();
   const data = await getAdminKols();
   return (
     <AdminShell>

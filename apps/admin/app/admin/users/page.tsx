@@ -1,10 +1,12 @@
 import { AdminShell } from "../_components/admin-shell";
 import { AdminUserActions } from "../_components/admin-user-actions";
 import { getAdminUsers } from "../../lib/api";
+import { requireAdminSession } from "../../lib/admin-session";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
+  await requireAdminSession();
   const data = await getAdminUsers();
   return (
     <AdminShell>

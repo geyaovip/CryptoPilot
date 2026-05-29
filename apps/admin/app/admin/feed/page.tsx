@@ -1,6 +1,7 @@
 import { AdminFeedPanel } from "../_components/admin-feed-panel";
 import { AdminShell } from "../_components/admin-shell";
 import { getAdminFeed, getAdminSources, type AdminFeedFilters } from "../../lib/api";
+import { requireAdminSession } from "../../lib/admin-session";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function AdminFeedPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  await requireAdminSession();
   const params = await searchParams;
   const filters = readFilters(params);
   let loadError: string | null = null;
