@@ -6,6 +6,10 @@ vi.mock("../_components/admin-shell", () => ({
   AdminShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }));
 
+vi.mock("../../lib/admin-session", () => ({
+  requireAdminSession: vi.fn().mockResolvedValue(undefined)
+}));
+
 vi.mock("../../lib/api", () => ({
   getAdminDashboard: vi.fn().mockResolvedValue({
     feeds_today: 12,

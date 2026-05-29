@@ -6,6 +6,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { EmbeddingService } from "../ai/embedding.service";
 import { buildSourcesFromSignals, parseSourcesJson } from "./insight.mapper";
 import { parseInsightSynthesisOutput } from "./insight-synthesis.schema";
+import type { InsightSynthesisOutput } from "./insight-synthesis.schema";
 
 const signalInclude = {
   source: true,
@@ -53,27 +54,11 @@ export class InsightSynthesisService {
         user: prompt
       });
       const parsed = parseInsightSynthesisOutput(llm.data);
-      if (!parsed.success) return false;
-
-      const heatVelocity = insight.heatVelocity;
-      await this.prisma.marketInsight.update({
-        where: { id: insightId },
-        data: {
-          aiInsight: parsed.data.ai_insight,
-          aiSummary: parsed.data.ai_summary,
-          keyReasons: parsed.data.key_reasons,
-          marketImpact: parsed.data.market_impact,
-          sentiment: parsed.data.sentiment.toUpperCase() as "BULLISH" | "NEUTRAL" | "BEARISH",
-          type: this.toPrismaFeedType(parsed.data.type),
-          sourcesJson: sources,
-          status: "PUBLISHED",
-          publishedAt: insight.signals[0]?.publishTime ?? new Date(),
-          rankScore: insight.heatScore + heatVelocity
-        }
-      });
+      const output = parsed.success ? parsed.data : this.fallbackOutput(insight);
+      await this.publishInsight(insightId, insight, sources, output);
 
       await this.embeddingService
-        .upsertEntityEmbedding("insight", insightId, `${parsed.data.ai_insight}\n${parsed.data.ai_summary}`)
+        .upsertEntityEmbedding("insight", insightId, `${output.ai_insight}\n${output.ai_summary}`)
         .catch((error) => {
           this.logger.warn(error instanceof Error ? error.message : "embedding failed");
         });
@@ -81,8 +66,54 @@ export class InsightSynthesisService {
       return true;
     } catch (error) {
       this.logger.warn(error instanceof Error ? error.message : "synthesis failed");
-      return false;
+      const output = this.fallbackOutput(insight);
+      await this.publishInsight(insightId, insight, sources, output);
+      await this.embeddingService.upsertEntityEmbedding("insight", insightId, `${output.ai_insight}\n${output.ai_summary}`).catch(() => undefined);
+      return true;
     }
+  }
+
+  private async publishInsight(
+    insightId: string,
+    insight: NonNullable<Awaited<ReturnType<InsightSynthesisService["loadInsight"]>>>,
+    sources: ReturnType<typeof buildSourcesFromSignals>,
+    output: InsightSynthesisOutput
+  ) {
+    const heatVelocity = insight.heatVelocity;
+    await this.prisma.marketInsight.update({
+      where: { id: insightId },
+      data: {
+        aiInsight: output.ai_insight,
+        aiSummary: output.ai_summary,
+        keyReasons: output.key_reasons,
+        marketImpact: output.market_impact,
+        sentiment: output.sentiment.toUpperCase() as "BULLISH" | "NEUTRAL" | "BEARISH",
+        type: this.toPrismaFeedType(output.type),
+        sourcesJson: sources,
+        status: "PUBLISHED",
+        publishedAt: insight.signals[0]?.publishTime ?? new Date(),
+        rankScore: insight.heatScore + heatVelocity
+      }
+    });
+  }
+
+  private fallbackOutput(
+    insight: NonNullable<Awaited<ReturnType<InsightSynthesisService["loadInsight"]>>>
+  ): InsightSynthesisOutput {
+    const primary = insight.primaryNarrative?.name ?? inferTopic(insight.signals.map((signal) => signal.title).join(" "));
+    const titles = insight.signals.slice(0, 3).map((signal) => signal.title);
+    const firstTitle = titles[0] ?? "多来源市场信号";
+    const secondTitle = titles[1];
+    return {
+      ai_insight: `${primary} 雷达：${compactText(firstTitle, 42)}`,
+      ai_summary: secondTitle
+        ? `${insight.signals.length} 条已收录来源共同指向「${compactText(firstTitle, 36)}」等相关事件，另有「${compactText(secondTitle, 36)}」提供交叉背景。该解读仅用于研究跟踪，不构成投资建议。`
+        : `已收录来源显示「${compactText(firstTitle, 54)}」值得继续跟踪。该解读仅用于研究参考，不构成投资建议。`,
+      key_reasons: insight.signals.slice(0, 4).map((signal) => `${signal.source.name} 报道：${compactText(signal.title, 64)}`),
+      market_impact: "该组信号可能影响相关叙事关注度与短期市场情绪，仍需结合更多来源和后续数据交叉验证。",
+      sentiment: "neutral",
+      type: insight.signals[0]?.type.toLowerCase().replace(/_/g, "-") as InsightSynthesisOutput["type"]
+    };
   }
 
   private toPrismaFeedType(type: string): FeedType {
@@ -98,4 +129,34 @@ export class InsightSynthesisService {
     });
     return this.synthesize(insightId);
   }
+
+  private async loadInsight(insightId: string) {
+    return this.prisma.marketInsight.findFirst({
+      where: { id: insightId, deletedAt: null },
+      include: {
+        primaryNarrative: true,
+        signals: { where: { deletedAt: null, status: "PUBLISHED" }, include: signalInclude }
+      }
+    });
+  }
+}
+
+function compactText(value: string, maxLength: number): string {
+  const compact = value.replace(/\s+/g, " ").trim();
+  return compact.length > maxLength ? `${compact.slice(0, maxLength - 1)}…` : compact;
+}
+
+function inferTopic(text: string): string {
+  const rules: Array<[RegExp, string]> = [
+    [/bitcoin|btc|比特币/i, "BTC"],
+    [/ethereum|eth|以太坊/i, "Ethereum"],
+    [/solana|sol\b/i, "Solana"],
+    [/\bxrp\b|ripple/i, "XRP"],
+    [/etf|资金流/i, "ETF 资金流"],
+    [/ai|人工智能|agent|模型/i, "AI"],
+    [/sec|监管|合规|牌照|法院/i, "监管"],
+    [/黑客|攻击|漏洞|安全|私钥/i, "安全事件"],
+    [/交易所|上线|下架|合约|永续/i, "交易所动态"]
+  ];
+  return rules.find(([pattern]) => pattern.test(text))?.[1] ?? "市场";
 }

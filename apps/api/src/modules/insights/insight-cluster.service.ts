@@ -41,7 +41,7 @@ export class InsightClusterService {
     const groups = new Map<string, typeof feeds>();
     for (const feed of feeds) {
       const primary = pickPrimaryNarrative(feed);
-      const key = primary?.slug ?? "general";
+      const key = primary?.slug ?? fallbackGroupKey(feed.title);
       const bucket = groups.get(key) ?? [];
       bucket.push(feed);
       groups.set(key, bucket);
@@ -94,4 +94,24 @@ export class InsightClusterService {
 
     return created;
   }
+}
+
+function fallbackGroupKey(title: string): string {
+  const normalized = title.toLowerCase();
+  const rules: Array<[RegExp, string]> = [
+    [/bitcoin|btc|比特币/, "btc"],
+    [/ethereum|eth|以太坊/, "eth"],
+    [/solana|sol\b/, "solana"],
+    [/\bxrp\b|ripple/, "xrp"],
+    [/\bbnb\b|币安|binance/, "bnb"],
+    [/etf|现货|资金流/, "etf"],
+    [/ai|人工智能|agent|模型/, "ai"],
+    [/sec|监管|合规|法院|牌照|批准/, "regulation"],
+    [/黑客|攻击|漏洞|安全|私钥/, "security"],
+    [/defi|借贷|dex|流动性/, "defi"],
+    [/stablecoin|稳定币|usdt|usdc/, "stablecoin"],
+    [/交易所|上线|下架|合约|永续/, "exchange"]
+  ];
+  const match = rules.find(([pattern]) => pattern.test(normalized));
+  return match?.[1] ?? "market";
 }
