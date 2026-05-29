@@ -11,8 +11,9 @@ import type {
 
 import { apiFetch } from "./api-fetch";
 import { adminHeaders } from "./admin-headers";
+import { getApiUrl } from "./api-url";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? "http://localhost:3002";
+const apiUrl = getApiUrl();
 
 export type AdminFeedFilters = {
   status?: string;

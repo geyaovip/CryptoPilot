@@ -4,9 +4,9 @@ import { Button, Card } from "@cryptopilot/ui";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAdminAuthStore } from "../../lib/auth-store";
+import { getApiUrl } from "../../lib/api-url";
 import { CryptoPilotMark } from "../_components/cryptopilot-mark";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 const betaDevLogin = process.env.NEXT_PUBLIC_BETA_DEV_LOGIN === "true";
 
 export function AdminLoginForm() {
@@ -33,6 +33,7 @@ export function AdminLoginForm() {
     const token = searchParams.get("token");
     if (!token) return;
     setLoading(true);
+    const apiUrl = getApiUrl();
     void fetch(`${apiUrl}/api/auth/callback`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -56,6 +57,7 @@ export function AdminLoginForm() {
     setError(null);
     setMagicLinkUrl(null);
     try {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/auth/magic-link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,6 +80,7 @@ export function AdminLoginForm() {
     setLoading(true);
     setError(null);
     try {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
