@@ -46,7 +46,7 @@ export type AdminFeedListData = {
 export async function getAdminFeed(filters: AdminFeedFilters = {}): Promise<AdminFeedListData> {
   const response = await apiFetch(`${apiUrl}/api/admin/feed${toQuery(filters)}`, {
     cache: "no-store",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("Feed 管理数据加载失败");
   const body = (await response.json()) as { data: AdminFeedListData };
@@ -56,7 +56,7 @@ export async function getAdminFeed(filters: AdminFeedFilters = {}): Promise<Admi
 export async function getAdminSources(): Promise<SourceListResponse["data"]> {
   const response = await apiFetch(`${apiUrl}/api/admin/sources`, {
     cache: "no-store",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("Source 数据加载失败");
   const body = (await response.json()) as SourceListResponse;
@@ -66,7 +66,7 @@ export async function getAdminSources(): Promise<SourceListResponse["data"]> {
 export async function getSourceLogs(sourceId: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/sources/${sourceId}/logs`, {
     cache: "no-store",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("采集日志加载失败");
   const body = (await response.json()) as IngestionLogListResponse;
@@ -76,7 +76,7 @@ export async function getSourceLogs(sourceId: string) {
 export async function createAdminFeed(input: { title: string; content: string; source_url: string }) {
   const response = await apiFetch(`${apiUrl}/api/admin/feed`, {
     method: "POST",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify(input)
   });
   if (!response.ok) throw new Error("创建 Feed 失败");
@@ -85,24 +85,24 @@ export async function createAdminFeed(input: { title: string; content: string; s
 export async function updateAdminFeed(id: string, input: { title?: string; ai_summary?: string }) {
   const response = await apiFetch(`${apiUrl}/api/admin/feed/${id}`, {
     method: "PATCH",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify(input)
   });
   if (!response.ok) throw new Error("更新 Feed 失败");
 }
 
 export async function pinAdminFeed(id: string) {
-  const response = await apiFetch(`${apiUrl}/api/admin/feed/${id}/pin`, { method: "POST", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/feed/${id}/pin`, { method: "POST", headers: await adminHeaders() });
   if (!response.ok) throw new Error("置顶操作失败");
 }
 
 export async function hideAdminFeed(id: string) {
-  const response = await apiFetch(`${apiUrl}/api/admin/feed/${id}/hide`, { method: "POST", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/feed/${id}/hide`, { method: "POST", headers: await adminHeaders() });
   if (!response.ok) throw new Error("隐藏操作失败");
 }
 
 export async function deleteAdminFeed(id: string) {
-  const response = await apiFetch(`${apiUrl}/api/admin/feed/${id}`, { method: "DELETE", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/feed/${id}`, { method: "DELETE", headers: await adminHeaders() });
   if (!response.ok) throw new Error("删除 Feed 失败");
 }
 
@@ -118,7 +118,7 @@ export async function getAdminFeedClusters(
   const query = params.toString();
   const response = await apiFetch(`${apiUrl}/api/admin/feed/clusters${query ? `?${query}` : ""}`, {
     cache: "no-store",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("Feed 簇列表加载失败");
   const body = (await response.json()) as { data: AdminFeedClusterListData };
@@ -128,7 +128,7 @@ export async function getAdminFeedClusters(
 export async function reassignAdminFeedClusters() {
   const response = await apiFetch(`${apiUrl}/api/admin/feed/clusters/reassign`, {
     method: "POST",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("重新聚类失败");
   return (await response.json()) as { data: { clusters: number; linked: number } };
@@ -137,7 +137,7 @@ export async function reassignAdminFeedClusters() {
 export async function setClusterRepresentative(clusterId: string, feedItemId: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/feed/clusters/${clusterId}/representative`, {
     method: "PATCH",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify({ feed_item_id: feedItemId })
   });
   if (!response.ok) throw new Error("设置代表条失败");
@@ -147,7 +147,7 @@ export async function setClusterRepresentative(clusterId: string, feedItemId: st
 export async function dissolveAdminFeedCluster(clusterId: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/feed/clusters/${clusterId}/dissolve`, {
     method: "POST",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("解散簇失败");
 }
@@ -155,7 +155,7 @@ export async function dissolveAdminFeedCluster(clusterId: string) {
 export async function removeFeedFromCluster(feedItemId: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/feed/${feedItemId}/cluster`, {
     method: "DELETE",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("移出簇失败");
 }
@@ -163,19 +163,19 @@ export async function removeFeedFromCluster(feedItemId: string) {
 export async function updateAdminSource(id: string, status: "active" | "paused") {
   const response = await apiFetch(`${apiUrl}/api/admin/sources/${id}`, {
     method: "PATCH",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify({ status })
   });
   if (!response.ok) throw new Error("更新数据源失败");
 }
 
 export async function retryAdminSource(id: string) {
-  const response = await apiFetch(`${apiUrl}/api/admin/sources/${id}/retry`, { method: "POST", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/sources/${id}/retry`, { method: "POST", headers: await adminHeaders() });
   if (!response.ok) throw new Error("手动重试失败");
 }
 
 export async function getAdminPrompts(): Promise<PromptListResponse["data"]["items"]> {
-  const response = await apiFetch(`${apiUrl}/api/admin/prompts`, { cache: "no-store", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/prompts`, { cache: "no-store", headers: await adminHeaders() });
   if (!response.ok) throw new Error("Prompt 列表加载失败");
   const body = (await response.json()) as PromptListResponse;
   return body.data.items;
@@ -184,7 +184,7 @@ export async function getAdminPrompts(): Promise<PromptListResponse["data"]["ite
 export async function createPrompt(input: { prompt_key: MvpPromptKey; content: string }) {
   const response = await apiFetch(`${apiUrl}/api/admin/prompts`, {
     method: "POST",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify(input)
   });
   if (!response.ok) throw new Error("创建 Prompt 失败");
@@ -193,7 +193,7 @@ export async function createPrompt(input: { prompt_key: MvpPromptKey; content: s
 export async function updatePrompt(id: string, content: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/prompts/${id}`, {
     method: "PATCH",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify({ content })
   });
   if (!response.ok) throw new Error("更新 Prompt 失败");
@@ -202,7 +202,7 @@ export async function updatePrompt(id: string, content: string) {
 export async function activatePrompt(id: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/prompts/${id}/activate`, {
     method: "PATCH",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("激活 Prompt 失败");
 }
@@ -210,7 +210,7 @@ export async function activatePrompt(id: string) {
 export async function archivePrompt(id: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/prompts/${id}/archive`, {
     method: "PATCH",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("归档 Prompt 失败");
 }
@@ -218,7 +218,7 @@ export async function archivePrompt(id: string) {
 export async function testPrompt(id: string, variables: Record<string, string>) {
   const response = await apiFetch(`${apiUrl}/api/admin/prompts/${id}/test`, {
     method: "POST",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify({ variables })
   });
   if (!response.ok) throw new Error("测试 Prompt 失败");
@@ -259,21 +259,21 @@ export type AdminDashboardData = {
 };
 
 export async function getAdminDashboard(): Promise<AdminDashboardData> {
-  const response = await apiFetch(`${apiUrl}/api/admin/dashboard`, { cache: "no-store", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/dashboard`, { cache: "no-store", headers: await adminHeaders() });
   if (!response.ok) throw new Error("仪表盘数据加载失败");
   const body = (await response.json()) as { data: AdminDashboardData };
   return body.data;
 }
 
 export async function getAiMonitor() {
-  const response = await apiFetch(`${apiUrl}/api/admin/ai-monitor`, { cache: "no-store", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/ai-monitor`, { cache: "no-store", headers: await adminHeaders() });
   if (!response.ok) throw new Error("AI 监控数据加载失败");
   const body = (await response.json()) as AiMonitorResponse;
   return body.data;
 }
 
 export async function getAdminNarratives() {
-  const response = await apiFetch(`${apiUrl}/api/admin/narratives`, { cache: "no-store", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/narratives`, { cache: "no-store", headers: await adminHeaders() });
   if (!response.ok) throw new Error("Narrative 管理数据加载失败");
   const body = (await response.json()) as {
     data: {
@@ -292,7 +292,7 @@ export async function getAdminNarratives() {
 }
 
 export async function getAdminTokens() {
-  const response = await apiFetch(`${apiUrl}/api/admin/tokens`, { cache: "no-store", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/tokens`, { cache: "no-store", headers: await adminHeaders() });
   if (!response.ok) throw new Error("资产管理数据加载失败");
   const body = (await response.json()) as {
     data: { items: { id: string; symbol: string; name: string; is_active: boolean }[] };
@@ -301,7 +301,7 @@ export async function getAdminTokens() {
 }
 
 export async function getAdminKols() {
-  const response = await apiFetch(`${apiUrl}/api/admin/kols`, { cache: "no-store", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/kols`, { cache: "no-store", headers: await adminHeaders() });
   if (!response.ok) throw new Error("观点源管理数据加载失败");
   const body = (await response.json()) as {
     data: { items: { id: string; name: string; handle: string; is_active: boolean }[] };
@@ -321,7 +321,7 @@ export type AdminUserItem = {
 };
 
 export async function getAdminUsers() {
-  const response = await apiFetch(`${apiUrl}/api/admin/users`, { cache: "no-store", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/users`, { cache: "no-store", headers: await adminHeaders() });
   if (!response.ok) throw new Error("用户列表加载失败");
   const body = (await response.json()) as { data: { items: AdminUserItem[] } };
   return body.data;
@@ -334,7 +334,7 @@ export async function createAdminNarrative(input: {
 }) {
   const response = await apiFetch(`${apiUrl}/api/admin/narratives`, {
     method: "POST",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify(input)
   });
   if (!response.ok) throw new Error("创建 Narrative 失败");
@@ -346,7 +346,7 @@ export async function updateAdminNarrative(
 ) {
   const response = await apiFetch(`${apiUrl}/api/admin/narratives/${id}`, {
     method: "PATCH",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify(input)
   });
   if (!response.ok) throw new Error("更新 Narrative 失败");
@@ -355,7 +355,7 @@ export async function updateAdminNarrative(
 export async function mergeAdminNarratives(sourceId: string, targetId: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/narratives/${sourceId}/merge`, {
     method: "POST",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify({ target_narrative_id: targetId })
   });
   if (!response.ok) throw new Error("合并 Narrative 失败");
@@ -364,7 +364,7 @@ export async function mergeAdminNarratives(sourceId: string, targetId: string) {
 export async function regenerateAdminNarrativeAi(id: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/narratives/${id}/regenerate-ai`, {
     method: "POST",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("重生 Narrative AI 失败");
 }
@@ -372,7 +372,7 @@ export async function regenerateAdminNarrativeAi(id: string) {
 export async function updateAdminToken(id: string, input: { symbol?: string; is_active?: boolean }) {
   const response = await apiFetch(`${apiUrl}/api/admin/tokens/${id}`, {
     method: "PATCH",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify(input)
   });
   if (!response.ok) throw new Error("更新 Token 失败");
@@ -381,7 +381,7 @@ export async function updateAdminToken(id: string, input: { symbol?: string; is_
 export async function refreshAdminToken(id: string) {
   const response = await apiFetch(`${apiUrl}/api/admin/tokens/${id}/refresh`, {
     method: "POST",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("刷新 Token 失败");
 }
@@ -394,7 +394,7 @@ export async function createAdminKol(input: {
 }) {
   const response = await apiFetch(`${apiUrl}/api/admin/kols`, {
     method: "POST",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify(input)
   });
   if (!response.ok) throw new Error("创建 KOL 失败");
@@ -403,7 +403,7 @@ export async function createAdminKol(input: {
 export async function updateAdminKol(id: string, input: { is_active?: boolean; influence_score?: number }) {
   const response = await apiFetch(`${apiUrl}/api/admin/kols/${id}`, {
     method: "PATCH",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify(input)
   });
   if (!response.ok) throw new Error("更新 KOL 失败");
@@ -428,7 +428,7 @@ export async function getAdminLogs(filters: { type?: string; from?: string; to?:
   const query = params.toString();
   const response = await apiFetch(`${apiUrl}/api/admin/logs${query ? `?${query}` : ""}`, {
     cache: "no-store",
-    headers: adminHeaders()
+    headers: await adminHeaders()
   });
   if (!response.ok) throw new Error("日志加载失败");
   const body = (await response.json()) as { data: { items: AdminLogItem[] } };
@@ -436,7 +436,7 @@ export async function getAdminLogs(filters: { type?: string; from?: string; to?:
 }
 
 export async function getAdminConfig() {
-  const response = await apiFetch(`${apiUrl}/api/admin/config`, { cache: "no-store", headers: adminHeaders() });
+  const response = await apiFetch(`${apiUrl}/api/admin/config`, { cache: "no-store", headers: await adminHeaders() });
   if (!response.ok) throw new Error("系统配置加载失败");
   const body = (await response.json()) as { data: { items: { key: string; value: unknown }[] } };
   return body.data;
@@ -445,7 +445,7 @@ export async function getAdminConfig() {
 export async function patchAdminConfig(key: string, value: unknown) {
   const response = await apiFetch(`${apiUrl}/api/admin/config`, {
     method: "PATCH",
-    headers: adminHeaders(),
+    headers: await adminHeaders(),
     body: JSON.stringify({ key, value })
   });
   if (!response.ok) throw new Error("更新配置失败");

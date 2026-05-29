@@ -63,6 +63,7 @@ export function AdminUserMenu() {
   }
 
   function logout() {
+    void fetch("/admin/auth/session", { method: "DELETE" });
     setAccessToken(null);
     setUser(null);
     router.push("/admin/login");

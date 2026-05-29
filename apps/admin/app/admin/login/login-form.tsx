@@ -18,9 +18,14 @@ export function AdminLoginForm() {
   const [magicLinkUrl, setMagicLinkUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function finishLogin(accessToken: string) {
+  async function finishLogin(accessToken: string) {
+    await fetch("/admin/auth/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ access_token: accessToken })
+    });
     setAccessToken(accessToken);
-    router.push("/admin/dashboard");
+    router.replace("/admin/dashboard");
     router.refresh();
   }
 
@@ -40,7 +45,7 @@ export function AdminLoginForm() {
         };
         if (!response.ok) throw new Error(body.message ?? "登录链接无效");
         if (body.data?.user?.role !== "admin") throw new Error("该账号不是管理员");
-        finishLogin(body.data?.access_token ?? "");
+        await finishLogin(body.data?.access_token ?? "");
       })
       .catch((err) => setError(err instanceof Error ? err.message : "登录失败"))
       .finally(() => setLoading(false));
@@ -84,7 +89,7 @@ export function AdminLoginForm() {
       };
       if (!response.ok) throw new Error(body.message ?? "登录失败");
       if (body.data?.user?.role !== "admin") throw new Error("该账号不是管理员");
-      finishLogin(body.data?.access_token ?? "");
+      await finishLogin(body.data?.access_token ?? "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "登录失败");
     } finally {

@@ -1,3 +1,5 @@
+import { ADMIN_AUTH_COOKIE_NAME } from "./admin-auth-cookie";
+
 const ADMIN_AUTH_STORAGE_KEY = "cryptopilot-admin-auth";
 const adminUserId = process.env.NEXT_PUBLIC_ADMIN_USER_ID ?? "00000000-0000-0000-0000-000000000001";
 
@@ -15,10 +17,19 @@ function readBearerFromStorage(): string | null {
 }
 
 /** Safe for Server Components and client-side fetch helpers. */
-export function adminHeaders(): Record<string, string> {
+export async function adminHeaders(): Promise<Record<string, string>> {
   const authorization = readBearerFromStorage();
+  const cookieToken = await readBearerFromCookie();
   return {
     "Content-Type": "application/json",
-    ...(authorization ? { Authorization: authorization } : { "x-user-id": adminUserId })
+    ...(authorization || cookieToken
+      ? { Authorization: authorization ?? `Bearer ${cookieToken}` }
+      : { "x-user-id": adminUserId })
   };
+}
+
+async function readBearerFromCookie(): Promise<string | null> {
+  if (typeof window !== "undefined") return null;
+  const { cookies } = await import("next/headers");
+  return (await cookies()).get(ADMIN_AUTH_COOKIE_NAME)?.value ?? null;
 }
