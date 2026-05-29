@@ -49,7 +49,8 @@ describe("AuthService magic link", () => {
     };
     const config = {
       get: (key: string) => {
-        if (key === "APP_URL") return "https://admin.cryptopilot.chat";
+        if (key === "APP_URL") return "https://cryptopilot.chat";
+        if (key === "ADMIN_APP_URL") return "https://admin.cryptopilot.chat";
         if (key === "MAGIC_LINK_EXPOSE") return "true";
         if (key === "NODE_ENV") return "production";
         return undefined;
@@ -60,7 +61,7 @@ describe("AuthService magic link", () => {
       email: "admin@cryptopilot.local",
       redirect_path: "/admin/login"
     });
-    expect(result.magic_link_url).toContain("/admin/login?token=");
+    expect(result.magic_link_url).toContain("https://admin.cryptopilot.chat/admin/login?token=");
     expect(mailService.sendMagicLink).toHaveBeenCalledWith(
       expect.objectContaining({ magicLinkUrl: expect.stringContaining("/admin/login?token=") })
     );

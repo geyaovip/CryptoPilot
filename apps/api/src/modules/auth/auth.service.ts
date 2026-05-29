@@ -53,8 +53,8 @@ export class AuthService {
       data: { email, tokenHash, expiresAt }
     });
 
-    const appUrl = this.config.get<string>("APP_URL") ?? "http://localhost:3000";
     const redirectPath = dto.redirect_path ?? "/login";
+    const appUrl = this.appUrlForRedirect(redirectPath);
     const magicLinkUrl = `${appUrl}${redirectPath}?token=${encodeURIComponent(raw)}`;
     const exposeLink = this.shouldExposeMagicLink();
     await this.mailService.sendMagicLink({
@@ -114,6 +114,14 @@ export class AuthService {
   private shouldExposeMagicLink(): boolean {
     if (this.config.get<string>("MAGIC_LINK_EXPOSE") === "true") return true;
     return this.config.get<string>("NODE_ENV") !== "production";
+  }
+
+  private appUrlForRedirect(redirectPath: string): string {
+    const fallback = this.config.get<string>("APP_URL") ?? "http://localhost:3000";
+    if (redirectPath.startsWith("/admin/")) {
+      return this.config.get<string>("ADMIN_APP_URL") ?? this.config.get<string>("ADMIN_URL") ?? fallback;
+    }
+    return fallback;
   }
 
   private isDevLoginAllowed(): boolean {
