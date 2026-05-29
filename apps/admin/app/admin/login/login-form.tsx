@@ -7,6 +7,7 @@ import { useAdminAuthStore } from "../../lib/auth-store";
 import { CryptoPilotMark } from "../_components/cryptopilot-mark";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
+const betaDevLogin = process.env.NEXT_PUBLIC_BETA_DEV_LOGIN === "true";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -53,17 +54,14 @@ export function AdminLoginForm() {
       const response = await fetch(`${apiUrl}/api/auth/magic-link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, redirect_path: "/admin/login" })
       });
       const body = (await response.json()) as {
         data?: { magic_link_url?: string };
         message?: string;
       };
       if (!response.ok) throw new Error(body.message ?? "发送失败");
-      if (body.data?.magic_link_url) {
-        const adminUrl = body.data.magic_link_url.replace("/login?", "/admin/login?");
-        setMagicLinkUrl(adminUrl);
-      }
+      if (body.data?.magic_link_url) setMagicLinkUrl(body.data.magic_link_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "发送失败");
     } finally {
@@ -98,7 +96,7 @@ export function AdminLoginForm() {
     <Card className="w-full max-w-md">
       <CryptoPilotMark className="h-10 w-10" showText />
       <h1 className="mt-2 text-2xl font-semibold text-slate-950">管理员登录</h1>
-      <p className="mt-2 text-sm text-slate-500">使用管理员邮箱获取 Magic Link，或开发环境快速登录。</p>
+      <p className="mt-2 text-sm text-slate-500">使用管理员邮箱获取 Magic Link，完成后台登录。</p>
       <input
         className="mt-4 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"
         type="email"
@@ -114,13 +112,15 @@ export function AdminLoginForm() {
       <Button className="mt-4 w-full" disabled={loading} onClick={() => void handleMagicLink()}>
         发送 Magic Link
       </Button>
-      <Button
-        className="mt-2 w-full border border-slate-200 bg-white text-slate-950 hover:bg-slate-50"
-        disabled={loading}
-        onClick={() => void handleQuickLogin()}
-      >
-        快速登录（开发）
-      </Button>
+      {betaDevLogin ? (
+        <Button
+          className="mt-2 w-full border border-slate-200 bg-white text-slate-950 hover:bg-slate-50"
+          disabled={loading}
+          onClick={() => void handleQuickLogin()}
+        >
+          快速登录（开发）
+        </Button>
+      ) : null}
     </Card>
   );
 }

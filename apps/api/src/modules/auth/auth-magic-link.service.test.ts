@@ -34,6 +34,38 @@ describe("AuthService magic link", () => {
     );
   });
 
+  it("supports admin login redirect path", async () => {
+    const prisma = {
+      user: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: "admin1",
+          shortUid: "CP-A7K9Q2M4",
+          email: "admin@cryptopilot.local",
+          name: "Admin",
+          role: "ADMIN"
+        })
+      },
+      magicLinkToken: { create: vi.fn().mockResolvedValue({}) }
+    };
+    const config = {
+      get: (key: string) => {
+        if (key === "APP_URL") return "https://admin.cryptopilot.chat";
+        if (key === "MAGIC_LINK_EXPOSE") return "true";
+        if (key === "NODE_ENV") return "production";
+        return undefined;
+      }
+    };
+    const service = new AuthService(prisma as never, config as never, mailService as never);
+    const result = await service.requestMagicLink({
+      email: "admin@cryptopilot.local",
+      redirect_path: "/admin/login"
+    });
+    expect(result.magic_link_url).toContain("/admin/login?token=");
+    expect(mailService.sendMagicLink).toHaveBeenCalledWith(
+      expect.objectContaining({ magicLinkUrl: expect.stringContaining("/admin/login?token=") })
+    );
+  });
+
   it("consumes valid token and issues session", async () => {
     const raw = "abc123validtoken456";
     const prisma = {

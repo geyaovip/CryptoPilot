@@ -54,7 +54,8 @@ export class AuthService {
     });
 
     const appUrl = this.config.get<string>("APP_URL") ?? "http://localhost:3000";
-    const magicLinkUrl = `${appUrl}/login?token=${encodeURIComponent(raw)}`;
+    const redirectPath = dto.redirect_path ?? "/login";
+    const magicLinkUrl = `${appUrl}${redirectPath}?token=${encodeURIComponent(raw)}`;
     const exposeLink = this.shouldExposeMagicLink();
     await this.mailService.sendMagicLink({
       to: email,
