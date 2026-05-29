@@ -165,13 +165,14 @@ function collectNarratives(
 function normalizeInsightSummary(insight: InsightRecord, sources: InsightSourceRef[]): string {
   const summary = insight.aiSummary.replace(/\s+/g, " ").trim();
   const signals = insight.signals ?? [];
-  if (summary.length <= 120 || signals.length < 2) return summary;
+  if (signals.length < 2) return summary;
 
   const signalSummaries = signals
     .map((signal) => signal.aiSummary?.replace(/\s+/g, " ").trim())
     .filter((value): value is string => Boolean(value));
-  const looksConcatenated = signalSummaries.length >= 2 && signalSummaries.every((value) => summary.includes(value.slice(0, 24)));
-  if (!looksConcatenated && summary.length <= 140) return summary;
+  const matchedSignalCount = signalSummaries.filter((value) => includesMeaningfulSlice(summary, value)).length;
+  const shouldRewrite = matchedSignalCount >= 2 || looksLikeSourceDigest(summary, sources);
+  if (!shouldRewrite) return summary;
 
   const topic = insight.primaryNarrative?.name ?? collectNarratives(signals, insight.primaryNarrative)[0]?.name ?? "市场";
   const sourceNames = [...new Set(sources.map((source) => source.source_name).filter(Boolean))].slice(0, 3).join("、");
@@ -184,4 +185,17 @@ function normalizeInsightSummary(insight: InsightRecord, sources: InsightSourceR
 function compactText(value: string, maxLength: number): string {
   const compact = value.replace(/\s+/g, " ").trim();
   return compact.length > maxLength ? `${compact.slice(0, maxLength - 1)}…` : compact;
+}
+
+function includesMeaningfulSlice(summary: string, sourceText: string): boolean {
+  const compact = sourceText.replace(/\s+/g, " ").trim();
+  if (compact.length < 16) return false;
+  return summary.includes(compact.slice(0, Math.min(32, compact.length)));
+}
+
+function looksLikeSourceDigest(summary: string, sources: InsightSourceRef[]): boolean {
+  const sourceNameHits = sources.filter((source) => source.source_name && summary.includes(source.source_name)).length;
+  const titleHits = sources.filter((source) => source.title && summary.includes(source.title.slice(0, Math.min(18, source.title.length)))).length;
+  const sentenceCount = summary.split(/[。！？.!?]+/).filter((sentence) => sentence.trim().length > 0).length;
+  return sourceNameHits >= 1 && (titleHits >= 1 || sentenceCount >= 2);
 }

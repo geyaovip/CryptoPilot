@@ -277,8 +277,8 @@ function buildInsightSummary(label: string, batch: Array<{ title: string; aiSumm
   const first = batch[0];
   const second = batch[1];
   const sourceNames = [...new Set(batch.map((signal) => signal.source.name))].slice(0, 3).join("、");
-  const firstText = compactText(first.aiSummary || first.title, 48);
-  const secondText = second ? `，同时「${compactText(second.aiSummary || second.title, 42)}」提供交叉背景` : "";
+  const firstText = compactText(first.title, 48);
+  const secondText = second ? `，并由「${compactText(second.title, 42)}」提供交叉背景` : "";
   return `${batch.length} 个来源（${sourceNames}）正在共同指向 ${label} 相关信号：「${firstText}」${secondText}。该总结用于快速理解多来源动态，不构成投资建议。`;
 }
 
