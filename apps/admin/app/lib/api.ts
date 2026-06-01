@@ -7,6 +7,7 @@ import type {
   IngestionLogListResponse,
   MvpPromptKey,
   PromptListResponse,
+  PushMessageSummary,
   SourceListResponse
 } from "@cryptopilot/types";
 
@@ -350,6 +351,8 @@ export type AdminUserItem = {
   email: string | null;
   name: string | null;
   role: "user" | "admin";
+  telegram_bound: boolean;
+  telegram_bound_at: string | null;
   disabled_at: string | null;
   daily_ai_search_count: number;
   created_at: string;
@@ -381,7 +384,10 @@ export async function sendAdminPush(input: {
     headers: await adminHeaders(),
     body: JSON.stringify(input)
   });
-  if (!response.ok) throw new Error("发送 Push 失败");
+  const body = (await response.json()) as { data?: PushMessageSummary; message?: string };
+  if (!response.ok) throw new Error(body.message ?? "发送 Push 失败");
+  if (!body.data) throw new Error("发送 Push 失败");
+  return body.data;
 }
 
 export async function updateAdminUser(id: string, input: { role?: "user" | "admin"; disabled?: boolean }) {

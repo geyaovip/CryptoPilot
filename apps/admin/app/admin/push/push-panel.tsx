@@ -15,12 +15,14 @@ export function PushPanel({
   items: PushMessageSummary[];
   users: AdminUserItem[];
 }) {
-  const [userId, setUserId] = useState(users[0]?.id ?? "");
+  const defaultUser = users.find((user) => user.telegram_bound) ?? users[0];
+  const [userId, setUserId] = useState(defaultUser?.id ?? "");
   const [title, setTitle] = useState("CryptoPilot 市场提醒");
   const [body, setBody] = useState("这里填写推送正文。Not financial advice.");
   const [typeFilter, setTypeFilter] = useState<(typeof pushTypes)[number]>("all");
   const [statusFilter, setStatusFilter] = useState<(typeof pushStatuses)[number]>("all");
   const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const filteredItems = items.filter((item) => {
     const matchType = typeFilter === "all" || item.type === typeFilter;
     const matchStatus = statusFilter === "all" || item.status === statusFilter;
@@ -29,9 +31,17 @@ export function PushPanel({
 
   async function submit() {
     setBusy(true);
+    setNotice(null);
     try {
-      await sendAdminPush({ user_id: userId, type: "manual", title, body });
-      window.location.reload();
+      const result = await sendAdminPush({ user_id: userId, type: "manual", title, body });
+      if (result.status === "sent") {
+        setNotice({ type: "success", text: "Push 已发送，Telegram 应该会收到消息。" });
+      } else {
+        setNotice({ type: "error", text: result.error_message ?? "Push 发送失败，请查看下方记录。" });
+      }
+      window.setTimeout(() => window.location.reload(), 900);
+    } catch (error) {
+      setNotice({ type: "error", text: error instanceof Error ? error.message : "发送失败" });
     } finally {
       setBusy(false);
     }
@@ -48,7 +58,7 @@ export function PushPanel({
             <select className="rounded-xl border border-[#D9D5C9] px-3 py-2" onChange={(event) => setUserId(event.target.value)} value={userId}>
               {users.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {user.email ?? user.uid}
+                  {user.email ?? user.uid}{user.telegram_bound ? " · Telegram 已绑定" : " · 未绑定"}
                 </option>
               ))}
             </select>
@@ -65,6 +75,9 @@ export function PushPanel({
         <Button className="mt-4" disabled={busy || !userId} onClick={() => void submit()} type="button">
           {busy ? "发送中…" : "立即发送"}
         </Button>
+        {notice ? (
+          <p className={`mt-3 text-sm ${notice.type === "success" ? "text-[#20808D]" : "text-[#B54708]"}`}>{notice.text}</p>
+        ) : null}
       </Card>
 
       <Card className="border-[#D9D5C9] bg-white p-5">

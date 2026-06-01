@@ -24,6 +24,8 @@ export class AdminUserService {
         email: user.email,
         name: user.name,
         role: user.role.toLowerCase() as "user" | "admin",
+        telegram_bound: Boolean(user.telegramChatId),
+        telegram_bound_at: user.telegramBoundAt?.toISOString() ?? null,
         disabled_at: user.disabledAt?.toISOString() ?? null,
         daily_ai_search_count: user.dailyAiSearchCount,
         created_at: user.createdAt.toISOString()
