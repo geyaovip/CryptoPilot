@@ -94,10 +94,11 @@ export class FeedAiService {
           }
         });
         await this.syncRelations(feedItemId, output.related_tokens, output.narrative_tags);
-        await this.embeddingService.upsertFeedEmbedding(
-          feedItemId,
-          `${feed.title}\n${feed.content}\n${output.summary}`
-        );
+        await this.embeddingService
+          .upsertFeedEmbedding(feedItemId, `${feed.title}\n${feed.content}\n${output.summary}`)
+          .catch((error) => {
+            this.logger.warn(error instanceof Error ? error.message : "feed embedding failed");
+          });
         return;
       } catch (error) {
         if (attempt === 2) {

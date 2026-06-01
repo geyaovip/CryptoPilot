@@ -57,8 +57,11 @@ export function publicPageMetadata(input: {
     referrer: "origin-when-cross-origin",
     alternates: { canonical: input.path },
     icons: {
-      icon: "/icon.svg",
-      shortcut: "/icon.svg",
+      icon: [
+        { url: "/favicon.svg", sizes: "64x64", type: "image/svg+xml" },
+        { url: "/icon.svg", sizes: "64x64", type: "image/svg+xml" }
+      ],
+      shortcut: "/favicon.svg",
       apple: "/icon-192.svg"
     },
     formatDetection: {
