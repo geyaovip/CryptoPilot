@@ -35,6 +35,8 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
   const [result, setResult] = useState<AiSearchResponse["data"] | null>(null);
   const [suggestions, setSuggestions] = useState(fallbackSuggestions);
   const prefilledRan = useRef(false);
+  const initialSearchRan = useRef(false);
+  const isResultView = Boolean(initialQuery.trim()) || Boolean(result) || loading;
 
   useEffect(() => {
     let mounted = true;
@@ -60,6 +62,12 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
     if (!initialQuery.trim() || prefilledRan.current) return;
     prefilledRan.current = true;
     setQuery(initialQuery);
+  }, [initialQuery]);
+
+  useEffect(() => {
+    if (!initialQuery.trim() || initialSearchRan.current) return;
+    initialSearchRan.current = true;
+    void runSearch(initialQuery);
   }, [initialQuery]);
 
   async function runSearch(nextQuery: string) {
@@ -98,17 +106,25 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
   }
 
   return (
-    <section className="mx-auto flex min-h-[70vh] max-w-4xl flex-col justify-center space-y-6">
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="text-sm font-medium text-[#20808D]">AI 市场研究</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-[#102A2C] md:text-4xl">
-          用一句问题，快速梳理市场背景
-        </h1>
-        <p className="mt-3 text-sm leading-6 text-[#5F6868]">
-          CryptoPilot 会结合已收录来源、叙事与相关资产回答问题，并保留来源供你继续核验。
-        </p>
-      </div>
-      <Card className="rounded-3xl border-[#D9D5C9] bg-white/95 p-4 shadow-[0_18px_70px_rgba(16,42,44,0.08)] md:p-5">
+    <section className={isResultView ? "mx-auto flex max-w-4xl flex-col space-y-4" : "mx-auto flex min-h-[70vh] max-w-4xl flex-col justify-center space-y-6"}>
+      {!isResultView ? (
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-sm font-medium text-[#20808D]">AI 市场研究</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-[#102A2C] md:text-4xl">
+            用一句问题，快速梳理市场背景
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-[#5F6868]">
+            CryptoPilot 会结合已收录来源、叙事与相关资产回答问题，并保留来源供你继续核验。
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p className="text-sm font-medium text-[#20808D]">AI 市场研究</p>
+          <h1 className="mt-2 text-2xl font-semibold text-[#102A2C]">关于「{query || initialQuery}」的搜索结果</h1>
+        </div>
+      )}
+
+      <Card className={isResultView ? "border-[#D9D5C9] bg-white/95 p-3 md:p-4" : "rounded-3xl border-[#D9D5C9] bg-white/95 p-4 shadow-[0_18px_70px_rgba(16,42,44,0.08)] md:p-5"}>
         <label className="text-sm font-medium text-[#5F6868]" htmlFor="search">
           询问 CryptoPilot
         </label>
@@ -135,25 +151,31 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
         <p className="mt-3 text-xs leading-5 text-[#8A918C]">答案仅用于研究参考，不构成投资建议。</p>
       </Card>
 
-      <div className="flex flex-wrap gap-2">
-        <span className="py-1.5 text-xs font-medium text-[#8A918C]">可直接试试：</span>
-        {suggestions.map((item) => (
-          <button
-            className="rounded-full border border-[#D9D5C9] bg-white px-3 py-1.5 text-xs text-[#5F6868] hover:border-[#20808D]"
-            key={item}
-            onClick={() => {
-              setQuery(item);
-              void runSearch(item);
-            }}
-            type="button"
-          >
-            {item}
-          </button>
-        ))}
-      </div>
+      {!isResultView ? (
+        <div className="flex flex-wrap gap-2">
+          <span className="py-1.5 text-xs font-medium text-[#8A918C]">可直接试试：</span>
+          {suggestions.map((item) => (
+            <button
+              className="rounded-full border border-[#D9D5C9] bg-white px-3 py-1.5 text-xs text-[#5F6868] hover:border-[#20808D]"
+              key={item}
+              onClick={() => {
+                setQuery(item);
+                void runSearch(item);
+              }}
+              type="button"
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {error ? (
         <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>
+      ) : null}
+
+      {loading ? (
+        <Card className="border-[#D9D5C9] bg-white/95 p-5 text-sm text-[#5F6868]">正在检索已收录来源并生成研究结果…</Card>
       ) : null}
 
       {result ? (

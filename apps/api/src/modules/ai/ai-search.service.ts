@@ -1,4 +1,4 @@
-import { HttpStatus, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import type { AiSearchResult } from "@cryptopilot/types";
 import { AppHttpException } from "../common/app-http.exception";
 import { LlmService } from "../llm/llm.service";
@@ -28,7 +28,7 @@ export class AiSearchService {
     if (trimmed.length > 500) throw new AppHttpException("QUERY_TOO_LONG", "问题长度不能超过 500 字符");
 
     await this.ensureDailyQuota(id);
-    const providerName = this.requireRealSearchProvider();
+    const providerName = this.llm.getProviderName("ai_search");
 
     const contextItems = insightId
       ? await this.loadInsightContext(insightId)
@@ -55,7 +55,8 @@ export class AiSearchService {
       const llm = await this.llm.generateJson({
         promptKey: "ai_search_prompt",
         user: prompt,
-        userId: id
+        userId: id,
+        requireReal: true
       });
       const parsed = parseAiSearchLlmOutput(llm.data);
       if (parsed.success) {
@@ -121,18 +122,6 @@ export class AiSearchService {
   private requireUser(userId: string | undefined): string {
     if (!userId) throw new UnauthorizedException("需要登录");
     return userId;
-  }
-
-  private requireRealSearchProvider(): string {
-    const providerName = this.llm.getProviderName("ai_search");
-    if (providerName === "mock") {
-      throw new AppHttpException(
-        "LLM_PROVIDER_ERROR",
-        "AI 搜索模型未配置，无法生成真实研究结果",
-        HttpStatus.SERVICE_UNAVAILABLE
-      );
-    }
-    return providerName;
   }
 
   private async ensureDailyQuota(userId: string) {

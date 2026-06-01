@@ -52,10 +52,12 @@ export class InsightSynthesisService {
     try {
       const llm = await this.llm.generateJson({
         promptKey: "insight_synthesis_prompt",
-        user: prompt
+        user: prompt,
+        requireReal: true
       });
       const parsed = parseInsightSynthesisOutput(llm.data);
-      const output = parsed.success ? parsed.data : this.fallbackOutput(insight);
+      if (!parsed.success) return false;
+      const output = parsed.data;
       await this.publishInsight(insightId, insight, sources, output);
 
       await this.embeddingService
@@ -67,10 +69,7 @@ export class InsightSynthesisService {
       return true;
     } catch (error) {
       this.logger.warn(error instanceof Error ? error.message : "synthesis failed");
-      const output = this.fallbackOutput(insight);
-      await this.publishInsight(insightId, insight, sources, output);
-      await this.embeddingService.upsertEntityEmbedding("insight", insightId, `${output.ai_insight}\n${output.ai_summary}`).catch(() => undefined);
-      return true;
+      return false;
     }
   }
 
@@ -98,25 +97,6 @@ export class InsightSynthesisService {
     });
   }
 
-  private fallbackOutput(
-    insight: NonNullable<Awaited<ReturnType<InsightSynthesisService["loadInsight"]>>>
-  ): InsightSynthesisOutput {
-    const primary = insight.primaryNarrative?.name ?? inferTopic(insight.signals.map((signal) => signal.title).join(" "));
-    const titles = insight.signals.slice(0, 3).map((signal) => signal.title);
-    const firstTitle = titles[0] ?? "多来源市场信号";
-    const secondTitle = titles[1];
-    return {
-      ai_insight: `${primary} 雷达：${compactText(firstTitle, 42)}`,
-      ai_summary: secondTitle
-        ? `${insight.signals.length} 条已收录来源共同指向「${compactText(firstTitle, 36)}」等相关事件，另有「${compactText(secondTitle, 36)}」提供交叉背景。该解读仅用于研究跟踪，不构成投资建议。`
-        : `已收录来源显示「${compactText(firstTitle, 54)}」值得继续跟踪。该解读仅用于研究参考，不构成投资建议。`,
-      key_reasons: insight.signals.slice(0, 4).map((signal) => `${signal.source.name} 报道：${compactText(signal.title, 64)}`),
-      market_impact: "该组信号可能影响相关叙事关注度与短期市场情绪，仍需结合更多来源和后续数据交叉验证。",
-      sentiment: "neutral",
-      type: insight.signals[0]?.type.toLowerCase().replace(/_/g, "-") as InsightSynthesisOutput["type"]
-    };
-  }
-
   private toPrismaFeedType(type: string): FeedType {
     const normalized = type.toUpperCase().replace(/-/g, "_");
     const values = Object.values(FeedType) as string[];
@@ -140,24 +120,4 @@ export class InsightSynthesisService {
       }
     });
   }
-}
-
-function compactText(value: string, maxLength: number): string {
-  const compact = value.replace(/\s+/g, " ").trim();
-  return compact.length > maxLength ? `${compact.slice(0, maxLength - 1)}…` : compact;
-}
-
-function inferTopic(text: string): string {
-  const rules: Array<[RegExp, string]> = [
-    [/bitcoin|btc|比特币/i, "BTC"],
-    [/ethereum|eth|以太坊/i, "Ethereum"],
-    [/solana|sol\b/i, "Solana"],
-    [/\bxrp\b|ripple/i, "XRP"],
-    [/etf|资金流/i, "ETF 资金流"],
-    [/ai|人工智能|agent|模型/i, "AI"],
-    [/sec|监管|合规|牌照|法院/i, "监管"],
-    [/黑客|攻击|漏洞|安全|私钥/i, "安全事件"],
-    [/交易所|上线|下架|合约|永续/i, "交易所动态"]
-  ];
-  return rules.find(([pattern]) => pattern.test(text))?.[1] ?? "市场";
 }

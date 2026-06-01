@@ -71,7 +71,8 @@ export class FeedAiService {
       try {
         const llm = await this.llm.generateJson({
           promptKey: "feed_summary_prompt",
-          user: prompt
+          user: prompt,
+          requireReal: true
         });
         const parsed = parseFeedSummaryOutput(llm.data);
         if (!parsed.success) {

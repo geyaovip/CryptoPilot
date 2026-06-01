@@ -3,6 +3,7 @@ export type LlmJsonInput = {
   system?: string;
   user: string;
   userId?: string;
+  requireReal?: boolean;
 };
 
 export type LlmTextInput = LlmJsonInput;

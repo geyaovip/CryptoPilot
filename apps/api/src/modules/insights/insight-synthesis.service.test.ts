@@ -34,8 +34,9 @@ const baseInsight = {
 };
 
 describe("InsightSynthesisService", () => {
-  it("publishes a fallback insight when LLM output is invalid", async () => {
+  it("does not publish fallback insight when LLM output is invalid", async () => {
     const update = vi.fn();
+    const embed = vi.fn();
     const service = new InsightSynthesisService(
       {
         marketInsight: {
@@ -48,18 +49,36 @@ describe("InsightSynthesisService", () => {
         renderTemplate: vi.fn().mockReturnValue("rendered prompt")
       } as never,
       { generateJson: vi.fn().mockResolvedValue({ data: { bad: true } }) } as never,
-      { upsertEntityEmbedding: vi.fn().mockResolvedValue(undefined) } as never
+      { upsertEntityEmbedding: embed } as never
     );
 
-    await expect(service.synthesize("insight-1")).resolves.toBe(true);
-    expect(update).toHaveBeenCalledWith(
+    await expect(service.synthesize("insight-1")).resolves.toBe(false);
+    expect(update).not.toHaveBeenCalled();
+    expect(embed).not.toHaveBeenCalled();
+  });
+
+  it("requires a real LLM provider for insight synthesis", async () => {
+    const generateJson = vi.fn().mockResolvedValue({ data: { bad: true } });
+    const service = new InsightSynthesisService(
+      {
+        marketInsight: {
+          findFirst: vi.fn().mockResolvedValue(baseInsight),
+          update: vi.fn()
+        }
+      } as never,
+      {
+        getActiveContent: vi.fn().mockResolvedValue("signals: {{signals}}"),
+        renderTemplate: vi.fn().mockReturnValue("rendered prompt")
+      } as never,
+      { generateJson } as never,
+      { upsertEntityEmbedding: vi.fn() } as never
+    );
+
+    await service.synthesize("insight-1");
+    expect(generateJson).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "insight-1" },
-        data: expect.objectContaining({
-          status: "PUBLISHED",
-          publishedAt: new Date("2026-05-29T07:02:00.000Z"),
-          aiInsight: expect.stringContaining("XRP")
-        })
+        promptKey: "insight_synthesis_prompt",
+        requireReal: true
       })
     );
   });

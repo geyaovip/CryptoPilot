@@ -1,6 +1,7 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { LlmCallStatus } from "@prisma/client";
+import { AppHttpException } from "../common/app-http.exception";
 import { PrismaService } from "../prisma/prisma.service";
 import { createLlmProvider, createMockLlmProvider, registryEmbeddingsEnabled } from "./llm-provider.factory";
 import { featureFromPromptKey, resolveRegistryProviderId, type LlmFeature } from "./llm-routing";
@@ -29,12 +30,14 @@ export class LlmService {
   async generateJson(input: LlmJsonInput): Promise<LlmJsonResult> {
     const feature = featureFromPromptKey(input.promptKey);
     const provider = this.resolveProvider(feature);
+    this.assertRealProvider(input, provider);
     return this.runWithLog(input, feature, () => provider.generateJson(input));
   }
 
   async generateText(input: LlmTextInput): Promise<LlmTextResult> {
     const feature = featureFromPromptKey(input.promptKey);
     const provider = this.resolveProvider(feature);
+    this.assertRealProvider(input, provider);
     return this.runWithLog(input, feature, () => provider.generateText(input));
   }
 
@@ -73,6 +76,16 @@ export class LlmService {
       return this.mockProvider;
     }
     return this.resolveProvider(feature);
+  }
+
+  private assertRealProvider(input: LlmJsonInput | LlmTextInput, provider: LlmProvider) {
+    if (input.requireReal && provider.name === "mock") {
+      throw new AppHttpException(
+        "LLM_PROVIDER_ERROR",
+        `${input.promptKey} 未配置真实模型，无法生成生产内容`,
+        HttpStatus.SERVICE_UNAVAILABLE
+      );
+    }
   }
 
   private async runWithLog<T extends LlmJsonResult | LlmTextResult>(

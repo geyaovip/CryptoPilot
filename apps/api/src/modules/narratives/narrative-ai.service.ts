@@ -77,7 +77,8 @@ export class NarrativeAiService {
 
     const llm = await this.llm.generateJson({
       promptKey: "narrative_summary_prompt",
-      user: prompt
+      user: prompt,
+      requireReal: true
     });
     const parsed = parseNarrativeSummaryOutput(llm.data);
     if (!parsed.success) return;
