@@ -51,7 +51,7 @@ export class TelegramService {
     if (text.startsWith("/start")) {
       const code = text.match(/bind_([A-Z0-9]+)/i)?.[1];
       if (code) return this.bindWithCode(chatId, code.toUpperCase());
-      await this.provider.sendMessage(chatId, "欢迎使用 CryptoPilot。请在网页端生成绑定码后发送 /bind <code> 完成绑定。");
+      await this.provider.sendMessage(chatId, "欢迎使用 CryptoPilot。请从网页端点击“一键绑定 Telegram”，或发送 /bind <code> 完成绑定。");
       return { ok: true };
     }
     if (text.startsWith("/summary")) return this.sendSummary(chatId);
@@ -68,7 +68,7 @@ export class TelegramService {
 
   private async bindWithCode(chatId: string, code: string) {
     if (!code) {
-      await this.provider.sendMessage(chatId, "请发送 /bind <code>，绑定码可在 CryptoPilot 个人中心生成。");
+      await this.provider.sendMessage(chatId, "请从 CryptoPilot 个人中心点击“一键绑定 Telegram”，或发送 /bind <code> 完成绑定。");
       return { ok: true };
     }
     const bindCode = await this.prisma.telegramBindCode.findUnique({ where: { code } });
@@ -142,7 +142,7 @@ export class TelegramService {
   }
 
   private async sendBindFirst(chatId: string) {
-    await this.provider.sendMessage(chatId, "请先在 CryptoPilot 个人中心生成绑定码，并发送 /bind <code> 完成绑定。");
+    await this.provider.sendMessage(chatId, "请先在 CryptoPilot 个人中心点击“一键绑定 Telegram”，或发送 /bind <code> 完成绑定。");
     return { ok: true };
   }
 
@@ -179,7 +179,7 @@ export class TelegramService {
   private helpText() {
     return [
       "CryptoPilot Telegram 命令：",
-      "/bind <code> 绑定账号",
+      "/bind <code> 手动绑定账号",
       "/summary 查看最近市场摘要",
       "/watchlist 查看关注列表",
       "/pause 暂停推送",

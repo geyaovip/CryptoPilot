@@ -7,7 +7,7 @@
 
 ## 1. 绑定
 
-Web 生成绑定码，Telegram Bot 消费绑定码。
+Web 生成一次性绑定码，并优先通过 Telegram deep link 自动带入 Bot；用户点击 Bot 的 Start 后完成绑定。手动 `/bind <code>` 仅作为兜底。
 
 规则：
 
@@ -15,10 +15,11 @@ Web 生成绑定码，Telegram Bot 消费绑定码。
 - 一次性使用。
 - 绑定成功后保存 telegram_chat_id。
 - 用户可解绑。
+- Web 端应提供一键打开 Bot 的入口，避免用户手动输入绑定码。
 
 ## 2. Bot 命令
 
-- `/start`
+- `/start bind_<code>`
 - `/bind <code>`
 - `/summary`
 - `/watchlist`

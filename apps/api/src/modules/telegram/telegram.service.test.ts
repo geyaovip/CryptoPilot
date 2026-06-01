@@ -74,6 +74,43 @@ describe("TelegramService", () => {
     expect(sendMessage).toHaveBeenCalledWith("42", expect.stringContaining("无效或已过期"));
   });
 
+  it("binds account from Telegram start deep link", async () => {
+    const sendMessage = vi.fn();
+    const updateUser = vi.fn();
+    const updateBindCode = vi.fn();
+    const service = new TelegramService(
+      {
+        telegramBindCode: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "code-1",
+            userId: "u1",
+            code: "ABC123",
+            consumedAt: null,
+            expiresAt: new Date(Date.now() + 1000)
+          }),
+          update: updateBindCode
+        },
+        user: { update: updateUser }
+      } as never,
+      new ConfigService({ TELEGRAM_WEBHOOK_SECRET: "secret" }),
+      { ensurePreference: vi.fn() } as never,
+      { sendMessage, botUsername: "cryptopilot_bot" } as never
+    );
+
+    await expect(service.handleWebhook({ secret: "secret", text: "/start bind_ABC123", chatId: "42" })).resolves.toEqual({
+      ok: true
+    });
+    expect(updateUser).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      data: { telegramChatId: "42", telegramBoundAt: expect.any(Date) }
+    });
+    expect(updateBindCode).toHaveBeenCalledWith({
+      where: { id: "code-1" },
+      data: { consumedAt: expect.any(Date), chatId: "42" }
+    });
+    expect(sendMessage).toHaveBeenCalledWith("42", expect.stringContaining("绑定成功"));
+  });
+
   it("pauses and resumes telegram push for bound users", async () => {
     const sendMessage = vi.fn();
     const updateNotifications = vi.fn();

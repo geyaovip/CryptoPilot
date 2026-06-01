@@ -35,7 +35,7 @@
 
 必须支持：
 
-- `/start`
+- `/start bind_<code>`
 - `/bind <code>`
 - `/summary`
 - `/watchlist`
@@ -45,8 +45,9 @@
 
 命令行为：
 
+- `/start bind_<code>`：通过 Telegram deep link 自动完成绑定。
 - `/start`：展示欢迎语和绑定说明。
-- `/bind <code>`：完成绑定。
+- `/bind <code>`：手动完成绑定，作为一键绑定失败时的兜底。
 - `/summary`：返回最近一次 Daily Digest。
 - `/watchlist`：返回用户 Watchlist 概览。
 - `/pause`：关闭 Telegram Push。
@@ -60,15 +61,20 @@ Web：
 1. 用户进入 `/me` 或 Settings。
 2. 点击绑定 Telegram。
 3. 调用 `POST /api/telegram/bind-code`。
-4. 显示绑定码和 Bot 链接。
+4. 自动打开 Bot deep link：`https://t.me/<bot>?start=bind_<code>`。
+5. 页面保留绑定码和 Bot 链接作为兜底。
 
 Telegram：
 
-1. 用户向 Bot 发送 `/bind <code>`。
+1. 用户点击 Bot 的 Start，Telegram 发送 `/start bind_<code>`。
 2. Webhook 校验 code。
 3. 保存 `telegram_chat_id`。
 4. 标记 code consumed。
 5. 返回绑定成功。
+
+兜底流程：
+
+- 用户也可以手动向 Bot 发送 `/bind <code>` 完成绑定。
 
 绑定码规则：
 
