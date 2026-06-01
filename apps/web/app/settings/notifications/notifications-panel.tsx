@@ -2,8 +2,8 @@
 
 import { Button, Card } from "@cryptopilot/ui";
 import type { NotificationSettings } from "@cryptopilot/types";
-import { useState } from "react";
-import { updateNotificationSettings } from "../../lib/api";
+import { useEffect, useState } from "react";
+import { getNotificationSettings, updateNotificationSettings } from "../../lib/api";
 
 const rows: Array<{ key: keyof NotificationSettings; title: string; description: string }> = [
   {
@@ -31,6 +31,21 @@ const rows: Array<{ key: keyof NotificationSettings; title: string; description:
 export function NotificationsPanel({ initialSettings }: { initialSettings: NotificationSettings }) {
   const [settings, setSettings] = useState(initialSettings);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getNotificationSettings()
+      .then((next) => {
+        if (!cancelled) setSettings(next);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setLoadError(error instanceof Error ? error.message : "通知设置加载失败");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function toggle(key: keyof NotificationSettings) {
     const next = !settings[key];
@@ -53,6 +68,7 @@ export function NotificationsPanel({ initialSettings }: { initialSettings: Notif
         <div className="mt-4 rounded-2xl bg-[#FCFCF9] p-4 text-sm text-[#5F6868]">
           Telegram：{settings.telegram_bound ? "已绑定" : "未绑定"}，时区：{settings.timezone}
         </div>
+        {loadError ? <p className="mt-3 text-sm text-[#B54708]">{loadError}</p> : null}
       </Card>
       {rows.map((row) => {
         const enabled = Boolean(settings[row.key]);
