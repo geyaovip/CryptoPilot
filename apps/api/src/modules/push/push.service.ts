@@ -289,10 +289,6 @@ export class PushService {
   }
 
   private formatMessage(title: string, body: string, detailUrl?: string | null) {
-    return [`<b>${escapeHtml(title)}</b>`, escapeHtml(body), detailUrl ? `\n${escapeHtml(detailUrl)}` : "", "\nNot financial advice."].join("\n");
+    return [title, body, detailUrl ? `\n${detailUrl}` : "", "\nNot financial advice."].join("\n");
   }
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

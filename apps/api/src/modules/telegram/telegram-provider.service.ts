@@ -24,7 +24,6 @@ export class TelegramProviderService {
       body: JSON.stringify({
         chat_id: chatId,
         text,
-        parse_mode: "HTML",
         disable_web_page_preview: true
       })
     });
