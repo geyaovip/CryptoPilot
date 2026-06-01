@@ -7,6 +7,20 @@ import { sendAdminPush, type AdminUserItem } from "../../lib/api";
 
 const pushTypes = ["all", "daily_digest", "market_alert", "watchlist_alert", "manual"] as const;
 const pushStatuses = ["all", "pending", "sent", "failed", "cancelled"] as const;
+const pushTypeLabels: Record<(typeof pushTypes)[number], string> = {
+  all: "全部类型",
+  daily_digest: "每日摘要",
+  market_alert: "市场异动",
+  watchlist_alert: "关注提醒",
+  manual: "手动推送"
+};
+const pushStatusLabels: Record<(typeof pushStatuses)[number], string> = {
+  all: "全部状态",
+  pending: "待发送",
+  sent: "已发送",
+  failed: "发送失败",
+  cancelled: "已取消"
+};
 
 export function PushPanel({
   items,
@@ -90,14 +104,14 @@ export function PushPanel({
             <select className="rounded-xl border border-[#D9D5C9] px-3 py-2 text-sm" onChange={(event) => setTypeFilter(event.target.value as typeof typeFilter)} value={typeFilter}>
               {pushTypes.map((type) => (
                 <option key={type} value={type}>
-                  {type === "all" ? "全部类型" : type}
+                  {pushTypeLabels[type]}
                 </option>
               ))}
             </select>
             <select className="rounded-xl border border-[#D9D5C9] px-3 py-2 text-sm" onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} value={statusFilter}>
               {pushStatuses.map((status) => (
                 <option key={status} value={status}>
-                  {status === "all" ? "全部状态" : status}
+                  {pushStatusLabels[status]}
                 </option>
               ))}
             </select>
@@ -118,8 +132,8 @@ export function PushPanel({
             <tbody className="divide-y divide-[#EDE8DA]">
               {filteredItems.map((item) => (
                 <tr key={item.id}>
-                  <td className="py-3">{item.type}</td>
-                  <td className="py-3">{item.status}</td>
+                  <td className="py-3">{pushTypeLabels[item.type]}</td>
+                  <td className="py-3">{pushStatusLabels[item.status]}</td>
                   <td className="max-w-sm py-3">{item.title}</td>
                   <td className="max-w-md py-3 text-[#5F6868]">{item.body.slice(0, 120)}{item.body.length > 120 ? "…" : ""}</td>
                   <td className="py-3">{item.sent_at ? new Date(item.sent_at).toLocaleString("zh-CN") : "-"}</td>
