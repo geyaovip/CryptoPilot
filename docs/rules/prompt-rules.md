@@ -137,7 +137,7 @@ Push 输出：
   "bullets": ["string"],
   "related_tokens": ["string"],
   "related_narratives": ["string"],
-  "risk_note": "Not financial advice."
+  "risk_note": "仅供研究参考，不构成投资建议。"
 }
 ```
 
@@ -287,4 +287,3 @@ Prompt 测试必须：
 - sources 不足处理。
 - 投资建议禁用规则。
 - LLM provider 失败处理。
-

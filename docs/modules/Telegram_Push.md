@@ -42,7 +42,7 @@ Web 生成绑定码，Telegram Bot 消费绑定码。
 - related_tokens
 - related_narratives
 - detail_url
-- Not financial advice.
+- 中文风险提示：仅供研究参考，不构成投资建议。
 
 ## 5. 限流
 

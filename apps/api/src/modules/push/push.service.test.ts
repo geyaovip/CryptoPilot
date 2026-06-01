@@ -47,6 +47,49 @@ describe("PushService", () => {
     );
   });
 
+  it("sends Telegram pushes with the localized risk note", async () => {
+    const sendMessage = vi.fn().mockResolvedValue({ message_id: 1001 });
+    const createLog = vi.fn();
+    const updateMessage = vi.fn().mockResolvedValue({
+      id: "push-1",
+      userId: "u1",
+      type: "MANUAL",
+      status: "SENT",
+      title: "市场提醒",
+      body: "BTC 出现大幅波动。",
+      detailUrl: null,
+      relatedFeedItemId: null,
+      scheduledAt: null,
+      sentAt: new Date(),
+      failedAt: null,
+      errorMessage: null,
+      createdAt: new Date()
+    });
+    const service = new PushService(
+      {
+        pushMessage: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "push-1",
+            userId: "u1",
+            title: "市场提醒",
+            body: "BTC 出现大幅波动。",
+            detailUrl: "https://cryptopilot.chat/feed/1",
+            user: { telegramChatId: "42", notificationPreference: { telegramPushEnabled: true } }
+          }),
+          update: updateMessage
+        },
+        pushDeliveryLog: { create: createLog }
+      } as never,
+      { sendMessage } as never,
+      { enabled: false } as never
+    );
+
+    await expect(service.send("push-1")).resolves.toMatchObject({ status: "sent" });
+    const [, text] = sendMessage.mock.calls[0] as [string, string];
+    expect(text).toContain("仅供研究参考，不构成投资建议。");
+    expect(text).not.toContain("Not financial advice");
+  });
+
   it("blocks duplicate feed push for the same user and type", async () => {
     const service = new PushService(
       {

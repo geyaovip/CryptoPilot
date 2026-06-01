@@ -8,6 +8,8 @@ import { TelegramProviderService } from "../telegram/telegram-provider.service";
 import { mapPushMessage } from "./push.mapper";
 
 const DAILY_LIMIT = 20;
+const PUSH_RISK_NOTE = "仅供研究参考，不构成投资建议。";
+const RISK_NOTE_PATTERN = /(Not financial advice\.?|仅供研究参考|不构成投资建议)/i;
 const HOURLY_LIMITS: Partial<Record<PushType, number>> = {
   MARKET_ALERT: 3,
   WATCHLIST_ALERT: 5
@@ -66,7 +68,7 @@ export class PushService {
           userId: user.id,
           type: "market_alert",
           title: `${mover.symbol} 24h 波动提醒`,
-          body: `${mover.symbol} 24h 变动 ${Number(mover.priceChange24h).toFixed(2)}%，建议结合来源信息继续研究。Not financial advice.`
+          body: `${mover.symbol} 24h 变动 ${Number(mover.priceChange24h).toFixed(2)}%，建议结合来源信息继续研究。`
         });
       }
     }
@@ -147,8 +149,7 @@ export class PushService {
       title: "CryptoPilot 每日市场摘要",
       body: [
         "今日重点：",
-        ...feeds.map((feed, index) => `${index + 1}. ${feed.title}：${feed.aiSummary}`),
-        "Not financial advice."
+        ...feeds.map((feed, index) => `${index + 1}. ${feed.title}：${feed.aiSummary}`)
       ].join("\n"),
       relatedFeedItemId: feeds[0]?.id,
       detailUrl: feeds[0]?.sourceUrl
@@ -289,6 +290,8 @@ export class PushService {
   }
 
   private formatMessage(title: string, body: string, detailUrl?: string | null) {
-    return [title, body, detailUrl ? `\n${detailUrl}` : "", "\nNot financial advice."].join("\n");
+    const parts = [title.trim(), body.trim(), detailUrl ? detailUrl.trim() : ""].filter(Boolean);
+    const content = parts.join("\n\n");
+    return RISK_NOTE_PATTERN.test(content) ? content : [content, PUSH_RISK_NOTE].join("\n\n");
   }
 }

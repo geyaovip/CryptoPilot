@@ -184,7 +184,7 @@ Push Prompt 输出 Schema：
   "bullets": ["string"],
   "related_tokens": ["string"],
   "related_narratives": ["string"],
-  "risk_note": "Not financial advice."
+  "risk_note": "仅供研究参考，不构成投资建议。"
 }
 ```
 
@@ -192,7 +192,7 @@ Push Prompt 输出 Schema：
 
 - 标题不超过 60 字符。
 - bullets 3-5 条。
-- 必须包含 `Not financial advice.`。
+- 必须包含中文风险提示：`仅供研究参考，不构成投资建议。`。
 
 ## 11. 测试清单
 

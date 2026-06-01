@@ -32,7 +32,7 @@ export function PushPanel({
   const defaultUser = users.find((user) => user.telegram_bound) ?? users[0];
   const [userId, setUserId] = useState(defaultUser?.id ?? "");
   const [title, setTitle] = useState("CryptoPilot 市场提醒");
-  const [body, setBody] = useState("这里填写推送正文。Not financial advice.");
+  const [body, setBody] = useState("这里填写推送正文。");
   const [typeFilter, setTypeFilter] = useState<(typeof pushTypes)[number]>("all");
   const [statusFilter, setStatusFilter] = useState<(typeof pushStatuses)[number]>("all");
   const [busy, setBusy] = useState(false);
