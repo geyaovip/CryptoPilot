@@ -19,19 +19,15 @@ export function TelegramCard({ bound }: { bound: boolean }) {
   async function createCode() {
     setBusy(true);
     setError(null);
-    const telegramWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
     try {
       const data = await createTelegramBindCode();
       setCode(data.code);
       setBotLink(data.bot_link);
       setExpiresAt(data.expires_at);
-      if (data.bot_link && telegramWindow) {
-        telegramWindow.location.href = data.bot_link;
-      } else if (!data.bot_link && telegramWindow) {
-        telegramWindow.close();
+      if (data.bot_link) {
+        window.location.href = data.bot_link;
       }
     } catch (err) {
-      telegramWindow?.close();
       setError(err instanceof Error ? err.message : "生成 Telegram 绑定链接失败");
     } finally {
       setBusy(false);
