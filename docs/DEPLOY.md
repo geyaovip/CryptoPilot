@@ -18,7 +18,31 @@
 - `AUTH_SECRET`（至少 16 字符，勿入库）
 - `APP_URL` / `ADMIN_URL` / `API_URL`
 - `NEXT_PUBLIC_API_URL`（Web/Admin 指向 API 公网地址）
+- `NODE_ENV=production`
+- `ADMIN_APP_URL`（管理端 Magic Link 回跳地址）
+- `RESEND_API_KEY` / `MAIL_FROM`（生产 Magic Link 邮件发送）
+- `MAGIC_LINK_EXPOSE=false`
+- `BETA_DEV_LOGIN=false`
 - LLM 相关 `MOONSHOT_*` / `DEEPSEEK_*` / `OPENAI_*`
+
+生产服务器同步代码时必须排除 `.env`，避免本地开发配置覆盖线上密钥和域名：
+
+```bash
+rsync -az --delete \
+  --exclude .env \
+  --exclude node_modules \
+  --exclude .git \
+  --exclude apps/web/.next \
+  --exclude apps/admin/.next \
+  --exclude apps/api/dist \
+  ./ ubuntu@<server>:/home/ubuntu/apps/CryptoPilot-release/
+```
+
+Magic Link 验证：
+
+- 用户端请求应返回 `登录链接已发送，请查收邮件。`，且响应中不应出现 `magic_link_url`。
+- 邮件链接应指向 `https://cryptopilot.chat/login?...`。
+- 管理端邮件链接应指向 `https://admin.cryptopilot.chat/admin/login?...`。
 
 ## API（Railway）
 

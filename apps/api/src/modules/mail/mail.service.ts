@@ -23,7 +23,12 @@ export class MailService {
 
   async sendMagicLink(input: SendMagicLinkInput): Promise<void> {
     const apiKey = this.config.get<string>("RESEND_API_KEY");
-    if (!apiKey) return;
+    if (!apiKey) {
+      if (this.config.get<string>("NODE_ENV") === "production") {
+        throw new ServiceUnavailableException("邮件服务未配置，请稍后再试");
+      }
+      return;
+    }
 
     const from = this.config.get<string>("MAIL_FROM") ?? "CryptoPilot <noreply@cryptopilot.chat>";
     const response = await fetch("https://api.resend.com/emails", {
