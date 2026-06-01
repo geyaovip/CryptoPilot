@@ -1,4 +1,4 @@
-import { Body, Controller, Inject, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Headers, Inject, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { UserGuard } from "../auth/user.guard";
 import { ok } from "../common/api-response";
 import { TelegramWebhookDto } from "./dto/telegram-webhook.dto";
@@ -21,10 +21,14 @@ export class TelegramController {
   }
 
   @Post("webhook")
-  async webhook(@Body() dto: TelegramWebhookDto) {
+  async webhook(
+    @Body() dto: TelegramWebhookDto,
+    @Headers("x-telegram-bot-api-secret-token") secretHeader?: string,
+    @Query("secret") secretQuery?: string
+  ) {
     return ok(
       await this.telegram.handleWebhook({
-        secret: dto.secret,
+        secret: secretHeader ?? secretQuery ?? dto.secret,
         text: dto.message?.text,
         chatId: dto.message?.chat?.id === undefined ? undefined : String(dto.message.chat.id)
       })
