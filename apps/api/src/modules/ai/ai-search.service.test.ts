@@ -41,4 +41,18 @@ describe("AiSearchService quota", () => {
       errorCode: "DAILY_LIMIT_EXCEEDED"
     });
   });
+
+  it("does not return mock AI search results as real answers", async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: "u1",
+      dailyAiSearchCount: 0,
+      lastAiSearchResetAt: new Date()
+    });
+
+    await expect(service.search("u1", "ETH today")).rejects.toMatchObject({
+      errorCode: "LLM_PROVIDER_ERROR"
+    });
+    expect(rag.retrieve).not.toHaveBeenCalled();
+    expect(llm.generateJson).not.toHaveBeenCalled();
+  });
 });
