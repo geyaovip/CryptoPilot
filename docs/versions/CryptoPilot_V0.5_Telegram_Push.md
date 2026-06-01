@@ -1,9 +1,9 @@
 # CryptoPilot V0.5 Telegram Push 开发规格
 
-> **排期说明**：本版本 **延后至 MVP 主线完成之后** 再开发（在 V0.6 MVP Beta 及 V0.7–V0.9 首页阶段路线之后）。文件名保留 V0.5 编号，但 **不得插在 V0.4 与 V0.6 之间** 实施。
+> **当前状态**：产品方已明确启动 V0.5 Telegram Push 专项，本版本进入实现与验收阶段。
 
 版本目标：实现 Telegram 绑定、每日总结、市场异动、Watchlist 异动、Push 管理、通知设置和限流。  
-依赖版本：V0.6 MVP Beta 已完成（或产品方明确启动 Telegram 专项时）。
+依赖版本：V0.6 MVP Beta 已完成，或产品方明确启动 Telegram 专项。
 
 ---
 
@@ -217,4 +217,3 @@ V0.5 完成必须满足：
 - Push 限流生效。
 - Admin 可查看和手动发送 Push。
 - Push 失败有日志。
-

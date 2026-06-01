@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "../lib/auth-store";
 import { getApiUrl } from "../lib/api-url";
 import { useBookmarkStore } from "../lib/bookmark-store";
+import { getNotificationSettings } from "../lib/api";
+import { TelegramCard } from "./telegram-card";
 
 type MeUser = {
   id: string;
@@ -18,6 +20,7 @@ export function MePanel() {
   const token = useAuthStore((state) => state.accessToken);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const [user, setUser] = useState<MeUser | null>(null);
+  const [telegramBound, setTelegramBound] = useState(false);
   const [loading, setLoading] = useState(true);
   const bookmarkItems = useBookmarkStore((state) => state.items);
   const bookmarkLoading = useBookmarkStore((state) => state.loading);
@@ -43,6 +46,13 @@ export function MePanel() {
       })
       .finally(() => setLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    if (!user) return;
+    void getNotificationSettings()
+      .then((settings) => setTelegramBound(settings.telegram_bound))
+      .catch(() => setTelegramBound(false));
+  }, [user]);
 
   useEffect(() => {
     if (user) void loadBookmarks();
@@ -80,6 +90,8 @@ export function MePanel() {
           退出登录
         </Button>
       </Card>
+
+      <TelegramCard bound={telegramBound} />
 
       <Card className="border-[#D9D5C9] bg-white/95 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
         <div className="flex items-center justify-between gap-3">

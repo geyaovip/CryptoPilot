@@ -25,6 +25,8 @@ export type FeedType =
   | "kol_signal";
 export type FeedStatus = "published" | "hidden" | "deleted";
 export type Sentiment = "bullish" | "neutral" | "bearish";
+export type PushType = "daily_digest" | "market_alert" | "watchlist_alert" | "manual";
+export type PushStatus = "pending" | "sent" | "failed" | "cancelled";
 
 export type ApiSuccess<T> = {
   data: T;
@@ -106,6 +108,45 @@ export type CurrentUser = {
 
 export type AuthMeResponse = ApiSuccess<{
   user: CurrentUser;
+}>;
+
+export type NotificationSettings = {
+  telegram_bound: boolean;
+  telegram_bound_at: string | null;
+  telegram_push_enabled: boolean;
+  daily_digest_enabled: boolean;
+  market_alert_enabled: boolean;
+  watchlist_alert_enabled: boolean;
+  timezone: string;
+};
+
+export type NotificationSettingsResponse = ApiSuccess<NotificationSettings>;
+
+export type TelegramBindCodeResponse = ApiSuccess<{
+  code: string;
+  expires_at: string;
+  bot_username: string | null;
+  bot_link: string | null;
+}>;
+
+export type PushMessageSummary = {
+  id: string;
+  user_id: string;
+  type: PushType;
+  status: PushStatus;
+  title: string;
+  body: string;
+  detail_url: string | null;
+  related_feed_item_id: string | null;
+  scheduled_at: string | null;
+  sent_at: string | null;
+  failed_at: string | null;
+  error_message: string | null;
+  created_at: string;
+};
+
+export type AdminPushListResponse = ApiSuccess<{
+  items: PushMessageSummary[];
 }>;
 
 export type HealthResponse = ApiSuccess<{

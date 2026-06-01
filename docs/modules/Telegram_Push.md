@@ -1,6 +1,6 @@
 # 模块规格：Telegram Push
 
-适用版本：V0.5（**延后至 MVP 主线完成之后**，见 `README_AI_DEVELOPMENT_DOCS.md`）  
+适用版本：V0.5（Telegram Push 专项）  
 目标：定义 Telegram 绑定、推送类型、限流、后台管理和失败处理。
 
 ---
@@ -78,4 +78,3 @@ Web 生成绑定码，Telegram Bot 消费绑定码。
 - 限流有效。
 - 关闭通知后不发送。
 - 失败有日志。
-

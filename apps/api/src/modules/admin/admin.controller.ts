@@ -26,6 +26,8 @@ import { PatchAdminConfigDto } from "./dto/admin-config.dto";
 import { AdminLogsQueryDto } from "./dto/admin-logs-query.dto";
 import { AdminPaginationDto } from "./dto/admin-pagination.dto";
 import { UpdateAdminUserDto } from "./dto/admin-user.dto";
+import { AdminSendPushDto } from "../push/dto/admin-send-push.dto";
+import { PushService } from "../push/push.service";
 
 @Controller("admin")
 @UseGuards(AdminGuard)
@@ -44,7 +46,8 @@ export class AdminController {
     @Inject(AdminTokenService) private readonly adminTokenService: AdminTokenService,
     @Inject(AdminKolService) private readonly adminKolService: AdminKolService,
     @Inject(AdminInsightService) private readonly adminInsightService: AdminInsightService,
-    @Inject(AdminUserService) private readonly adminUserService: AdminUserService
+    @Inject(AdminUserService) private readonly adminUserService: AdminUserService,
+    @Inject(PushService) private readonly pushService: PushService
   ) {}
 
   @Get("dashboard")
@@ -276,6 +279,31 @@ export class AdminController {
   @Get("logs")
   async logs(@Query() query: AdminLogsQueryDto) {
     return ok(await this.adminLogsService.list(query));
+  }
+
+  @Get("push")
+  async pushMessages() {
+    return ok(await this.pushService.adminList());
+  }
+
+  @Post("push/send")
+  async sendPush(@Req() req: { user: { id: string } }, @Body() dto: AdminSendPushDto) {
+    const result = await this.pushService.createAndSend({
+      userId: dto.user_id,
+      type: dto.type,
+      title: dto.title,
+      body: dto.body,
+      detailUrl: dto.detail_url,
+      relatedFeedItemId: dto.related_feed_item_id
+    });
+    await this.audit.log({
+      adminUserId: req.user.id,
+      action: "push.send",
+      entityType: "push_message",
+      entityId: result.id,
+      after: result
+    });
+    return ok(result);
   }
 
   @Get("config")

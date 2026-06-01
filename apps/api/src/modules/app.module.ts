@@ -11,11 +11,14 @@ import { FeedModule } from "./feed/feed.module";
 import { InsightsModule } from "./insights/insights.module";
 import { KolsModule } from "./kols/kols.module";
 import { NarrativesModule } from "./narratives/narratives.module";
+import { SettingsModule } from "./settings/settings.module";
+import { TelegramModule } from "./telegram/telegram.module";
 import { TokensModule } from "./tokens/tokens.module";
 import { WatchlistModule } from "./watchlist/watchlist.module";
 import { HealthModule } from "./health/health.module";
 import { IngestionModule } from "./ingestion/ingestion.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { PushModule } from "./push/push.module";
 import { RedisModule } from "./redis/redis.module";
 
 @Module({
@@ -28,6 +31,8 @@ import { RedisModule } from "./redis/redis.module";
     RedisModule,
     HealthModule,
     AuthModule,
+    SettingsModule,
+    TelegramModule,
     InsightsModule,
     FeedModule,
     BookmarksModule,
@@ -37,6 +42,7 @@ import { RedisModule } from "./redis/redis.module";
     KolsModule,
     IngestionModule,
     AiModule,
+    PushModule,
     AdminModule
   ]
 })

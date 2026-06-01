@@ -113,6 +113,30 @@ enum WatchlistTargetType {
   @@map("watchlist_target_type")
 }
 
+enum PushType {
+  DAILY_DIGEST    @map("daily_digest")
+  MARKET_ALERT    @map("market_alert")
+  WATCHLIST_ALERT @map("watchlist_alert")
+  MANUAL          @map("manual")
+
+  @@map("push_type")
+}
+
+enum PushStatus {
+  PENDING   @map("pending")
+  SENT      @map("sent")
+  FAILED    @map("failed")
+  CANCELLED @map("cancelled")
+
+  @@map("push_status")
+}
+
+enum PushChannel {
+  TELEGRAM @map("telegram")
+
+  @@map("push_channel")
+}
+
 enum KolPlatform {
   TWITTER @map("twitter")
   YOUTUBE @map("youtube")
@@ -141,6 +165,10 @@ model User {
   watchlistItems        WatchlistItem[]
   aiSearchHistory       AiSearchHistory[]
   llmCallLogs           LlmCallLog[]
+  notificationPreference NotificationPreference?
+  telegramBindCodes     TelegramBindCode[]
+  pushMessages          PushMessage[]
+  pushDeliveryLogs      PushDeliveryLog[]
 
   @@map("users")
 }
@@ -279,6 +307,81 @@ model WatchlistItem {
   @@map("watchlist_items")
 }
 
+model TelegramBindCode {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  code       String    @unique @db.VarChar(16)
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  chatId     String?   @map("chat_id") @db.VarChar(255)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  user       User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+  @@map("telegram_bind_codes")
+}
+
+model NotificationPreference {
+  id                    String   @id @default(uuid()) @db.Uuid
+  userId                String   @unique @map("user_id") @db.Uuid
+  telegramPushEnabled   Boolean  @default(true) @map("telegram_push_enabled")
+  dailyDigestEnabled    Boolean  @default(true) @map("daily_digest_enabled")
+  marketAlertEnabled    Boolean  @default(true) @map("market_alert_enabled")
+  watchlistAlertEnabled Boolean  @default(true) @map("watchlist_alert_enabled")
+  timezone              String   @default("Asia/Shanghai") @db.VarChar(64)
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  user                  User     @relation(fields: [userId], references: [id])
+
+  @@map("notification_preferences")
+}
+
+model PushMessage {
+  id                String            @id @default(uuid()) @db.Uuid
+  userId            String            @map("user_id") @db.Uuid
+  type              PushType
+  status            PushStatus        @default(PENDING)
+  title             String            @db.VarChar(255)
+  body              String
+  detailUrl         String?           @map("detail_url")
+  relatedFeedItemId String?           @map("related_feed_item_id") @db.Uuid
+  metadataJson      Json              @default("{}") @map("metadata_json")
+  scheduledAt       DateTime?         @map("scheduled_at")
+  sentAt            DateTime?         @map("sent_at")
+  failedAt          DateTime?         @map("failed_at")
+  errorMessage      String?           @map("error_message")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  user              User              @relation(fields: [userId], references: [id])
+  feedItem          FeedItem?         @relation(fields: [relatedFeedItemId], references: [id])
+  deliveryLogs      PushDeliveryLog[]
+
+  @@unique([userId, relatedFeedItemId, type])
+  @@index([userId, status, scheduledAt])
+  @@index([type, createdAt])
+  @@map("push_messages")
+}
+
+model PushDeliveryLog {
+  id                String      @id @default(uuid()) @db.Uuid
+  pushMessageId     String      @map("push_message_id") @db.Uuid
+  userId            String      @map("user_id") @db.Uuid
+  channel           PushChannel @default(TELEGRAM)
+  status            PushStatus
+  providerMessageId String?     @map("provider_message_id") @db.VarChar(255)
+  errorMessage      String?     @map("error_message")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  pushMessage       PushMessage @relation(fields: [pushMessageId], references: [id])
+  user              User        @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([pushMessageId])
+  @@index([status, createdAt])
+  @@map("push_delivery_logs")
+}
+
 model NarrativeHeatSnapshot {
   id                 String    @id @default(uuid()) @db.Uuid
   narrativeId        String    @map("narrative_id") @db.Uuid
@@ -351,6 +454,7 @@ model FeedItem {
   feedItemTokens     FeedItemToken[]
   feedItemNarratives FeedItemNarrative[]
   bookmarks          Bookmark[]
+  pushMessages       PushMessage[]
 
   @@index([insightId])
   @@index([clusterId])

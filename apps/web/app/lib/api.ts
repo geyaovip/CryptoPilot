@@ -7,6 +7,9 @@ import type {
   KolListResponse,
   NarrativeDetailResponse,
   NarrativeListResponse,
+  NotificationSettings,
+  NotificationSettingsResponse,
+  TelegramBindCodeResponse,
   TokenListResponse,
   TrendingResponse,
   WatchlistListResponse,
@@ -167,6 +170,49 @@ export async function removeWatchlist(id: string) {
     headers: buildUserHeaders()
   });
   if (!response.ok) throw new Error("取消关注失败");
+}
+
+export async function getNotificationSettings(): Promise<NotificationSettings> {
+  const apiUrl = getApiUrl();
+  const response = await apiFetch(`${apiUrl}/api/settings/notifications`, {
+    cache: "no-store",
+    headers: buildUserHeaders()
+  });
+  if (!response.ok) throw new Error("通知设置加载失败");
+  const body = (await response.json()) as NotificationSettingsResponse;
+  return body.data;
+}
+
+export async function updateNotificationSettings(input: Partial<NotificationSettings>) {
+  const apiUrl = getApiUrl();
+  const response = await apiFetch(`${apiUrl}/api/settings/notifications`, {
+    method: "PATCH",
+    headers: buildUserHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(input)
+  });
+  if (!response.ok) throw new Error("更新通知设置失败");
+  const body = (await response.json()) as NotificationSettingsResponse;
+  return body.data;
+}
+
+export async function createTelegramBindCode() {
+  const apiUrl = getApiUrl();
+  const response = await apiFetch(`${apiUrl}/api/telegram/bind-code`, {
+    method: "POST",
+    headers: buildUserHeaders()
+  });
+  if (!response.ok) throw new Error("生成 Telegram 绑定码失败");
+  const body = (await response.json()) as TelegramBindCodeResponse;
+  return body.data;
+}
+
+export async function unbindTelegram() {
+  const apiUrl = getApiUrl();
+  const response = await apiFetch(`${apiUrl}/api/telegram/unbind`, {
+    method: "POST",
+    headers: buildUserHeaders()
+  });
+  if (!response.ok) throw new Error("解绑 Telegram 失败");
 }
 
 export async function getTokens() {

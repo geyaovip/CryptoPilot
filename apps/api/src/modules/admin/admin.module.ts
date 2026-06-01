@@ -7,6 +7,7 @@ import { InsightsModule } from "../insights/insights.module";
 import { NarrativesModule } from "../narratives/narratives.module";
 import { PromptModule } from "../prompt/prompt.module";
 import { PrismaModule } from "../prisma/prisma.module";
+import { PushModule } from "../push/push.module";
 import { SystemModule } from "../system/system.module";
 import { AdminAiMonitorService } from "./admin-ai-monitor.service";
 import { AdminDashboardService } from "./admin-dashboard.service";
@@ -32,7 +33,8 @@ import { AdminUserService } from "./admin-user.service";
     PromptModule,
     AiModule,
     NarrativesModule,
-    InsightsModule
+    InsightsModule,
+    PushModule
   ],
   controllers: [AdminController],
   providers: [

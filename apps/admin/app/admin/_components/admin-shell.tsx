@@ -10,6 +10,7 @@ const navItems: NavItem[] = [
   { label: "Feed 簇", href: "/admin/feed-clusters" },
   { label: "Prompt 管理", href: "/admin/prompts" },
   { label: "AI 监控", href: "/admin/ai-monitor" },
+  { label: "Push 管理", href: "/admin/push" },
   { label: "叙事管理", href: "/admin/narratives" },
   { label: "资产管理", href: "/admin/tokens" },
   { label: "KOL 源", href: "/admin/kols" },

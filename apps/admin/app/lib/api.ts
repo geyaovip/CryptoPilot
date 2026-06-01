@@ -1,6 +1,7 @@
 import type {
   AdminFeedClusterListData,
   AdminFeedClusterSummary,
+  AdminPushListResponse,
   AiMonitorResponse,
   FeedItemSummary,
   IngestionLogListResponse,
@@ -359,6 +360,28 @@ export async function getAdminUsers() {
   if (!response.ok) throw new Error("用户列表加载失败");
   const body = (await response.json()) as { data: { items: AdminUserItem[] } };
   return body.data;
+}
+
+export async function getAdminPush() {
+  const response = await apiFetch(`${apiUrl}/api/admin/push`, { cache: "no-store", headers: await adminHeaders() });
+  if (!response.ok) throw new Error("Push 列表加载失败");
+  const body = (await response.json()) as AdminPushListResponse;
+  return body.data;
+}
+
+export async function sendAdminPush(input: {
+  user_id: string;
+  type: "manual" | "daily_digest" | "market_alert" | "watchlist_alert";
+  title: string;
+  body: string;
+  detail_url?: string;
+}) {
+  const response = await apiFetch(`${apiUrl}/api/admin/push/send`, {
+    method: "POST",
+    headers: await adminHeaders(),
+    body: JSON.stringify(input)
+  });
+  if (!response.ok) throw new Error("发送 Push 失败");
 }
 
 export async function updateAdminUser(id: string, input: { role?: "user" | "admin"; disabled?: boolean }) {
