@@ -131,7 +131,7 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
         <label className="text-sm font-medium text-[#5F6868]" htmlFor="search">
           询问 CryptoPilot
         </label>
-        <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-2 focus-within:border-[#20808D] sm:flex-row">
+        <div className="mt-3 flex items-center gap-2 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-2 focus-within:border-[#20808D]">
           <input
             className="h-12 min-w-0 flex-1 bg-transparent px-3 text-sm text-[#102A2C] outline-none placeholder:text-[#8A918C]"
             id="search"
@@ -143,12 +143,13 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
             value={query}
           />
           <Button
-            className="h-12 shrink-0 rounded-xl border-[#20808D] bg-[#20808D] px-5 text-white hover:bg-[#186A73]"
+            className="h-12 shrink-0 rounded-xl border-[#20808D] bg-[#20808D] px-3 text-sm text-white hover:bg-[#186A73] sm:px-5"
             disabled={loading}
             onClick={() => void runSearch(query)}
             type="button"
           >
-            {loading ? "检索中…" : "开始搜索"}
+            <span className="sm:hidden">{loading ? "检索中" : "搜索"}</span>
+            <span className="hidden sm:inline">{loading ? "检索中…" : "开始搜索"}</span>
           </Button>
         </div>
         <p className="mt-3 text-xs leading-5 text-[#8A918C]">答案仅用于研究参考，不构成投资建议。</p>
