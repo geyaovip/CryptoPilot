@@ -1,9 +1,10 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 import { FeedAiService } from "../ai/feed-ai.service";
 import { BackgroundJobsService } from "../common/background-jobs.service";
 import { PrismaService } from "../prisma/prisma.service";
-import { ingestSourceItems } from "./ingest-source.util";
+import { fetchRedditItemsForSource, ingestSourceItems } from "./ingest-source.util";
 
 const MAX_CONSECUTIVE_SOURCE_FAILURES = 5;
 const MAX_INGESTION_RETRIES = 2;
@@ -13,7 +14,8 @@ export class IngestionService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(FeedAiService) private readonly feedAiService: FeedAiService,
-    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService
+    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService,
+    @Inject(ConfigService) private readonly config: ConfigService
   ) {}
 
   @Cron("*/5 * * * *")
@@ -24,7 +26,19 @@ export class IngestionService {
     });
 
     for (const source of sources) {
-      await this.ingestRssSource(source.id);
+      await this.ingestSource(source.id);
+    }
+  }
+
+  @Cron("*/10 * * * *")
+  async ingestActiveRedditSources(): Promise<void> {
+    if (!this.jobs.enabled) return;
+    const sources = await this.prisma.source.findMany({
+      where: { type: "REDDIT", status: "ACTIVE", deletedAt: null }
+    });
+
+    for (const source of sources) {
+      await this.ingestSource(source.id);
     }
   }
 
@@ -53,6 +67,10 @@ export class IngestionService {
   }
 
   async ingestRssSource(sourceId: string): Promise<{ items_found: number; items_created: number }> {
+    return this.ingestSource(sourceId);
+  }
+
+  async ingestSource(sourceId: string): Promise<{ items_found: number; items_created: number }> {
     const source = await this.prisma.source.findUnique({ where: { id: sourceId } });
     if (!source?.url) return { items_found: 0, items_created: 0 };
 
@@ -115,9 +133,27 @@ export class IngestionService {
     let lastError: unknown;
     for (let attempt = 1; attempt <= MAX_INGESTION_RETRIES + 1; attempt += 1) {
       try {
-        const result = await ingestSourceItems(this.prisma, source, 25, (feedItemId) => {
-          this.feedAiService.queueGeneration(feedItemId);
-        });
+        const itemsOverride =
+          source.type === "REDDIT"
+            ? await fetchRedditItemsForSource(
+                source,
+                {
+                  clientId: this.config.get<string>("REDDIT_CLIENT_ID"),
+                  clientSecret: this.config.get<string>("REDDIT_CLIENT_SECRET"),
+                  userAgent: this.config.get<string>("REDDIT_USER_AGENT")
+                },
+                25
+              )
+            : undefined;
+        const result = await ingestSourceItems(
+          this.prisma,
+          source,
+          25,
+          (feedItemId) => {
+            this.feedAiService.queueGeneration(feedItemId);
+          },
+          itemsOverride
+        );
         return { result, attempts: attempt };
       } catch (error) {
         lastError = error;

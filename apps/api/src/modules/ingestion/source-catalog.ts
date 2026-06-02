@@ -1,13 +1,15 @@
-import type { ContentLocale } from "@prisma/client";
+import type { ContentLocale, SourceType } from "@prisma/client";
 
-export type CatalogIngestKind = "rss" | "blockbeats_flash";
+export type CatalogIngestKind = "rss" | "blockbeats_flash" | "reddit";
 
 export type SourceCatalogEntry = {
   name: string;
   url: string;
+  type?: SourceType;
   locale: ContentLocale;
   sourceWeight: number;
   ingest: CatalogIngestKind;
+  fetchIntervalSeconds?: number;
   /** Pause low-priority overseas feeds by default in new seeds. */
   defaultActive?: boolean;
 };
@@ -62,5 +64,73 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     locale: "EN",
     sourceWeight: 35,
     ingest: "rss"
+  },
+  {
+    name: "Ethereum Foundation Blog",
+    url: "https://blog.ethereum.org/feed.xml",
+    locale: "EN",
+    sourceWeight: 62,
+    ingest: "rss"
+  },
+  {
+    name: "a16z crypto Medium",
+    url: "https://medium.com/feed/a16zcrypto",
+    locale: "EN",
+    sourceWeight: 58,
+    ingest: "rss"
+  },
+  {
+    name: "r/CryptoCurrency",
+    url: "https://oauth.reddit.com/r/CryptoCurrency",
+    type: "REDDIT",
+    locale: "EN",
+    sourceWeight: 48,
+    ingest: "reddit",
+    fetchIntervalSeconds: 600
+  },
+  {
+    name: "r/Bitcoin",
+    url: "https://oauth.reddit.com/r/Bitcoin",
+    type: "REDDIT",
+    locale: "EN",
+    sourceWeight: 50,
+    ingest: "reddit",
+    fetchIntervalSeconds: 600
+  },
+  {
+    name: "r/ethereum",
+    url: "https://oauth.reddit.com/r/ethereum",
+    type: "REDDIT",
+    locale: "EN",
+    sourceWeight: 50,
+    ingest: "reddit",
+    fetchIntervalSeconds: 600
+  },
+  {
+    name: "r/solana",
+    url: "https://oauth.reddit.com/r/solana",
+    type: "REDDIT",
+    locale: "EN",
+    sourceWeight: 45,
+    ingest: "reddit",
+    fetchIntervalSeconds: 600
+  },
+  {
+    name: "r/ethfinance",
+    url: "https://oauth.reddit.com/r/ethfinance",
+    type: "REDDIT",
+    locale: "EN",
+    sourceWeight: 45,
+    ingest: "reddit",
+    fetchIntervalSeconds: 600
+  },
+  {
+    name: "r/CryptoMarkets",
+    url: "https://oauth.reddit.com/r/CryptoMarkets",
+    type: "REDDIT",
+    locale: "EN",
+    sourceWeight: 42,
+    ingest: "reddit",
+    fetchIntervalSeconds: 600
   }
 ];

@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { IngestionService } from "./ingestion.service";
-import { ingestSourceItems } from "./ingest-source.util";
+import { fetchRedditItemsForSource, ingestSourceItems } from "./ingest-source.util";
 
 vi.mock("./ingest-source.util", () => ({
+  fetchRedditItemsForSource: vi.fn(),
   ingestSourceItems: vi.fn()
 }));
 
@@ -25,8 +26,9 @@ function createService() {
   };
   const feedAi = { queueGeneration: vi.fn() };
   const jobs = { enabled: true };
+  const config = { get: vi.fn() };
   return {
-    service: new IngestionService(prisma as never, feedAi as never, jobs as never),
+    service: new IngestionService(prisma as never, feedAi as never, jobs as never, config as never),
     prisma
   };
 }
@@ -34,6 +36,7 @@ function createService() {
 describe("IngestionService", () => {
   beforeEach(() => {
     vi.mocked(ingestSourceItems).mockReset();
+    vi.mocked(fetchRedditItemsForSource).mockReset();
   });
 
   it("retries a source twice before recording success", async () => {
@@ -78,5 +81,46 @@ describe("IngestionService", () => {
       })
     );
     expect(prisma.ingestionLog.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses reddit provider output for reddit sources", async () => {
+    vi.mocked(fetchRedditItemsForSource).mockResolvedValue([
+      {
+        title: "Bitcoin ETF discussion heats up",
+        content: "BTC ETF liquidity discussion",
+        sourceUrl: "https://www.reddit.com/r/Bitcoin/comments/1/etf/",
+        publishTime: new Date("2026-06-01T00:00:00.000Z")
+      }
+    ]);
+    vi.mocked(ingestSourceItems).mockResolvedValue({ items_found: 1, items_created: 1 });
+    const redditSource = { ...source, type: "REDDIT", sourceWeight: 50 };
+    const prisma = {
+      source: {
+        findUnique: vi.fn().mockResolvedValue(redditSource),
+        update: vi.fn()
+      },
+      ingestionLog: {
+        create: vi.fn()
+      }
+    };
+    const feedAi = { queueGeneration: vi.fn() };
+    const jobs = { enabled: true };
+    const config = { get: vi.fn((key: string) => (key === "REDDIT_CLIENT_ID" ? "id" : "secret")) };
+    const service = new IngestionService(prisma as never, feedAi as never, jobs as never, config as never);
+
+    await expect(service.ingestSource(source.id)).resolves.toEqual({ items_found: 1, items_created: 1 });
+
+    expect(fetchRedditItemsForSource).toHaveBeenCalledWith(
+      redditSource,
+      expect.objectContaining({ clientId: "id", clientSecret: "secret" }),
+      25
+    );
+    expect(ingestSourceItems).toHaveBeenCalledWith(
+      prisma,
+      redditSource,
+      25,
+      expect.any(Function),
+      expect.arrayContaining([expect.objectContaining({ title: "Bitcoin ETF discussion heats up" })])
+    );
   });
 });

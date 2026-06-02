@@ -4,6 +4,7 @@ import { isChineseContent } from "./chinese-content.util";
 import { fetchBlockBeatsFlashItems, isBlockBeatsSourceUrl } from "./blockbeats-ingest.util";
 import { calculateHeatScore } from "./heat-score";
 import { evaluateFeedQuality } from "./feed-quality.util";
+import { fetchRedditSignals, type RedditCredentials } from "./reddit-provider";
 import { cleanRssItems, type CleanRssItem } from "./rss-cleaner";
 
 const parser = new Parser();
@@ -24,6 +25,20 @@ export async function fetchItemsForSource(
   return cleanRssItems(feed.items ?? [], new Date()).slice(0, maxPerSource);
 }
 
+export async function fetchRedditItemsForSource(
+  source: Pick<Source, "url" | "sourceWeight">,
+  credentials: RedditCredentials,
+  maxPerSource: number
+): Promise<CleanRssItem[]> {
+  const signals = await fetchRedditSignals(source, credentials, maxPerSource);
+  return signals.map((signal) => ({
+    title: signal.title,
+    sourceUrl: signal.sourceUrl,
+    content: `${signal.content}\n\nReddit author: u/${signal.author}; score: ${signal.score}; comments: ${signal.comments}`,
+    publishTime: signal.publishTime
+  }));
+}
+
 export function initialAiFields(
   item: CleanRssItem,
   source: Pick<Source, "contentLocale">
@@ -40,9 +55,10 @@ export async function ingestSourceItems(
   prisma: PrismaClient,
   source: Source,
   maxPerSource: number,
-  onCreated?: (feedItemId: string, item: CleanRssItem) => void | Promise<void>
+  onCreated?: (feedItemId: string, item: CleanRssItem) => void | Promise<void>,
+  itemsOverride?: CleanRssItem[]
 ): Promise<IngestSourceResult> {
-  const items = await fetchItemsForSource(source, maxPerSource);
+  const items = itemsOverride ?? (await fetchItemsForSource(source, maxPerSource));
   let created = 0;
 
   for (const item of items) {
@@ -67,6 +83,7 @@ export async function ingestSourceItems(
         aiSummary,
         narrativeHook,
         sourceUrl: item.sourceUrl,
+        type: source.type === "REDDIT" ? "SOCIAL_TREND" : "NEWS",
         publishTime: item.publishTime,
         heatScore,
         rankScore: heatScore + (source.contentLocale === "ZH" ? 8 : 0),

@@ -25,16 +25,17 @@ async function main() {
         url: entry.url,
         status: entry.defaultActive === false ? "PAUSED" : "ACTIVE",
         contentLocale: entry.locale,
-        sourceWeight: entry.sourceWeight
+        sourceWeight: entry.sourceWeight,
+        fetchIntervalSeconds: entry.fetchIntervalSeconds ?? 300
       },
       create: {
         id: nameToStableId(entry.name),
         name: entry.name,
         url: entry.url,
-        type: "RSS",
+        type: entry.type ?? "RSS",
         status: entry.defaultActive === false ? "PAUSED" : "ACTIVE",
         contentLocale: entry.locale,
-        fetchIntervalSeconds: 300,
+        fetchIntervalSeconds: entry.fetchIntervalSeconds ?? 300,
         sourceWeight: entry.sourceWeight
       }
     });

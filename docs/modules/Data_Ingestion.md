@@ -20,7 +20,8 @@ MVP：
 - 中文源 `source_weight` 更高；列表 API 支持 `locale=zh` 提升中文条目排序。
 - 英文条目经 `feed_summary_prompt` 生成 **中文 headline + summary**（卡片主文案为中文）。
 - Admin → 数据源 可查看「语言」列；可在库中追加可用中文 RSS URL（部分国内站点无公开 RSS，需 API 或运营录入）。
-- 当前实现状态：RSS 与 CoinGecko 已接入；Twitter/X、Reddit 仍为规划源，正式接入前不得在 UI 中暗示其已稳定运行。
+- Medium 作为 RSS 内容源接入，不单独新增 source 类型；优先收录项目方、研究机构和高质量作者的 feed，避免直接接大标签流。
+- 当前实现状态：RSS、Medium RSS、CoinGecko、Reddit 已接入；Twitter/X 仍为规划源，正式接入前不得在 UI 中暗示其已稳定运行。
 
 ## 2. 采集频率
 
@@ -39,6 +40,14 @@ MVP：
 - 标题相似度去重。
 - 内容长度过短过滤。
 - 来源权重。
+
+Reddit 额外过滤：
+
+- 仅采白名单 subreddit。
+- 过滤 daily discussion、megathread、simple questions、giveaway、referral、100x、moonshot、shill、price prediction、what should I buy 等低价值内容。
+- 必须命中至少一个资产、叙事或市场主题关键词。
+- 结合 score、comments、时效性和 source_weight 计算社交信号分数，低分不入库。
+- 入库类型为 `social_trend`，后续进入 Feed 聚类和 Market Insight 合成。
 
 ## 4. 失败处理
 
@@ -68,6 +77,12 @@ Twitter/X 不可用时：
 - 系统继续使用 RSS + Reddit + CoinGecko。
 - 前台不得因为单一数据源失败而不可用。
 
+Reddit 未配置 OAuth 或触发限流时：
+
+- 该 Reddit source 写入失败日志并增加 `consecutive_failures`。
+- 连续失败 5 次自动标记为 error。
+- RSS、Medium RSS、CoinGecko 和前台页面必须继续可用。
+
 ## 6. 输出
 
 采集结果进入：
@@ -80,6 +95,8 @@ Twitter/X 不可用时：
 ## 7. 验收
 
 - RSS 可定时采集。
+- Reddit 可在配置 OAuth 后定时采集公开 subreddit。
+- Medium RSS 可作为普通 RSS 源采集。
 - CoinGecko 可定时更新。
 - 失败有日志。
 - Source 状态可在 Admin 查看。
