@@ -95,7 +95,9 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
             <p className="text-xs font-semibold text-[#8A918C]">AI 任务总结</p>
             <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-[#5F6868]">{summary}</p>
           </div>
-          <InsightCardActions askQuery={insight.ai_insight} insightId={insight.id} showDetailLink={false} />
+          <div className="mt-5 border-t border-[#EDE8DA] pt-4">
+            <InsightCardActions askQuery={insight.ai_insight} insightId={insight.id} showDetailLink={false} />
+          </div>
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2">
