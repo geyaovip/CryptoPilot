@@ -140,11 +140,11 @@ export function MePanel() {
 
       <Card className="border-[#D9D5C9] bg-white/95 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
         <div className="flex items-center justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <h2 className="text-lg font-semibold text-[#102A2C]">我的收藏</h2>
             <p className="mt-1 text-sm text-[#5F6868]">保存过的市场信号和 Feed 会集中在这里。</p>
           </div>
-          <span className="rounded-full bg-[#F7F5EE] px-3 py-1 text-xs text-[#5F6868]">{bookmarkItems.length} 条</span>
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-[#F7F5EE] px-3 py-1 text-xs text-[#5F6868]">{bookmarkItems.length} 条</span>
         </div>
 
         {bookmarkLoading ? <p className="mt-5 text-sm text-[#8A918C]">正在加载收藏…</p> : null}
@@ -162,7 +162,7 @@ export function MePanel() {
               return (
                 <a className="block py-4 hover:bg-[#FCFCF9]" href={href} key={`${kind}-${item.id}`}>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-[#E8F4F6] px-2 py-0.5 text-xs text-[#20808D]">
+                    <span className="shrink-0 whitespace-nowrap rounded-full bg-[#E8F4F6] px-2 py-0.5 text-xs text-[#20808D]">
                       {kind === "insight" ? "Insight" : "Feed"}
                     </span>
                     <span className="text-xs text-[#8A918C]">热度 {item.heat_score}</span>

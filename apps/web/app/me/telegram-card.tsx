@@ -75,14 +75,14 @@ export function TelegramCard({ bound, onRefreshBound }: { bound: boolean; onRefr
 
   return (
     <Card className="max-w-xl border-[#D9D5C9] bg-white/95 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold text-[#102A2C]">Telegram 推送</h2>
           <p className="mt-1 text-sm text-[#5F6868]">
             {isBound ? "已绑定 Telegram，可在通知设置里管理推送。" : "点击一键绑定会打开 Telegram Bot，并自动完成账号绑定。"}
           </p>
         </div>
-        <span className="rounded-full bg-[#F7F5EE] px-3 py-1 text-xs text-[#5F6868]">
+        <span className="shrink-0 whitespace-nowrap rounded-full bg-[#F7F5EE] px-3 py-1 text-xs text-[#5F6868]">
           {isBound ? "已绑定" : checkingBound ? "等待确认" : "未绑定"}
         </span>
       </div>
