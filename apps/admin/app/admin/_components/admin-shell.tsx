@@ -6,9 +6,9 @@ import { CryptoPilotMark } from "./cryptopilot-mark";
 
 const navItems: NavItem[] = [
   { label: "仪表盘", href: "/admin/dashboard" },
-  { label: "Feed 管理", href: "/admin/feed" },
-  { label: "Feed 簇", href: "/admin/feed-clusters" },
-  { label: "Insight", href: "/admin/insights" },
+  { label: "原始内容", href: "/admin/feed" },
+  { label: "内容聚类", href: "/admin/feed-clusters" },
+  { label: "市场情报", href: "/admin/insights" },
   { label: "Prompt 管理", href: "/admin/prompts" },
   { label: "AI 监控", href: "/admin/ai-monitor" },
   { label: "Push 管理", href: "/admin/push" },

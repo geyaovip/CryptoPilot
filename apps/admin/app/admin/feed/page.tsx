@@ -1,5 +1,6 @@
 import { AdminFeedPanel } from "../_components/admin-feed-panel";
 import { AdminShell } from "../_components/admin-shell";
+import { Card } from "@cryptopilot/ui";
 import { getAdminFeed, getAdminSources, type AdminFeedFilters } from "../../lib/api";
 import { requireAdminSession } from "../../lib/admin-session";
 
@@ -57,6 +58,14 @@ export default async function AdminFeedPage({
 
   return (
     <AdminShell>
+      <Card className="mb-4 border-slate-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Raw Signals</p>
+        <h1 className="mt-1 text-xl font-semibold text-slate-950">原始内容</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+          这里是 RSS、快讯和手动录入进入系统后的原始素材库，适合做单条内容审核、隐藏、置顶和 AI Summary 重生成。
+          面向用户首页的市场判断请在「市场情报」中运营。
+        </p>
+      </Card>
       {loadError ? <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</p> : null}
       <AdminFeedPanel
         filters={filters}
