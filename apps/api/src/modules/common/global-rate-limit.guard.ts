@@ -3,6 +3,14 @@ import type { Request } from "express";
 import { AppHttpException } from "./app-http.exception";
 
 const buckets = new Map<string, { count: number; resetAt: number }>();
+const PUBLIC_READ_PATHS = [
+  "/api/feed",
+  "/api/trending",
+  "/api/narratives",
+  "/api/tokens",
+  "/api/kols",
+  "/api/insights"
+];
 
 @Injectable()
 export class GlobalRateLimitGuard implements CanActivate {
@@ -12,6 +20,9 @@ export class GlobalRateLimitGuard implements CanActivate {
 
     const path = request.url ?? "";
     if (path.includes("/health")) return true;
+    if (request.method === "GET" && PUBLIC_READ_PATHS.some((publicPath) => path.startsWith(publicPath))) {
+      return true;
+    }
 
     const ip = String(request.headers["x-forwarded-for"] ?? request.ip ?? "unknown").split(",")[0].trim();
     const key = `api:${ip}`;

@@ -45,13 +45,19 @@ export async function CryptoPilotHomePage({
     },
     fear_greed_index: null
   };
-  try {
-    [feed, trending] = await Promise.all([
-      getFeed("for_you", undefined, narrativeSlug),
-      getTrending()
-    ]);
-  } catch (error) {
-    loadError = error instanceof Error ? error.message : "首页数据加载失败";
+  const [feedResult, trendingResult] = await Promise.allSettled([
+    getFeed("for_you", undefined, narrativeSlug),
+    getTrending()
+  ]);
+  if (feedResult.status === "fulfilled") {
+    feed = feedResult.value;
+  } else {
+    loadError = feedResult.reason instanceof Error ? feedResult.reason.message : "Feed 加载失败";
+  }
+  if (trendingResult.status === "fulfilled") {
+    trending = trendingResult.value;
+  } else if (!loadError) {
+    loadError = trendingResult.reason instanceof Error ? trendingResult.reason.message : "趋势数据加载失败";
   }
   const activeNarrative = narrativeSlug
     ? trending.narratives.find((item) => item.slug === narrativeSlug)

@@ -17,9 +17,15 @@ describe("GlobalRateLimitGuard", () => {
     expect(guard.canActivate(createContext("/api/health"))).toBe(true);
   });
 
+  it("skips public read endpoints", () => {
+    const guard = new GlobalRateLimitGuard();
+    expect(guard.canActivate(createContext("/api/feed?tab=for_you"))).toBe(true);
+    expect(guard.canActivate(createContext("/api/trending"))).toBe(true);
+  });
+
   it("rate limits repeated requests", () => {
     const guard = new GlobalRateLimitGuard();
-    const ctx = createContext("/api/feed", "9.9.9.9");
+    const ctx = createContext("/api/ai/search", "9.9.9.9");
     for (let i = 0; i < 180; i += 1) {
       guard.canActivate(ctx);
     }

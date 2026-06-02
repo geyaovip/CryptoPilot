@@ -11,5 +11,5 @@ export function getApiUrl(): string {
     return productionApiUrl;
   }
 
-  return localApiUrl;
+  return productionApiUrl;
 }
