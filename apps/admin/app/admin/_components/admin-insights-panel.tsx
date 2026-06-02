@@ -143,12 +143,17 @@ function InsightDetailModal({ insight, onClose }: { insight: MarketInsightDetail
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4">
       <div className="max-h-[88vh] w-full max-w-3xl overflow-auto rounded-2xl border border-slate-200 bg-white shadow-2xl">
         <div className="sticky top-0 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-medium text-[#20808D]">市场情报详情</p>
             <h2 className="mt-1 text-lg font-semibold leading-7 text-slate-950">{insight.ai_insight}</h2>
           </div>
-          <button className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600" onClick={onClose} type="button">
-            关闭
+          <button
+            aria-label="关闭详情弹窗"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#20808D]/30"
+            onClick={onClose}
+            type="button"
+          >
+            <CloseIcon />
           </button>
         </div>
         <div className="space-y-5 px-5 py-4">
@@ -180,6 +185,14 @@ function InsightDetailModal({ insight, onClose }: { insight: MarketInsightDetail
         </div>
       </div>
     </div>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    </svg>
   );
 }
 
