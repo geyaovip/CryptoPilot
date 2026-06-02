@@ -6,6 +6,7 @@ import { HomeFeedPanel } from "../components/home-feed-panel";
 import { HomeHeader } from "../components/home-header";
 import { JsonLd } from "../components/json-ld";
 import { MarketHeatBar } from "../components/market-heat-bar";
+import { SiteInfoFooter } from "../components/site-info-footer";
 import { getFeed, getTrending } from "../lib/api";
 import { organizationJsonLd, websiteJsonLd } from "../lib/seo";
 
@@ -83,6 +84,7 @@ export async function CryptoPilotHomePage({
             initialTab="for_you"
             narrativeSlug={narrativeSlug}
           />
+          <SiteInfoFooter />
         </section>
         <aside className="hidden space-y-4 lg:block">
           <Card className="border-[#D9D5C9] bg-[#F7F5EE]">
