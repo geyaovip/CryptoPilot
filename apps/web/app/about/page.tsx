@@ -13,6 +13,7 @@ export default function AboutPage() {
       eyebrow="About"
       title="关于 CryptoPilot"
       description="CryptoPilot 是面向研究者和加密市场观察者的 AI 加密市场情报终端，用于聚合多来源市场动态、叙事变化、资产信号与 AI 解读。"
+      path="/about"
       sections={[
         {
           title: "CryptoPilot 是什么",

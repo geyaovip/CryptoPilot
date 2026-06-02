@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Card } from "@cryptopilot/ui";
 import { WebShell } from "../_components/web-shell";
+import { JsonLd } from "./json-ld";
+import { breadcrumbJsonLd, pageJsonLd } from "../lib/seo";
 
 type InfoSection = {
   title: string;
@@ -11,6 +13,7 @@ type InfoPageProps = {
   eyebrow: string;
   title: string;
   description: string;
+  path: string;
   sections: InfoSection[];
 };
 
@@ -21,9 +24,18 @@ const relatedLinks = [
   { href: "/disclaimer", label: "免责声明" }
 ];
 
-export function InfoPage({ eyebrow, title, description, sections }: InfoPageProps) {
+export function InfoPage({ eyebrow, title, description, path, sections }: InfoPageProps) {
   return (
     <WebShell>
+      <JsonLd
+        data={[
+          pageJsonLd({ name: title, description, path }),
+          breadcrumbJsonLd([
+            { name: "首页", path: "/" },
+            { name: title, path }
+          ])
+        ]}
+      />
       <article className="mx-auto max-w-3xl space-y-5">
         <Card className="border-[#D9D5C9] bg-white/90 p-6">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#20808D]">{eyebrow}</p>

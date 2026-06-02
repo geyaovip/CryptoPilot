@@ -7,7 +7,7 @@ import { HomeHeader } from "../components/home-header";
 import { JsonLd } from "../components/json-ld";
 import { MarketHeatBar } from "../components/market-heat-bar";
 import { getFeed, getTrending } from "../lib/api";
-import { organizationJsonLd, websiteJsonLd } from "../lib/seo";
+import { defaultDescription, organizationJsonLd, webApplicationJsonLd, websiteJsonLd } from "../lib/seo";
 
 export async function CryptoPilotHomePage({
   searchParams
@@ -59,7 +59,7 @@ export async function CryptoPilotHomePage({
 
   return (
     <WebShell>
-      <JsonLd data={[websiteJsonLd(), organizationJsonLd()]} />
+      <JsonLd data={[websiteJsonLd(), organizationJsonLd(), webApplicationJsonLd()]} />
       <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
         <section className="space-y-5">
           {loadError ? (
@@ -68,7 +68,7 @@ export async function CryptoPilotHomePage({
           <Card className="border-[#D9D5C9] bg-white/90 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
             <HomeHeader />
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5F6868]">
-              每天为你筛出值得关注的市场变化：优先展示多来源验证的 AI 解读，也可切换查看原始信号流。
+              {defaultDescription} 每天为你筛出值得关注的市场变化：优先展示多来源验证的 AI 解读，也可切换查看原始信号流。
             </p>
             {activeNarrative ? (
               <p className="mt-2 text-sm text-[#102A2C]">

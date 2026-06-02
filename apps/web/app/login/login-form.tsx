@@ -110,7 +110,7 @@ export function LoginForm() {
       <p className="text-xs font-medium uppercase tracking-wide text-[#20808D]">CryptoPilot</p>
       <h1 className="mt-2 text-2xl font-semibold text-[#102A2C]">登录</h1>
       <p className="mt-2 text-sm leading-6 text-[#5F6868]">
-        输入邮箱获取 Magic Link，完成登录。
+        输入邮箱，我们会发送一个一次性登录链接到你的邮箱。
       </p>
       <div className="mt-6 space-y-3">
         <input
@@ -136,7 +136,7 @@ export function LoginForm() {
           disabled={loading || !email.trim()}
           onClick={() => void handleMagicLink()}
         >
-          {loading ? "处理中…" : "发送 Magic Link"}
+          {loading ? "处理中…" : "发送一次性登录链接"}
         </Button>
         {betaDevLogin ? (
           <Button

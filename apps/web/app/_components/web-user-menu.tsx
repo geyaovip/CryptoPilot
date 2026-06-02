@@ -80,7 +80,7 @@ export function WebUserMenu() {
       <SidebarUserMenu
         avatarText="登"
         name="登录"
-        subtitle="使用邮箱 Magic Link"
+        subtitle="邮箱一次性登录链接"
         menuLabel="用户菜单"
         items={[]}
         variant="perplexity"

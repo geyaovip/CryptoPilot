@@ -7,7 +7,7 @@ type TokenPayload = {
 };
 
 export function signAuthToken(input: { userId: string; role: "user" | "admin"; secret: string; ttlSeconds?: number }) {
-  const exp = Math.floor(Date.now() / 1000) + (input.ttlSeconds ?? 60 * 60 * 24 * 7);
+  const exp = Math.floor(Date.now() / 1000) + (input.ttlSeconds ?? 60 * 60 * 24 * 30);
   const payload: TokenPayload = { sub: input.userId, role: input.role, exp };
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const sig = createHmac("sha256", input.secret).update(body).digest("base64url");

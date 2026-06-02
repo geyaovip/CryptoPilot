@@ -20,11 +20,12 @@ export function AdminLoginForm() {
   const [loading, setLoading] = useState(false);
 
   async function finishLogin(accessToken: string) {
-    await fetch("/admin/auth/session", {
+    const sessionResponse = await fetch("/admin/auth/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ access_token: accessToken })
     });
+    if (!sessionResponse.ok) throw new Error("登录会话保存失败，请刷新后重试");
     setAccessToken(accessToken);
     router.replace("/admin/dashboard");
     router.refresh();
@@ -120,7 +121,7 @@ export function AdminLoginForm() {
     <Card className="w-full max-w-md">
       <CryptoPilotMark className="h-10 w-10" showText />
       <h1 className="mt-2 text-2xl font-semibold text-slate-950">管理员登录</h1>
-      <p className="mt-2 text-sm text-slate-500">使用管理员邮箱获取 Magic Link，完成后台登录。</p>
+      <p className="mt-2 text-sm text-slate-500">输入管理员邮箱，我们会发送一个一次性登录链接到你的邮箱。</p>
       <input
         className="mt-4 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"
         placeholder="you@example.com"
@@ -140,7 +141,7 @@ export function AdminLoginForm() {
         </a>
       ) : null}
       <Button className="mt-4 w-full" disabled={loading || !email.trim()} onClick={() => void handleMagicLink()}>
-        {loading ? "处理中..." : "发送 Magic Link"}
+        {loading ? "处理中..." : "发送一次性登录链接"}
       </Button>
       {betaDevLogin ? (
         <Button

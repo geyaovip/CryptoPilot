@@ -86,8 +86,8 @@ export function AdminUserMenu() {
     return (
       <SidebarUserMenu
         avatarText="登"
-        name="管理员登录"
-        subtitle="需要 Bearer Token"
+        name="尚未登录"
+        subtitle="请重新登录后台"
         menuLabel="管理员菜单"
         items={[]}
         onPrimaryClick={goLogin}

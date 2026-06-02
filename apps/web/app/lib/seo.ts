@@ -59,6 +59,7 @@ export function publicPageMetadata(input: {
     icons: {
       icon: [
         { url: "/favicon.svg", sizes: "64x64", type: "image/svg+xml" },
+        { url: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
         { url: "/icon.svg", sizes: "64x64", type: "image/svg+xml" }
       ],
       shortcut: "/favicon.svg",
@@ -134,6 +135,61 @@ export function organizationJsonLd() {
       height: 512
     },
     sameAs: [absoluteUrl("/")]
+  };
+}
+
+export function webApplicationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: siteName,
+    alternateName: siteTagline,
+    url: absoluteUrl("/"),
+    applicationCategory: "FinanceApplication",
+    operatingSystem: "Web",
+    browserRequirements: "Requires a modern web browser",
+    description: defaultDescription,
+    inLanguage: "zh-CN",
+    isAccessibleForFree: true,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD"
+    },
+    publisher: {
+      "@type": "Organization",
+      name: siteName,
+      url: absoluteUrl("/")
+    }
+  };
+}
+
+export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: absoluteUrl(item.path)
+    }))
+  };
+}
+
+export function pageJsonLd(input: { name: string; description: string; path: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: input.name,
+    description: truncateDescription(input.description, 200),
+    url: absoluteUrl(input.path),
+    isPartOf: {
+      "@type": "WebSite",
+      name: siteName,
+      url: absoluteUrl("/")
+    },
+    inLanguage: "zh-CN"
   };
 }
 
