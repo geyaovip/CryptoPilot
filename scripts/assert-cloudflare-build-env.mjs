@@ -1,5 +1,5 @@
-import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { access, readdir, readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 
 const appName = process.argv[2];
 if (!appName) {
@@ -7,7 +7,6 @@ if (!appName) {
   process.exit(1);
 }
 
-const root = join(process.cwd(), "apps", appName, ".open-next");
 const forbidden = [
   { label: "local API URL", pattern: "http://localhost:3002" },
   { label: "local API URL", pattern: "http://127.0.0.1:3002" },
@@ -30,6 +29,25 @@ const allowedExtensions = new Set([".js", ".mjs", ".cjs", ".json", ".map"]);
 
 const matches = [];
 
+async function exists(path) {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function findWorkspaceRoot(startDir) {
+  let dir = startDir;
+  while (true) {
+    if (await exists(join(dir, "pnpm-workspace.yaml"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) return startDir;
+    dir = parent;
+  }
+}
+
 async function walk(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
@@ -49,7 +67,9 @@ async function walk(dir) {
 }
 
 try {
-  await walk(root);
+  const workspaceRoot = await findWorkspaceRoot(process.cwd());
+  const artifactRoot = join(workspaceRoot, "apps", appName, ".open-next");
+  await walk(artifactRoot);
 } catch (error) {
   console.error(`Cloudflare build artifact check failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
