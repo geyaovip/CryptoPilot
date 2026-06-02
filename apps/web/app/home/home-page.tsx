@@ -9,6 +9,9 @@ import { MarketHeatBar } from "../components/market-heat-bar";
 import { getFeed, getTrending } from "../lib/api";
 import { organizationJsonLd, webApplicationJsonLd, websiteJsonLd } from "../lib/seo";
 
+const MARKET_SNAPSHOT_PRIORITY = ["BTC", "ETH"];
+const MARKET_SNAPSHOT_LIMIT = 10;
+
 export async function CryptoPilotHomePage({
   searchParams
 }: {
@@ -62,6 +65,16 @@ export async function CryptoPilotHomePage({
   const activeNarrative = narrativeSlug
     ? trending.narratives.find((item) => item.slug === narrativeSlug)
     : undefined;
+  const marketSnapshotTokens = [...trending.tokens]
+    .sort((a, b) => {
+      const aPriority = MARKET_SNAPSHOT_PRIORITY.indexOf(a.symbol);
+      const bPriority = MARKET_SNAPSHOT_PRIORITY.indexOf(b.symbol);
+      if (aPriority !== -1 || bPriority !== -1) {
+        return (aPriority === -1 ? MARKET_SNAPSHOT_PRIORITY.length : aPriority) - (bPriority === -1 ? MARKET_SNAPSHOT_PRIORITY.length : bPriority);
+      }
+      return 0;
+    })
+    .slice(0, MARKET_SNAPSHOT_LIMIT);
 
   return (
     <WebShell>
@@ -121,9 +134,9 @@ export async function CryptoPilotHomePage({
             </Card>
             <Card className="border-[#D9D5C9] bg-[#F7F5EE]">
               <h2 className="text-sm font-semibold text-[#102A2C]">市场快照</h2>
-              <p className="mt-2 text-xs leading-5 text-[#5F6868]">重点资产 24h 表现，用于快速感知盘面。</p>
+              <p className="mt-2 text-xs leading-5 text-[#5F6868]">按资产管理展示重点资产，BTC / ETH 优先。</p>
               <div className="mt-4 space-y-2">
-                {trending.tokens.slice(0, 5).map((item) => (
+                {marketSnapshotTokens.map((item) => (
                   <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm text-[#5F6868]" key={item.id}>
                     <div>
                       <span className="font-medium text-[#102A2C]">{item.symbol}</span>

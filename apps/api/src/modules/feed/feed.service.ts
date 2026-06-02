@@ -111,9 +111,8 @@ export class FeedService {
   async trending() {
     const [tokens, narratives, insightStats, leadingInsight, riskInsightStats, fearGreedIndex] = await Promise.all([
       this.prisma.token.findMany({
-        where: { deletedAt: null },
-        orderBy: [{ priceChange24h: "desc" }, { symbol: "asc" }],
-        take: 10
+        where: { deletedAt: null, isActive: true },
+        orderBy: [{ displayOrder: "asc" }, { symbol: "asc" }]
       }),
       this.prisma.narrative.findMany({
         where: { deletedAt: null, isActive: true, mergedIntoId: null },

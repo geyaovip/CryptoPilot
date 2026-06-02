@@ -97,6 +97,10 @@ describe("FeedService", () => {
 
     const result = await service.trending();
 
+    expect(prisma.token.findMany).toHaveBeenCalledWith({
+      where: { deletedAt: null, isActive: true },
+      orderBy: [{ displayOrder: "asc" }, { symbol: "asc" }]
+    });
     expect(result.market_heat.breadth.advance_ratio).toBe(67);
     expect(result.market_heat.narrative_rotation.heating[0].name).toBe("AI");
     expect(result.market_heat.unusual_moves.map((item) => item.symbol)).toContain("SOL");
