@@ -81,11 +81,11 @@ export function AdminFeedPanel({
   return (
     <div className="space-y-4">
       <Card className="p-4">
-        <h1 className="text-lg font-semibold text-slate-950">Feed 管理</h1>
+        <h2 className="text-sm font-semibold text-slate-950">内容操作</h2>
         <p className="mt-1 text-sm text-slate-500">
           支持筛选、编辑、置顶、隐藏、删除和手动创建。多来源聚合请前往{" "}
           <a className="text-[#20808D] hover:underline" href="/admin/feed-clusters">
-            Feed 簇管理
+            内容聚类
           </a>
           。
         </p>

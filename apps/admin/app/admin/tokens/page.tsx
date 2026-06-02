@@ -1,4 +1,5 @@
 import { Card } from "@cryptopilot/ui";
+import { AdminPageHeader } from "../_components/admin-page-header";
 import { AdminPagination } from "../_components/admin-pagination";
 import { AdminShell } from "../_components/admin-shell";
 import { AdminTokenActions } from "../_components/admin-token-actions";
@@ -23,7 +24,7 @@ export default async function AdminTokensPage({
   return (
     <AdminShell>
       <div className="space-y-4">
-        <h1 className="text-2xl font-semibold text-slate-950">资产管理</h1>
+        <AdminPageHeader title="资产管理" description="管理前台展示的重点资产、价格刷新和显示状态。" />
         <AdminTokenActions items={data.items} />
         {data.items.map((item) => (
           <Card className="p-4" key={item.id}>

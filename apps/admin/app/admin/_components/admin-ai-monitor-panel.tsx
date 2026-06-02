@@ -2,14 +2,12 @@
 
 import type { AiMonitorStats } from "@cryptopilot/types";
 import { Card } from "@cryptopilot/ui";
+import { AdminPageHeader } from "./admin-page-header";
 
 export function AdminAiMonitorPanel({ stats }: { stats: AiMonitorStats }) {
   return (
     <div className="space-y-4">
-      <Card className="p-4">
-        <h1 className="text-lg font-semibold text-slate-900">AI 监控</h1>
-        <p className="mt-1 text-sm text-slate-600">今日 LLM 调用与成本概览。</p>
-      </Card>
+      <AdminPageHeader title="AI 监控" description="今日大模型调用、成本、延迟和错误概览。" />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="今日调用" value={String(stats.calls_today)} />

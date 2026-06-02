@@ -3,6 +3,7 @@
 import { Button, Card } from "@cryptopilot/ui";
 import { useEffect, useState } from "react";
 import { getAdminConfig, patchAdminConfig } from "../../lib/api";
+import { AdminPageHeader } from "../_components/admin-page-header";
 
 export function ConfigPanel() {
   const [items, setItems] = useState<{ key: string; value: unknown }[]>([]);
@@ -38,10 +39,7 @@ export function ConfigPanel() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
-        <h1 className="text-lg font-semibold text-slate-950">系统设置</h1>
-        <p className="mt-1 text-sm text-slate-500">修改会写入 audit_logs 并即时生效（API 内存缓存）。</p>
-      </Card>
+      <AdminPageHeader title="系统设置" description="修改会写入审计日志并即时生效（API 内存缓存）。" />
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {items.map((item) => (
         <Card className="p-4" key={item.key}>

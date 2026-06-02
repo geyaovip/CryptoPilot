@@ -10,7 +10,7 @@ export function DataTable({ title, columns, rows }: DataTableProps) {
   return (
     <Card className="overflow-hidden p-0">
       <div className="border-b border-slate-200 p-4">
-        <h1 className="text-lg font-semibold text-slate-950">{title}</h1>
+        <h2 className="text-sm font-semibold text-slate-950">{title}</h2>
         <p className="mt-1 text-sm text-slate-500">共 {rows.length} 条记录。小屏可横向滑动查看完整字段。</p>
       </div>
       <div className="overflow-x-auto">

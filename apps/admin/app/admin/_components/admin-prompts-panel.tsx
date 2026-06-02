@@ -5,6 +5,7 @@ import { Button, Card } from "@cryptopilot/ui";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { activatePrompt, archivePrompt, createPrompt, testPrompt, updatePrompt } from "../../lib/api";
+import { AdminPageHeader } from "./admin-page-header";
 
 const promptKeys: MvpPromptKey[] = [
   "feed_summary_prompt",
@@ -46,10 +47,8 @@ export function AdminPromptsPanel({ items }: AdminPromptsPanelProps) {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
-        <h1 className="text-lg font-semibold text-slate-900">Prompt 管理</h1>
-        <p className="mt-1 text-sm text-slate-600">同一 prompt_key 仅允许一个 active 版本。</p>
-        <div className="mt-3 flex flex-wrap gap-2">
+      <AdminPageHeader title="提示词管理" description="管理大模型提示词版本，同一 prompt_key 仅允许一个 active 版本。">
+        <div className="flex flex-wrap gap-2">
           {promptKeys.map((key) => (
             <button
               className={`rounded-full px-3 py-1 text-xs ${selectedKey === key ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
@@ -61,7 +60,7 @@ export function AdminPromptsPanel({ items }: AdminPromptsPanelProps) {
             </button>
           ))}
         </div>
-      </Card>
+      </AdminPageHeader>
 
       <Card className="p-4">
         <p className="text-sm text-slate-600">当前 Active：v{active?.version ?? "-"}</p>

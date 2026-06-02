@@ -1,6 +1,6 @@
 import { AdminFeedClustersPanel } from "../_components/admin-feed-clusters-panel";
+import { AdminPageHeader } from "../_components/admin-page-header";
 import { AdminShell } from "../_components/admin-shell";
-import { Card } from "@cryptopilot/ui";
 import { getAdminFeedClusters, type AdminFeedClusterFilters } from "../../lib/api";
 import { requireAdminSession } from "../../lib/admin-session";
 
@@ -28,14 +28,12 @@ export default async function AdminFeedClustersPage({ searchParams }: PageProps)
 
   return (
     <AdminShell>
-      <Card className="mb-4 border-slate-200 bg-white p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Content Clusters</p>
-        <h1 className="mt-1 text-xl font-semibold text-slate-950">内容聚类</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-          这里检查多条相似 Feed 是否被正确聚成同一事件，用于选择代表条、移出误聚内容或解散不合理簇。
-          聚类是 Insight 合成前的中间层，不直接等同于用户看到的市场情报。
-        </p>
-      </Card>
+      <div className="mb-4">
+        <AdminPageHeader
+          title="内容聚类"
+          description="这里检查多条相似内容是否被正确聚成同一事件，用于选择代表条、移出误聚内容或解散不合理簇。聚类是市场情报合成前的中间层，不直接等同于用户看到的市场判断。"
+        />
+      </div>
       <AdminFeedClustersPanel
         filters={filters}
         hasNext={data.has_next}

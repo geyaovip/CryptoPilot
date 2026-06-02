@@ -5,6 +5,7 @@ import { Button, Card } from "@cryptopilot/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getSourceLogs, retryAdminSource, updateAdminSource } from "../../lib/api";
+import { AdminPageHeader } from "./admin-page-header";
 import { AdminPagination } from "./admin-pagination";
 
 type SourceListData = {
@@ -55,13 +56,12 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
-        <h1 className="text-lg font-semibold text-slate-950">数据源</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          支持启停、手动重试和查看最近 50 条采集日志；连续失败 5 次会自动标记为 error，避免异常源反复影响采集。
-        </p>
+      <AdminPageHeader
+        title="数据源"
+        description="支持启停、手动重试和查看最近 50 条采集日志；连续失败 5 次会自动标记为异常，避免异常源反复影响采集。"
+      >
         {message ? <p className="mt-2 text-sm text-[#20808D]">{message}</p> : null}
-      </Card>
+      </AdminPageHeader>
 
       <Card className="overflow-hidden p-0">
         <table className="w-full text-left text-sm">

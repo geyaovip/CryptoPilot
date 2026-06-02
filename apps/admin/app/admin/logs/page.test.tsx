@@ -12,6 +12,6 @@ vi.mock("./logs-panel", () => ({
 describe("Admin logs page", () => {
   it("renders logs panel", () => {
     render(<LogsPage />);
-    expect(screen.getByText("日志中心")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "日志中心", level: 1 })).toBeTruthy();
   });
 });

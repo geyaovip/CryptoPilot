@@ -1,6 +1,7 @@
 import { Card } from "@cryptopilot/ui";
 import Link from "next/link";
 import type { AdminDashboardData } from "../../lib/api";
+import { AdminPageHeader } from "./admin-page-header";
 
 type AdminDashboardPanelProps = {
   data: AdminDashboardData;
@@ -21,10 +22,7 @@ export function AdminDashboardPanel({ data }: AdminDashboardPanelProps) {
 
   return (
     <section className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-950">仪表盘</h1>
-        <p className="mt-1 text-sm text-slate-500">今日运营概览（按服务器本地日切统计）。</p>
-      </div>
+      <AdminPageHeader title="仪表盘" description="今日运营概览（按服务器本地日切统计）。" />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="今日 Feed（信号）" value={data.feeds_today} />

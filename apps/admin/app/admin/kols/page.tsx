@@ -1,5 +1,6 @@
 import { Card } from "@cryptopilot/ui";
 import { AdminKolActions } from "../_components/admin-kol-actions";
+import { AdminPageHeader } from "../_components/admin-page-header";
 import { AdminPagination } from "../_components/admin-pagination";
 import { AdminShell } from "../_components/admin-shell";
 import { getAdminKols } from "../../lib/api";
@@ -23,14 +24,10 @@ export default async function AdminKolsPage({
   return (
     <AdminShell>
       <div className="space-y-5">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">KOL Source</p>
-          <h1 className="text-2xl font-semibold text-slate-950">KOL 源管理</h1>
-          <p className="max-w-3xl text-sm leading-6 text-slate-600">
-            这里维护的是后续 KOL / 社交信号和用户 Watchlist 使用的账号画像，不参与当前 RSS/API Feed 采集。
-            新闻、行情、RSS、快讯 API 的启停、重试和采集日志请在「数据源」中管理。
-          </p>
-        </div>
+        <AdminPageHeader
+          title="观点源管理"
+          description="这里维护后续社交信号和用户观察列表使用的账号画像，不参与当前 RSS/API 内容采集。新闻、行情、RSS、快讯 API 的启停、重试和采集日志请在「数据源」中管理。"
+        />
         <AdminKolActions items={data.items} />
         <Card className="overflow-hidden p-0">
           <div className="overflow-x-auto">

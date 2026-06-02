@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@cryptopilot/ui";
+import { AdminPageHeader } from "./admin-page-header";
 import { AdminNarrativeActions } from "./admin-narrative-actions";
 
 type Item = {
@@ -16,7 +17,7 @@ type Item = {
 export function AdminNarrativesPanel({ items }: { items: Item[] }) {
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold text-slate-950">Narrative 管理</h1>
+      <AdminPageHeader title="叙事管理" description="维护内容归属的叙事主题、热度权重和前台展示状态。" />
       <AdminNarrativeActions items={items} />
       <div className="grid gap-3">
         {items.map((item) => (
