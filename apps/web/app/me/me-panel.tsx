@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card } from "@cryptopilot/ui";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../lib/auth-store";
 import { getApiUrl } from "../lib/api-url";
@@ -16,12 +17,20 @@ type MeUser = {
   role: string;
 };
 
+const helpLinks = [
+  { href: "/about", title: "关于 CryptoPilot", description: "产品定位、适合人群与核心能力" },
+  { href: "/methodology", title: "方法论", description: "来源聚合、AI 解读与风险边界" },
+  { href: "/faq", title: "FAQ", description: "常见问题、数据来源与使用边界" },
+  { href: "/disclaimer", title: "免责声明", description: "研究用途与非投资建议说明" }
+];
+
 export function MePanel() {
   const token = useAuthStore((state) => state.accessToken);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const [user, setUser] = useState<MeUser | null>(null);
   const [telegramBound, setTelegramBound] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [helpOpen, setHelpOpen] = useState(false);
   const bookmarkItems = useBookmarkStore((state) => state.items);
   const bookmarkLoading = useBookmarkStore((state) => state.loading);
   const loadBookmarks = useBookmarkStore((state) => state.load);
@@ -92,6 +101,37 @@ export function MePanel() {
       </Card>
 
       <TelegramCard bound={telegramBound} />
+
+      <Card className="border-[#D9D5C9] bg-white/95 p-0 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
+        <button
+          type="button"
+          aria-expanded={helpOpen}
+          className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+          onClick={() => setHelpOpen((value) => !value)}
+        >
+          <span>
+            <span className="block text-lg font-semibold text-[#102A2C]">帮助与说明</span>
+            <span className="mt-1 block text-sm text-[#5F6868]">了解 CryptoPilot、方法论、FAQ 与免责声明。</span>
+          </span>
+          <span className="text-xl text-[#8A918C]" aria-hidden>
+            {helpOpen ? "−" : "+"}
+          </span>
+        </button>
+        {helpOpen ? (
+          <div className="border-t border-[#EDE8DA] px-3 pb-3">
+            {helpLinks.map((item) => (
+              <Link
+                className="block rounded-2xl px-3 py-3 transition hover:bg-[#F7F5EE]"
+                href={item.href}
+                key={item.href}
+              >
+                <span className="block text-sm font-medium text-[#102A2C]">{item.title}</span>
+                <span className="mt-1 block text-xs text-[#5F6868]">{item.description}</span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+      </Card>
 
       <Card className="border-[#D9D5C9] bg-white/95 p-6 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
         <div className="flex items-center justify-between gap-3">

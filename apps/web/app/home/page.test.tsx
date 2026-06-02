@@ -66,7 +66,5 @@ describe("HomePage", () => {
     expect(screen.getByText(/恐惧贪婪指数：72 贪婪/)).toBeTruthy();
     expect(screen.getByTestId("insight-card-headline").textContent).toContain("叙事升温");
     expect(screen.getByText("2 个可点击来源")).toBeTruthy();
-    expect(screen.getByText("了解 CryptoPilot")).toBeTruthy();
-    expect(screen.getByRole("link", { name: /方法论/ })).toBeTruthy();
   });
 });
