@@ -111,12 +111,12 @@ export async function CryptoPilotHomePage({
           />
         </section>
         <aside className="hidden space-y-4 lg:block">
-          <div className="sticky top-6 space-y-4">
+          <div className="space-y-4">
             <Card className="border-[#D9D5C9] bg-[#F7F5EE]">
               <h2 className="text-sm font-semibold text-[#102A2C]">市场雷达</h2>
-              <p className="mt-2 text-xs leading-5 text-[#5F6868]">快速查看市场热度、情绪和重点资产变化。</p>
+              <p className="mt-2 text-xs leading-5 text-[#5F6868]">快速查看市场热度、情绪和风险变化。</p>
               <div className="mt-4">
-                <MarketHeatBar compact fearGreedIndex={trending.fear_greed_index} marketHeat={trending.market_heat} tokens={trending.tokens} />
+                <MarketHeatBar compact fearGreedIndex={trending.fear_greed_index} marketHeat={trending.market_heat} showTokenSnapshot={false} tokens={trending.tokens} />
               </div>
             </Card>
             <Card className="border-[#D9D5C9] bg-[#F7F5EE]">
@@ -125,8 +125,13 @@ export async function CryptoPilotHomePage({
               <div className="mt-4 space-y-2">
                 {trending.tokens.slice(0, 5).map((item) => (
                   <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm text-[#5F6868]" key={item.id}>
-                    <span className="font-medium text-[#102A2C]">{item.symbol}</span>
-                    <span className={(item.price_change_24h ?? 0) >= 0 ? "text-[#20808D]" : "text-red-600"}>
+                    <div>
+                      <span className="font-medium text-[#102A2C]">{item.symbol}</span>
+                      <span className="ml-2 text-xs text-[#8A918C]">
+                        {item.price_usd ? `$${item.price_usd.toLocaleString()}` : "价格更新中"}
+                      </span>
+                    </div>
+                    <span className={`shrink-0 ${(item.price_change_24h ?? 0) >= 0 ? "text-[#20808D]" : "text-red-600"}`}>
                       {item.price_change_24h?.toFixed(2) ?? "0.00"}%
                     </span>
                   </div>

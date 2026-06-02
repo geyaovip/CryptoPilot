@@ -5,12 +5,14 @@ export function MarketHeatBar({
   tokens,
   fearGreedIndex,
   marketHeat,
-  compact = false
+  compact = false,
+  showTokenSnapshot = true
 }: {
   tokens: TokenSummary[];
   fearGreedIndex: TrendingResponse["data"]["fear_greed_index"];
   marketHeat?: TrendingResponse["data"]["market_heat"];
   compact?: boolean;
+  showTokenSnapshot?: boolean;
 }) {
   const majors = tokens.filter((token) => token.symbol === "BTC" || token.symbol === "ETH");
 
@@ -40,21 +42,23 @@ export function MarketHeatBar({
           ) : null}
         </div>
       </div>
-      <div className={compact ? "space-y-2 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-3" : "grid gap-3 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-3 sm:grid-cols-2"}>
-        {majors.length > 0 ? (
-          majors.map((token) => (
-            <div className="text-sm text-[#5F6868]" key={token.id}>
-              <span className="font-medium text-[#102A2C]">{token.symbol}</span>
-              <span className="ml-2">{token.price_usd ? `$${token.price_usd.toLocaleString()}` : "价格更新中"}</span>
-              <span className={`ml-2 ${(token.price_change_24h ?? 0) >= 0 ? "text-[#20808D]" : "text-red-600"}`}>
-                {token.price_change_24h?.toFixed(2) ?? "0.00"}%
-              </span>
-            </div>
-          ))
-        ) : (
-          <p className="text-sm text-[#5F6868]">行情数据正在同步，稍后会展示重点资产表现。</p>
-        )}
-      </div>
+      {showTokenSnapshot ? (
+        <div className={compact ? "space-y-2 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-3" : "grid gap-3 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-3 sm:grid-cols-2"}>
+          {majors.length > 0 ? (
+            majors.map((token) => (
+              <div className="text-sm text-[#5F6868]" key={token.id}>
+                <span className="font-medium text-[#102A2C]">{token.symbol}</span>
+                <span className="ml-2">{token.price_usd ? `$${token.price_usd.toLocaleString()}` : "价格更新中"}</span>
+                <span className={`ml-2 ${(token.price_change_24h ?? 0) >= 0 ? "text-[#20808D]" : "text-red-600"}`}>
+                  {token.price_change_24h?.toFixed(2) ?? "0.00"}%
+                </span>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-[#5F6868]">行情数据正在同步，稍后会展示重点资产表现。</p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
