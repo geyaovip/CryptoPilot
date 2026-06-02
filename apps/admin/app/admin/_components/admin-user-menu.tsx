@@ -96,7 +96,7 @@ export function AdminUserMenu() {
   }
 
   const displayName = user?.name ?? "管理员";
-  const email = user?.email ?? "admin@cryptopilot.local";
+  const email = user?.email ?? "管理员账号";
 
   return (
     <SidebarUserMenu

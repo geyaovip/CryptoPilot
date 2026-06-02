@@ -13,6 +13,7 @@ alwaysApply: false
 - Include Loading, Empty, Error, and Retry states.
 - Confirm destructive actions.
 - Show success and failure feedback.
+- Cloudflare builds must not compile local API URLs or development-only values from `.env.local`; deploy scripts must scan `.open-next` before publishing.
 
 ## MVP ROUTES
 - `/admin`
@@ -33,3 +34,4 @@ alwaysApply: false
 - No dark theme.
 - No admin write action without audit requirement.
 - No direct imports from `apps/web`.
+- No production worker artifact may contain local API URLs, `trycloudflare.com`, development login flags, `.local` demo accounts, `Bearer Token` copy, or token-shaped secrets.

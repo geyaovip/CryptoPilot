@@ -13,6 +13,7 @@ alwaysApply: false
 - Use TanStack Query for server data.
 - Use Zustand only for transient UI state.
 - Use types from `packages/types`.
+- Cloudflare builds must not compile local API URLs or development-only values from `.env.local`; deploy scripts must scan `.open-next` before publishing.
 
 ## MVP ROUTES
 - `/`
@@ -32,3 +33,4 @@ alwaysApply: false
 - No Narrative bottom tab.
 - No direct imports from `apps/admin`.
 - No duplicate API DTOs.
+- No production worker artifact may contain local API URLs, `trycloudflare.com`, development login flags, `.local` demo accounts, `Bearer Token` copy, or token-shaped secrets.

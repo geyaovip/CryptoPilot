@@ -219,7 +219,20 @@ AI 生成的市场内容禁止：
 
 ---
 
-## 10. 数据与日志规则
+## 10. 部署与环境变量规则
+
+线上构建必须防止本地环境变量污染：
+
+- `apps/*/.env.local` 只允许服务本地开发，不得作为 Cloudflare / GitHub Actions / 线上部署的 API 地址来源。
+- Web/Admin 的 Cloudflare 构建必须显式设置 `API_URL` 与 `NEXT_PUBLIC_API_URL` 为线上 API。
+- 部署前必须运行 `.open-next` 产物扫描，禁止产物中出现本地 API 地址、`trycloudflare.com` 临时隧道、开发登录开关、`.local` 假账号文案、`Bearer Token` 技术文案或疑似密钥。
+- 如果线上页面出现“数据加载失败”，优先检查构建产物是否被本地 `NEXT_PUBLIC_API_URL` 编译污染，再排查 API 业务逻辑。
+- 本地开发保留 `localhost:3002`，但不得通过手动修改 `.env.local` 的方式修复线上问题；线上必须由构建脚本和 `wrangler.jsonc` 明确约束。
+- 生产前端不得暴露 `ghp_`、`re_`、Telegram bot token 等 token 形态字符串；所有密钥只能存在服务端环境变量或平台 Secret 中。
+
+---
+
+## 11. 数据与日志规则
 
 所有核心表必须包含：
 

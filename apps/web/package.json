@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "next build",
-    "build:cloudflare": "NEXT_PUBLIC_API_URL=https://api.cryptopilot.chat API_URL=https://api.cryptopilot.chat opennextjs-cloudflare build",
-    "deploy:cloudflare": "opennextjs-cloudflare deploy",
+    "build:cloudflare": "NEXT_PUBLIC_API_URL=https://api.cryptopilot.chat API_URL=https://api.cryptopilot.chat NEXT_PUBLIC_BETA_DEV_LOGIN=false opennextjs-cloudflare build",
+    "deploy:cloudflare": "node ../../scripts/assert-cloudflare-build-env.mjs web && opennextjs-cloudflare deploy",
     "preview:cloudflare": "opennextjs-cloudflare preview",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",

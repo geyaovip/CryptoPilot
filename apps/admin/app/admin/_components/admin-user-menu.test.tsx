@@ -23,7 +23,7 @@ describe("AdminUserMenu", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          data: { user: { name: "管理员", email: "admin@cryptopilot.local", role: "admin" } }
+          data: { user: { name: "管理员", email: "admin@example.com", role: "admin" } }
         })
       })
     );
