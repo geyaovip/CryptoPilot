@@ -40,22 +40,25 @@ MVP 禁止实现：
 - AI auto-trading
 - Dark theme
 
-除非当前版本文档明确要求，否则 AI 不得实现未来阶段功能。
+当前仓库已经进入 V0.8 轻聚合与 V0.9 Market Insight 的部分实现阶段；后续开发以补齐当前实现与验收差距为主。除非当前版本或模块文档明确要求，否则 AI 不得实现 V0.9 之后的未来阶段功能。
 
 ---
 
 ## 2. 开发顺序
 
-AI 必须按以下顺序开发：
+AI 必须按以下路线推进，并以当前仓库已有实现状态为准补齐验收差距：
 
 1. V0.1 Skeleton
 2. V0.2 Feed
 3. V0.3 AI
 4. V0.4 Narrative + Watchlist
-5. V0.5 Telegram Push
-6. V0.6 MVP Beta
+5. V0.6 MVP Beta
+6. V0.7 AI Curated Feed
+7. V0.8 Narrative Feed
+8. V0.9 Market Intelligence
+9. V0.5 Telegram Push（独立版本；如已实现，仅继续修复验收缺口）
 
-前一版本未通过验收前，不得开发后一版本功能。
+前一版本未通过验收前，不得开发后一版本功能；但已经进入 V0.8/V0.9 的能力不得被回退，需按对应文档补齐。
 
 ---
 
@@ -260,4 +263,3 @@ AI 生成的市场内容禁止：
 详细步骤见：`docs/rules/agent-verification-workflow.md`（Fix → `pnpm typecheck` / `pnpm test` → 针对性 API/页面验证 → 汇报）。
 
 向用户说明「已修好」时，必须列出**已执行的验证命令或步骤**及结果。
-

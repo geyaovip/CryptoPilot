@@ -312,8 +312,8 @@ export class AdminController {
   }
 
   @Get("insights")
-  async insights() {
-    return ok(await this.adminInsightService.list());
+  async insights(@Query() query: AdminPaginationDto) {
+    return ok(await this.adminInsightService.list(query));
   }
 
   @Get("insights/:id")

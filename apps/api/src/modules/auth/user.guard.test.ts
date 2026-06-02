@@ -15,7 +15,7 @@ function createContext(headers: Record<string, string>): ExecutionContext {
   } as unknown as ExecutionContext;
 }
 
-function createGuard(disabled = false) {
+function createGuard(disabled = false, configValues: Record<string, string | undefined> = {}) {
   const prisma = {
     user: {
       findUnique: vi.fn(async ({ where }: { where: { id: string } }) =>
@@ -25,7 +25,7 @@ function createGuard(disabled = false) {
       )
     }
   };
-  const config = { get: (key: string) => (key === "AUTH_SECRET" ? secret : undefined) } as ConfigService;
+  const config = { get: (key: string) => (key === "AUTH_SECRET" ? secret : configValues[key]) } as ConfigService;
   return new UserGuard(prisma as never, config);
 }
 
@@ -40,5 +40,15 @@ describe("UserGuard", () => {
   it("rejects missing auth", async () => {
     const guard = createGuard();
     await expect(guard.canActivate(createContext({}))).rejects.toThrow(UnauthorizedException);
+  });
+
+  it("rejects legacy user header in production", async () => {
+    const guard = createGuard(false, { NODE_ENV: "production" });
+    await expect(guard.canActivate(createContext({ "x-user-id": userId }))).rejects.toThrow(UnauthorizedException);
+  });
+
+  it("allows legacy user header outside production for local development", async () => {
+    const guard = createGuard(false, { NODE_ENV: "development" });
+    await expect(guard.canActivate(createContext({ "x-user-id": userId }))).resolves.toBe(true);
   });
 });

@@ -5,6 +5,8 @@ import type {
   AiMonitorResponse,
   FeedItemSummary,
   IngestionLogListResponse,
+  MarketInsightDetail,
+  MarketInsightSummary,
   MvpPromptKey,
   PromptListResponse,
   PushMessageSummary,
@@ -54,6 +56,34 @@ export async function getAdminFeed(filters: AdminFeedFilters = {}): Promise<Admi
   if (!response.ok) throw new Error("Feed 管理数据加载失败");
   const body = (await response.json()) as { data: AdminFeedListData };
   return body.data;
+}
+
+export async function getAdminInsights(filters: AdminPaginationFilters = {}): Promise<AdminListData<MarketInsightSummary>> {
+  const response = await apiFetch(`${apiUrl}/api/admin/insights${toQuery(filters)}`, {
+    cache: "no-store",
+    headers: await adminHeaders()
+  });
+  if (!response.ok) throw new Error("Insight 管理数据加载失败");
+  const body = (await response.json()) as { data: AdminListData<MarketInsightSummary> };
+  return body.data;
+}
+
+export async function getAdminInsightDetail(id: string): Promise<MarketInsightDetail> {
+  const response = await apiFetch(`${apiUrl}/api/admin/insights/${id}`, {
+    cache: "no-store",
+    headers: await adminHeaders()
+  });
+  if (!response.ok) throw new Error("Insight 详情加载失败");
+  const body = (await response.json()) as { data: MarketInsightDetail };
+  return body.data;
+}
+
+export async function resynthesizeAdminInsight(id: string) {
+  const response = await apiFetch(`${apiUrl}/api/admin/insights/${id}/resynthesize`, {
+    method: "POST",
+    headers: await adminHeaders()
+  });
+  if (!response.ok) throw new Error("Insight 重新合成失败");
 }
 
 export type AdminPaginationFilters = {

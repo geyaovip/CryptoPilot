@@ -9,7 +9,7 @@ alwaysApply: true
 - Read `README_AI_DEVELOPMENT_DOCS.md`, `docs/rules/MASTER_RULES.md`, the active `docs/versions/*` spec, and relevant module specs before coding.
 - If the active version is unclear, ask before implementing product features.
 - Develop only one version at a time: V0.1–V0.4 → V0.6 MVP Beta → V0.7–V0.9 首页阶段；**V0.5 Telegram 延后最后**（见 `README_AI_DEVELOPMENT_DOCS.md`）。
-- MVP home positioning is **AI Curated Market Feed** (aggregate/summarize/rank), not AI Narrative Engine. No `market_insights` table before V0.9.
+- MVP home positioning is **AI Curated Market Feed** (aggregate/summarize/rank), not AI Narrative Engine. `market_insights` is allowed only because the repo has entered V0.9 partial implementation; continue filling V0.9 acceptance gaps rather than reverting it.
 - Keep files under 300 lines and split large files into components, services, hooks, schemas, or utilities.
 - Use TypeScript for business code and shared API types from `packages/types`.
 - Put shared UI primitives in `packages/ui`.
@@ -18,7 +18,7 @@ alwaysApply: true
 
 ## FORBIDDEN
 - No dark theme, theme switcher, React Native app, Smart Money, Pro subscription, payment, wallet login, wallet tracking, trading, or AI auto-trading in MVP.
-- No future-version feature unless the active version spec explicitly requires it.
+- No post-V0.9 future-version feature unless the active version spec explicitly requires it.
 
 ## BEFORE FINISHING
 - After fixes: run self-verification per `docs/rules/agent-verification-workflow.md` (`pnpm typecheck`, `pnpm test`, then targeted API/page checks). Do not tell the user it is fixed until verification passes; if it fails, keep fixing.

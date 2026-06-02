@@ -78,16 +78,33 @@ export class AdminLogsService {
     }));
   }
 
-  private async pushErrors(_from: Date, _to: Date, _take: number) {
-    return [] as Array<{
-      id: string;
-      type: "push";
-      title: string;
-      message: string;
-      error_code: string;
-      created_at: string;
-      detail: Record<string, unknown>;
-    }>;
+  private async pushErrors(from: Date, to: Date, take: number) {
+    const rows = await this.prisma.pushDeliveryLog.findMany({
+      where: {
+        status: "FAILED",
+        createdAt: { gte: from, lte: to }
+      },
+      include: {
+        pushMessage: { select: { title: true, type: true } },
+        user: { select: { email: true, uid: true } }
+      },
+      orderBy: { createdAt: "desc" },
+      take
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      type: "push" as const,
+      title: row.pushMessage?.title ?? "Push 发送失败",
+      message: row.errorMessage ?? "Telegram Push 发送失败",
+      error_code: row.status,
+      created_at: row.createdAt.toISOString(),
+      detail: {
+        channel: row.channel,
+        push_message_id: row.pushMessageId,
+        push_type: row.pushMessage?.type ?? null,
+        user: row.user.email ?? row.user.uid
+      }
+    }));
   }
 
   private async auditLogs(from: Date, to: Date, take: number) {

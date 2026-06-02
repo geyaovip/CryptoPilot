@@ -8,6 +8,7 @@ const navItems: NavItem[] = [
   { label: "仪表盘", href: "/admin/dashboard" },
   { label: "Feed 管理", href: "/admin/feed" },
   { label: "Feed 簇", href: "/admin/feed-clusters" },
+  { label: "Insight", href: "/admin/insights" },
   { label: "Prompt 管理", href: "/admin/prompts" },
   { label: "AI 监控", href: "/admin/ai-monitor" },
   { label: "Push 管理", href: "/admin/push" },

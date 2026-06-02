@@ -6,6 +6,15 @@ import { getAdminLogs, type AdminLogItem } from "../../lib/api";
 
 const types = ["", "api", "ingestion", "llm", "push", "audit"] as const;
 
+const typeLabels: Record<(typeof types)[number], string> = {
+  "": "全部",
+  api: "API 错误",
+  ingestion: "采集错误",
+  llm: "LLM 错误",
+  push: "Push 错误",
+  audit: "Admin 审计"
+};
+
 export function LogsPanel() {
   const [type, setType] = useState("");
   const [from, setFrom] = useState("");
@@ -40,7 +49,7 @@ export function LogsPanel() {
           >
             {types.map((value) => (
               <option key={value || "all"} value={value}>
-                {value || "全部"}
+                {typeLabels[value]}
               </option>
             ))}
           </select>
@@ -95,7 +104,7 @@ export function LogsPanel() {
                   className="cursor-pointer border-t border-slate-100 hover:bg-slate-50"
                   onClick={() => setSelected(item)}
                 >
-                  <td className="px-4 py-3">{item.type}</td>
+                  <td className="px-4 py-3">{typeLabels[item.type]}</td>
                   <td className="px-4 py-3">{item.title}</td>
                   <td className="px-4 py-3">{item.message}</td>
                   <td className="px-4 py-3 text-slate-500">{new Date(item.created_at).toLocaleString()}</td>

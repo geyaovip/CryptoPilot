@@ -36,6 +36,7 @@ export class AdminSourceService {
         content_locale: source.contentLocale.toLowerCase() as "zh" | "en",
         last_success_at: source.lastSuccessAt?.toISOString() ?? null,
         last_error_at: source.lastErrorAt?.toISOString() ?? null,
+        error_message: source.errorMessage,
         consecutive_failures: source.consecutiveFailures,
         fetch_interval_seconds: source.fetchIntervalSeconds
       })),

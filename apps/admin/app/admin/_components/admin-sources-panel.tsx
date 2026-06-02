@@ -67,7 +67,7 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
-              {["名称", "语言", "类型", "状态", "失败次数", "最近成功", "最近错误", "间隔(秒)", "操作"].map((column) => (
+              {["名称", "语言", "类型", "状态", "失败次数", "错误信息", "最近成功", "最近错误", "间隔(秒)", "操作"].map((column) => (
                 <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
                   {column}
                 </th>
@@ -84,6 +84,9 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
                 <td className="px-4 py-3 text-slate-700">{source.type}</td>
                 <td className="px-4 py-3 text-slate-700">{source.status}</td>
                 <td className="px-4 py-3 text-slate-700">{source.consecutive_failures}</td>
+                <td className="max-w-[260px] px-4 py-3 text-slate-700">
+                  <span className="line-clamp-2">{source.error_message ?? "-"}</span>
+                </td>
                 <td className="px-4 py-3 text-slate-700">
                   {source.last_success_at ? new Date(source.last_success_at).toLocaleString("zh-CN") : "-"}
                 </td>

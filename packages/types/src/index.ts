@@ -403,6 +403,7 @@ export type SourceSummary = {
   content_locale: ContentLocale;
   last_success_at: string | null;
   last_error_at: string | null;
+  error_message: string | null;
   consecutive_failures: number;
   fetch_interval_seconds: number;
 };

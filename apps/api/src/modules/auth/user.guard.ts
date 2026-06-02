@@ -41,7 +41,10 @@ export class UserGuard implements CanActivate {
         return this.prisma.user.findUnique({ where: { id: payload.sub } });
       }
     }
-    const legacyId = String(request.headers?.["x-user-id"] ?? "");
+    const allowLegacyHeader =
+      this.config.get<string>("ALLOW_LEGACY_USER_HEADER") === "true" ||
+      this.config.get<string>("NODE_ENV") !== "production";
+    const legacyId = allowLegacyHeader ? String(request.headers?.["x-user-id"] ?? "") : "";
     if (legacyId) {
       return this.prisma.user.findUnique({ where: { id: legacyId } });
     }

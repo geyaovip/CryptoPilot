@@ -2,11 +2,9 @@
 
 import { Button, Card } from "@cryptopilot/ui";
 import type { AiSearchResponse, AiSearchSuggestionsResponse, ApiError } from "@cryptopilot/types";
-import { DEMO_USER_ID } from "@cryptopilot/types";
 import { useEffect, useRef, useState } from "react";
+import { useAuthStore } from "../lib/auth-store";
 import { getApiUrl } from "../lib/api-url";
-
-const demoUserId = process.env.NEXT_PUBLIC_DEMO_USER_ID ?? DEMO_USER_ID;
 
 const fallbackSuggestions = [
   "BTC 今天的波动主要受哪些事件影响？",
@@ -34,6 +32,7 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AiSearchResponse["data"] | null>(null);
   const [suggestions, setSuggestions] = useState(fallbackSuggestions);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const prefilledRan = useRef(false);
   const initialSearchRan = useRef(false);
   const isResultView = Boolean(initialQuery.trim()) || Boolean(result) || loading;
@@ -76,6 +75,10 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
       setError("请输入问题");
       return;
     }
+    if (!accessToken) {
+      setError("AI Search 需要登录后使用，请先通过邮箱登录。");
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
@@ -85,7 +88,7 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": demoUserId
+          Authorization: `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           query: trimmed,
@@ -171,7 +174,14 @@ export function SearchPanel({ initialQuery = "", initialInsightId = "" }: Search
       ) : null}
 
       {error ? (
-        <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <span>{error}</span>
+          {!accessToken ? (
+            <a className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700" href="/login">
+              去登录
+            </a>
+          ) : null}
+        </Card>
       ) : null}
 
       {loading ? (
