@@ -25,7 +25,7 @@ export function TelegramCard({ bound }: { bound: boolean }) {
       setBotLink(data.bot_link);
       setExpiresAt(data.expires_at);
       if (data.bot_link) {
-        window.location.href = data.bot_link;
+        window.open(data.bot_link, "_blank", "noopener,noreferrer");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "生成 Telegram 绑定链接失败");
@@ -65,14 +65,22 @@ export function TelegramCard({ bound }: { bound: boolean }) {
       </div>
       {code ? (
         <div className="mt-4 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-4">
-          <p className="text-sm font-medium text-[#102A2C]">{botLink ? "Telegram 已打开，点击 Bot 里的 Start 即可完成绑定。" : "复制下面的绑定码，在 Telegram Bot 中发送 /bind 绑定码。"}</p>
-          <p className="mt-3 font-mono text-2xl font-semibold tracking-[0.2em] text-[#102A2C]">{code}</p>
-          <p className="mt-2 text-xs text-[#8A918C]">备用绑定码，有效期至 {expiresAt ? new Date(expiresAt).toLocaleString("zh-CN") : "10 分钟后"}</p>
+          <p className="text-sm font-medium text-[#102A2C]">
+            {botLink ? "已打开 Telegram Bot。进入 Telegram 后点击 Start 即可完成绑定，不需要手动输入绑定码。" : "当前 Bot 链接未配置，只能复制下面的绑定码，在 Telegram Bot 中发送 /bind 绑定码。"}
+          </p>
+          <p className="mt-2 text-xs leading-5 text-[#8A918C]">
+            {botLink ? "如果 Telegram 没有自动打开，点下面按钮重新打开；绑定码仅作为兜底使用。" : "请确认服务端已配置 TELEGRAM_BOT_USERNAME，配置后即可生成自动带码的 Bot 链接。"}
+          </p>
           {botLink ? (
             <a className="mt-3 inline-flex rounded-full border border-[#D9D5C9] px-4 py-2 text-sm font-medium text-[#20808D]" href={botLink} rel="noreferrer" target="_blank">
               重新打开 Telegram Bot
             </a>
           ) : null}
+          <details className="mt-3">
+            <summary className="cursor-pointer text-xs font-medium text-[#5F6868]">手动绑定兜底</summary>
+            <p className="mt-3 font-mono text-2xl font-semibold tracking-[0.2em] text-[#102A2C]">{code}</p>
+            <p className="mt-2 text-xs text-[#8A918C]">有效期至 {expiresAt ? new Date(expiresAt).toLocaleString("zh-CN") : "10 分钟后"}</p>
+          </details>
         </div>
       ) : null}
       {error ? <p className="mt-3 text-sm text-[#B54708]">{error}</p> : null}
