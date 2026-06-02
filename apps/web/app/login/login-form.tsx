@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../lib/auth-store";
 import { getApiUrl } from "../lib/api-url";
-const betaDevLogin = process.env.NEXT_PUBLIC_BETA_DEV_LOGIN === "true";
+const betaDevLogin = process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_BETA_DEV_LOGIN === "true";
 
 export function LoginForm() {
   const router = useRouter();

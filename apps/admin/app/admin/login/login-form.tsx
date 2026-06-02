@@ -7,7 +7,7 @@ import { useAdminAuthStore } from "../../lib/auth-store";
 import { getApiUrl } from "../../lib/api-url";
 import { CryptoPilotMark } from "../_components/cryptopilot-mark";
 
-const betaDevLogin = process.env.NEXT_PUBLIC_BETA_DEV_LOGIN === "true";
+const betaDevLogin = process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_BETA_DEV_LOGIN === "true";
 
 export function AdminLoginForm() {
   const router = useRouter();
