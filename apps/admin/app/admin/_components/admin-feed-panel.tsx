@@ -12,6 +12,7 @@ import {
   pinAdminFeed,
   updateAdminFeed
 } from "../../lib/api";
+import { AdminFeedCreateDialog } from "./admin-feed-create-dialog";
 
 type AdminFeedPanelProps = {
   items: FeedItemSummary[];
@@ -35,6 +36,13 @@ function buildFeedQuery(filters: AdminFeedFilters, page?: number) {
   return query.toString();
 }
 
+function buildWebFeedUrl(feedId: string) {
+  if (typeof window !== "undefined" && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    return `http://localhost:3000/feed/${feedId}`;
+  }
+  return `https://cryptopilot.chat/feed/${feedId}`;
+}
+
 export function AdminFeedPanel({
   items,
   sources,
@@ -50,9 +58,7 @@ export function AdminFeedPanel({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editSummary, setEditSummary] = useState("");
-  const [createTitle, setCreateTitle] = useState("");
-  const [createContent, setCreateContent] = useState("");
-  const [createUrl, setCreateUrl] = useState("https://example.com/manual-feed");
+  const [createOpen, setCreateOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -65,8 +71,10 @@ export function AdminFeedPanel({
       await action();
       setMessage(successMessage);
       refresh();
+      return true;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "操作失败");
+      return false;
     } finally {
       setPending(false);
     }
@@ -81,14 +89,21 @@ export function AdminFeedPanel({
   return (
     <div className="space-y-4">
       <Card className="p-4">
-        <h2 className="text-sm font-semibold text-slate-950">内容操作</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          支持筛选、编辑、置顶、隐藏、删除和手动创建。多来源聚合请前往{" "}
-          <a className="text-[#20808D] hover:underline" href="/admin/feed-clusters">
-            内容聚类
-          </a>
-          。
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-950">内容操作</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              支持筛选、编辑、置顶、隐藏、删除和手动创建。多来源聚合请前往{" "}
+              <a className="text-[#20808D] hover:underline" href="/admin/feed-clusters">
+                内容聚类
+              </a>
+              。
+            </p>
+          </div>
+          <Button className="bg-slate-950 text-white hover:bg-slate-800" disabled={pending} onClick={() => setCreateOpen(true)} type="button">
+            创建原始内容
+          </Button>
+        </div>
         {message ? <p className="mt-2 text-sm text-[#20808D]">{message}</p> : null}
       </Card>
 
@@ -142,19 +157,12 @@ export function AdminFeedPanel({
         </form>
       </Card>
 
-      <Card className="space-y-3 p-4">
-        <h2 className="text-sm font-semibold text-slate-950">手动创建 Feed</h2>
-        <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" onChange={(e) => setCreateTitle(e.target.value)} placeholder="标题" value={createTitle} />
-        <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" onChange={(e) => setCreateContent(e.target.value)} placeholder="正文" rows={3} value={createContent} />
-        <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" onChange={(e) => setCreateUrl(e.target.value)} placeholder="原文链接" value={createUrl} />
-        <Button
-          disabled={pending || !createTitle || !createContent}
-          onClick={() => run(() => createAdminFeed({ title: createTitle, content: createContent, source_url: createUrl }), "Feed 已创建")}
-          type="button"
-        >
-          创建 Feed
-        </Button>
-      </Card>
+      <AdminFeedCreateDialog
+        open={createOpen}
+        pending={pending}
+        onClose={() => setCreateOpen(false)}
+        onCreate={(input) => run(() => createAdminFeed(input), "原始内容已创建")}
+      />
 
       {editingId ? (
         <Card className="space-y-3 p-4">
@@ -178,47 +186,59 @@ export function AdminFeedPanel({
       ) : null}
 
       <Card className="overflow-hidden p-0">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500">
-            <tr>
-              {["标题", "类型", "来源", "热度", "状态", "簇", "置顶", "发布时间", "操作"].map((column) => (
-                <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr className="border-b border-slate-100 align-top" key={item.id}>
-                <td className="max-w-xs px-4 py-3 text-slate-700">{item.title}</td>
-                <td className="px-4 py-3 text-slate-700">{item.type}</td>
-                <td className="px-4 py-3 text-slate-700">{item.source_name}</td>
-                <td className="px-4 py-3 text-slate-700">{item.heat_score}</td>
-                <td className="px-4 py-3 text-slate-700">{item.status}</td>
-                <td className="px-4 py-3 font-mono text-xs text-slate-500">{item.cluster_id?.slice(0, 8) ?? "—"}</td>
-                <td className="px-4 py-3 text-slate-700">{item.is_pinned ? "是" : "否"}</td>
-                <td className="px-4 py-3 text-slate-700">{new Date(item.publish_time).toLocaleString("zh-CN")}</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    <button className="text-[#20808D]" disabled={pending} onClick={() => startEdit(item)} type="button">
-                      编辑
-                    </button>
-                    <button className="text-slate-700" disabled={pending} onClick={() => run(() => pinAdminFeed(item.id), "置顶状态已更新")} type="button">
-                      置顶
-                    </button>
-                    <button className="text-slate-700" disabled={pending} onClick={() => run(() => hideAdminFeed(item.id), "隐藏状态已更新")} type="button">
-                      隐藏
-                    </button>
-                    <button className="text-red-600" disabled={pending} onClick={() => run(() => deleteAdminFeed(item.id), "Feed 已删除")} type="button">
-                      删除
-                    </button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-[1080px] w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500">
+              <tr>
+                {["标题", "类型", "来源", "热度", "状态", "簇", "置顶", "发布时间", "操作"].map((column) => (
+                  <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
+                    {column}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr className="border-b border-slate-100 align-top" key={item.id}>
+                  <td className="max-w-sm px-4 py-3 text-slate-700">
+                    <a className="font-medium text-slate-900 hover:text-[#20808D] hover:underline" href={item.source_url} target="_blank" rel="noopener noreferrer">
+                      {item.title}
+                    </a>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      <a className="text-[#20808D] hover:underline" href={buildWebFeedUrl(item.id)} target="_blank" rel="noopener noreferrer">
+                        系统详情
+                      </a>
+                      <span>标题已链接原文</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">{item.type}</td>
+                  <td className="px-4 py-3 text-slate-700">{item.source_name}</td>
+                  <td className="px-4 py-3 text-slate-700">{item.heat_score}</td>
+                  <td className="px-4 py-3 text-slate-700">{item.status}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate-500">{item.cluster_id?.slice(0, 8) ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-700">{item.is_pinned ? "是" : "否"}</td>
+                  <td className="px-4 py-3 text-slate-700">{new Date(item.publish_time).toLocaleString("zh-CN")}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      <button className="text-[#20808D]" disabled={pending} onClick={() => startEdit(item)} type="button">
+                        编辑
+                      </button>
+                      <button className="text-slate-700" disabled={pending} onClick={() => run(() => pinAdminFeed(item.id), "置顶状态已更新")} type="button">
+                        置顶
+                      </button>
+                      <button className="text-slate-700" disabled={pending} onClick={() => run(() => hideAdminFeed(item.id), "隐藏状态已更新")} type="button">
+                        隐藏
+                      </button>
+                      <button className="text-red-600" disabled={pending} onClick={() => run(() => deleteAdminFeed(item.id), "Feed 已删除")} type="button">
+                        删除
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
           <p className="text-sm text-slate-600">
             {total === 0

@@ -80,13 +80,91 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     ingest: "rss"
   },
   {
+    name: "Vitalik Blog",
+    url: "https://vitalik.eth.limo/feed.xml",
+    locale: "EN",
+    sourceWeight: 66,
+    ingest: "rss"
+  },
+  {
+    name: "Bankless Substack",
+    url: "https://bankless.substack.com/feed",
+    locale: "EN",
+    sourceWeight: 55,
+    ingest: "rss"
+  },
+  {
+    name: "Lido Blog",
+    url: "https://blog.lido.fi/rss/",
+    locale: "EN",
+    sourceWeight: 54,
+    ingest: "rss"
+  },
+  {
+    name: "Aave Governance Forum",
+    url: "https://governance.aave.com/posts.rss",
+    locale: "EN",
+    sourceWeight: 56,
+    ingest: "rss"
+  },
+  {
+    name: "Aave Mirror",
+    url: "https://aave.mirror.xyz/feed/atom",
+    locale: "EN",
+    sourceWeight: 58,
+    ingest: "rss"
+  },
+  {
+    name: "Optimism Mirror",
+    url: "https://optimism.mirror.xyz/feed/atom",
+    locale: "EN",
+    sourceWeight: 58,
+    ingest: "rss"
+  },
+  {
+    name: "Safe Mirror",
+    url: "https://safe.mirror.xyz/feed/atom",
+    locale: "EN",
+    sourceWeight: 54,
+    ingest: "rss"
+  },
+  {
+    name: "ChainFeeds Mirror",
+    url: "https://mirror.xyz/chainfeeds.eth/feed/atom",
+    locale: "ZH",
+    sourceWeight: 64,
+    ingest: "rss"
+  },
+  {
+    name: "EthDaily Paragraph",
+    url: "https://api.paragraph.com/blogs/rss/%40ethdaily",
+    locale: "EN",
+    sourceWeight: 58,
+    ingest: "rss"
+  },
+  {
+    name: "Polynya Paragraph",
+    url: "https://api.paragraph.com/blogs/rss/%40polynya",
+    locale: "EN",
+    sourceWeight: 60,
+    ingest: "rss"
+  },
+  {
+    name: "ZKsync Paragraph",
+    url: "https://api.paragraph.com/blogs/rss/%40zksync",
+    locale: "EN",
+    sourceWeight: 56,
+    ingest: "rss"
+  },
+  {
     name: "r/CryptoCurrency",
     url: "https://oauth.reddit.com/r/CryptoCurrency",
     type: "REDDIT",
     locale: "EN",
     sourceWeight: 48,
     ingest: "reddit",
-    fetchIntervalSeconds: 600
+    fetchIntervalSeconds: 600,
+    defaultActive: false
   },
   {
     name: "r/Bitcoin",
@@ -95,7 +173,8 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     locale: "EN",
     sourceWeight: 50,
     ingest: "reddit",
-    fetchIntervalSeconds: 600
+    fetchIntervalSeconds: 600,
+    defaultActive: false
   },
   {
     name: "r/ethereum",
@@ -104,7 +183,8 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     locale: "EN",
     sourceWeight: 50,
     ingest: "reddit",
-    fetchIntervalSeconds: 600
+    fetchIntervalSeconds: 600,
+    defaultActive: false
   },
   {
     name: "r/solana",
@@ -113,7 +193,8 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     locale: "EN",
     sourceWeight: 45,
     ingest: "reddit",
-    fetchIntervalSeconds: 600
+    fetchIntervalSeconds: 600,
+    defaultActive: false
   },
   {
     name: "r/ethfinance",
@@ -122,7 +203,8 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     locale: "EN",
     sourceWeight: 45,
     ingest: "reddit",
-    fetchIntervalSeconds: 600
+    fetchIntervalSeconds: 600,
+    defaultActive: false
   },
   {
     name: "r/CryptoMarkets",
@@ -131,6 +213,7 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     locale: "EN",
     sourceWeight: 42,
     ingest: "reddit",
-    fetchIntervalSeconds: 600
+    fetchIntervalSeconds: 600,
+    defaultActive: false
   }
 ];
