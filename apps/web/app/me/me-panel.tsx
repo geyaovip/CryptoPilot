@@ -56,10 +56,15 @@ export function MePanel() {
       .finally(() => setLoading(false));
   }, [token]);
 
+  async function refreshTelegramBound() {
+    const settings = await getNotificationSettings();
+    setTelegramBound(settings.telegram_bound);
+    return settings.telegram_bound;
+  }
+
   useEffect(() => {
     if (!user) return;
-    void getNotificationSettings()
-      .then((settings) => setTelegramBound(settings.telegram_bound))
+    void refreshTelegramBound()
       .catch(() => setTelegramBound(false));
   }, [user]);
 
@@ -100,7 +105,7 @@ export function MePanel() {
         </Button>
       </Card>
 
-      <TelegramCard bound={telegramBound} />
+      <TelegramCard bound={telegramBound} onRefreshBound={refreshTelegramBound} />
 
       <Card className="border-[#D9D5C9] bg-white/95 p-0 shadow-[0_18px_60px_rgba(16,42,44,0.06)]">
         <button

@@ -4,12 +4,13 @@ import { Button, Card } from "@cryptopilot/ui";
 import { useEffect, useState } from "react";
 import { createTelegramBindCode, unbindTelegram } from "../lib/api";
 
-export function TelegramCard({ bound }: { bound: boolean }) {
+export function TelegramCard({ bound, onRefreshBound }: { bound: boolean; onRefreshBound: () => Promise<boolean> }) {
   const [isBound, setIsBound] = useState(bound);
   const [code, setCode] = useState<string | null>(null);
   const [botLink, setBotLink] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [checkingBound, setCheckingBound] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,11 +28,33 @@ export function TelegramCard({ bound }: { bound: boolean }) {
       if (data.bot_link) {
         window.open(data.bot_link, "_blank", "noopener,noreferrer");
       }
+      void pollBoundStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "生成 Telegram 绑定链接失败");
     } finally {
       setBusy(false);
     }
+  }
+
+  async function pollBoundStatus() {
+    setCheckingBound(true);
+    for (let attempt = 0; attempt < 18; attempt += 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, 2500));
+      try {
+        const nextBound = await onRefreshBound();
+        if (nextBound) {
+          setIsBound(true);
+          setCode(null);
+          setBotLink(null);
+          setExpiresAt(null);
+          setCheckingBound(false);
+          return;
+        }
+      } catch {
+        // Keep polling briefly; Telegram binding can finish a few seconds after Start.
+      }
+    }
+    setCheckingBound(false);
   }
 
   async function handleUnbind() {
@@ -60,16 +83,20 @@ export function TelegramCard({ bound }: { bound: boolean }) {
           </p>
         </div>
         <span className="rounded-full bg-[#F7F5EE] px-3 py-1 text-xs text-[#5F6868]">
-          {isBound ? "已绑定" : "未绑定"}
+          {isBound ? "已绑定" : checkingBound ? "等待确认" : "未绑定"}
         </span>
       </div>
-      {code ? (
+      {code && !isBound ? (
         <div className="mt-4 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-4">
           <p className="text-sm font-medium text-[#102A2C]">
             {botLink ? "已打开 Telegram Bot。进入 Telegram 后点击 Start 即可完成绑定，不需要手动输入绑定码。" : "当前 Bot 链接未配置，只能复制下面的绑定码，在 Telegram Bot 中发送 /bind 绑定码。"}
           </p>
           <p className="mt-2 text-xs leading-5 text-[#8A918C]">
-            {botLink ? "如果 Telegram 没有自动打开，点下面按钮重新打开；绑定码仅作为兜底使用。" : "请确认服务端已配置 TELEGRAM_BOT_USERNAME，配置后即可生成自动带码的 Bot 链接。"}
+            {botLink
+              ? checkingBound
+                ? "我们正在确认绑定状态，成功后这里会自动切换为已绑定。"
+                : "如果 Telegram 没有自动打开，点下面按钮重新打开；绑定码仅作为兜底使用。"
+              : "请确认服务端已配置 TELEGRAM_BOT_USERNAME，配置后即可生成自动带码的 Bot 链接。"}
           </p>
           {botLink ? (
             <a className="mt-3 inline-flex rounded-full border border-[#D9D5C9] px-4 py-2 text-sm font-medium text-[#20808D]" href={botLink} rel="noreferrer" target="_blank">
@@ -85,9 +112,11 @@ export function TelegramCard({ bound }: { bound: boolean }) {
       ) : null}
       {error ? <p className="mt-3 text-sm text-[#B54708]">{error}</p> : null}
       <div className="mt-5 flex flex-wrap gap-3">
-        <Button disabled={busy} onClick={() => void createCode()} type="button">
-          {busy ? "处理中…" : "一键绑定 Telegram"}
-        </Button>
+        {!isBound ? (
+          <Button disabled={busy || checkingBound} onClick={() => void createCode()} type="button">
+            {busy ? "处理中…" : checkingBound ? "等待绑定确认…" : "一键绑定 Telegram"}
+          </Button>
+        ) : null}
         {isBound ? (
           <Button disabled={busy} onClick={() => void handleUnbind()} type="button">
             解绑 Telegram
