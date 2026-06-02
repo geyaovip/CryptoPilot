@@ -32,14 +32,43 @@ export default async function AdminKolsPage({
           </p>
         </div>
         <AdminKolActions items={data.items} />
-        {data.items.map((item) => (
-          <Card className="p-4" key={item.id}>
-            <p className="font-medium text-slate-950">
-              {item.name} @{item.handle}
-            </p>
-            <p className="text-sm text-slate-500">{item.is_active ? "启用" : "停用"}</p>
-          </Card>
-        ))}
+        <Card className="overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="bg-slate-50 text-slate-500">
+                <tr>
+                  {["名称", "平台", "Profile", "影响力", "状态"].map((column) => (
+                    <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
+                      {column}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.items.map((item) => (
+                  <tr className="border-b border-slate-100" key={item.id}>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-slate-950">{item.name}</p>
+                      <p className="text-xs text-slate-500">@{item.handle}</p>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">{platformLabel(item.platform)}</td>
+                    <td className="px-4 py-3">
+                      {item.profile_url ? (
+                        <a className="text-[#20808D]" href={item.profile_url} rel="noopener noreferrer" target="_blank">
+                          打开
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">{item.influence_score}</td>
+                    <td className="px-4 py-3 text-slate-700">{item.is_active ? "启用" : "停用"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
         <AdminPagination
           basePath="/admin/kols"
           hasNext={data.has_next}
@@ -52,4 +81,13 @@ export default async function AdminKolsPage({
       </div>
     </AdminShell>
   );
+}
+
+function platformLabel(platform: string) {
+  const map: Record<string, string> = {
+    twitter: "Twitter/X",
+    youtube: "YouTube",
+    other: "其他"
+  };
+  return map[platform] ?? platform;
 }

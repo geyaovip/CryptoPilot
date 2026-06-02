@@ -383,6 +383,15 @@ export type InsightDetailResponse = ApiSuccess<MarketInsightDetail>;
 export type TrendingResponse = ApiSuccess<{
   tokens: TokenSummary[];
   narratives: NarrativeSummary[];
+  market_heat: {
+    score: number;
+    velocity: number;
+    label: HeatLabel;
+    active_narrative_count: number;
+    leading_narrative: NarrativeSummary | null;
+    major_move: "up" | "down" | "mixed" | "flat";
+    updated_at: string;
+  };
   fear_greed_index: {
     value: number;
     classification: string;

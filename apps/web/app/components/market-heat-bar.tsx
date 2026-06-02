@@ -2,15 +2,25 @@ import type { TokenSummary, TrendingResponse } from "@cryptopilot/types";
 
 export function MarketHeatBar({
   tokens,
-  fearGreedIndex
+  fearGreedIndex,
+  marketHeat
 }: {
   tokens: TokenSummary[];
   fearGreedIndex: TrendingResponse["data"]["fear_greed_index"];
+  marketHeat?: TrendingResponse["data"]["market_heat"];
 }) {
   const majors = tokens.filter((token) => token.symbol === "BTC" || token.symbol === "ETH");
 
   return (
     <div className="space-y-3">
+      {marketHeat ? (
+        <div className="grid gap-3 rounded-2xl border border-[#D9D5C9] bg-white/85 p-3 sm:grid-cols-4">
+          <Metric label="市场热度" value={`${marketHeat.score}`} hint={toHeatLabel(marketHeat.label)} />
+          <Metric label="动态速度" value={formatVelocity(marketHeat.velocity)} hint="基于 Insight 热度变化" />
+          <Metric label="活跃叙事" value={`${marketHeat.active_narrative_count}`} hint={marketHeat.leading_narrative?.name ?? "等待更多信号"} />
+          <Metric label="主要资产" value={toMajorMoveLabel(marketHeat.major_move)} hint="BTC / ETH 24h" />
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-start gap-3 text-xs text-[#5F6868]">
         <div className="space-y-1.5 rounded-2xl bg-[#F7F5EE] px-3 py-2">
           {fearGreedIndex ? (
@@ -49,6 +59,40 @@ export function MarketHeatBar({
       </div>
     </div>
   );
+}
+
+function Metric({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] text-[#8A918C]">{label}</p>
+      <p className="mt-1 truncate text-base font-semibold text-[#102A2C]">{value}</p>
+      <p className="mt-1 truncate text-[11px] text-[#5F6868]">{hint}</p>
+    </div>
+  );
+}
+
+function toHeatLabel(label: TrendingResponse["data"]["market_heat"]["label"]): string {
+  const map = {
+    heating_up: "升温中",
+    cooling: "降温中",
+    stable: "平稳"
+  } as const;
+  return map[label];
+}
+
+function formatVelocity(value: number): string {
+  if (value > 0) return `+${value}`;
+  return String(value);
+}
+
+function toMajorMoveLabel(value: TrendingResponse["data"]["market_heat"]["major_move"]): string {
+  const map = {
+    up: "同步走强",
+    down: "同步走弱",
+    mixed: "分化",
+    flat: "窄幅"
+  } as const;
+  return map[value];
 }
 
 function toChineseClassification(classification: string): string {

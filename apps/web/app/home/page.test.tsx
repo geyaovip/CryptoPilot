@@ -47,6 +47,15 @@ vi.mock("../lib/api", () => ({
   getTrending: async () => ({
     tokens: [],
     narratives: [{ id: "n1", name: "AI", slug: "ai" }],
+    market_heat: {
+      score: 68,
+      velocity: 8,
+      label: "stable",
+      active_narrative_count: 3,
+      leading_narrative: { id: "n1", name: "AI", slug: "ai" },
+      major_move: "mixed",
+      updated_at: new Date().toISOString()
+    },
     fear_greed_index: {
       value: 72,
       classification: "Greed",

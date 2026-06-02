@@ -6,6 +6,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { ingestSourceItems } from "./ingest-source.util";
 
 const MAX_CONSECUTIVE_SOURCE_FAILURES = 5;
+const MAX_INGESTION_RETRIES = 2;
 
 @Injectable()
 export class IngestionService {
@@ -57,9 +58,7 @@ export class IngestionService {
 
     const startedAt = new Date();
     try {
-      const result = await ingestSourceItems(this.prisma, source, 25, (feedItemId) => {
-        this.feedAiService.queueGeneration(feedItemId);
-      });
+      const { result, attempts } = await this.ingestWithRetries(source);
 
       await this.prisma.source.update({
         where: { id: source.id },
@@ -77,7 +76,8 @@ export class IngestionService {
           finishedAt: new Date(),
           status: "SUCCESS",
           itemsFound: result.items_found,
-          itemsCreated: result.items_created
+          itemsCreated: result.items_created,
+          errorMessage: attempts > 1 ? `前 ${attempts - 1} 次尝试失败，已在第 ${attempts} 次重试成功` : null
         }
       });
 
@@ -85,6 +85,7 @@ export class IngestionService {
     } catch (error) {
       const nextFailures = source.consecutiveFailures + 1;
       const errorMessage = error instanceof Error ? error.message : "采集失败";
+      const attempts = MAX_INGESTION_RETRIES + 1;
       await this.prisma.source.update({
         where: { id: source.id },
         data: {
@@ -93,8 +94,8 @@ export class IngestionService {
           status: nextFailures >= MAX_CONSECUTIVE_SOURCE_FAILURES ? "ERROR" : source.status,
           errorMessage:
             nextFailures >= MAX_CONSECUTIVE_SOURCE_FAILURES
-              ? `${errorMessage}（连续失败 ${nextFailures} 次，已自动标记为 error）`
-              : errorMessage
+              ? `${errorMessage}（已重试 ${MAX_INGESTION_RETRIES} 次；连续失败 ${nextFailures} 次，已自动标记为 error）`
+              : `${errorMessage}（已重试 ${MAX_INGESTION_RETRIES} 次）`
         }
       });
       await this.prisma.ingestionLog.create({
@@ -103,10 +104,26 @@ export class IngestionService {
           startedAt,
           finishedAt: new Date(),
           status: "FAILED",
-          errorMessage
+          errorMessage: `${errorMessage}（尝试 ${attempts} 次）`
         }
       });
       throw error;
     }
+  }
+
+  private async ingestWithRetries(source: NonNullable<Awaited<ReturnType<PrismaService["source"]["findUnique"]>>>) {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= MAX_INGESTION_RETRIES + 1; attempt += 1) {
+      try {
+        const result = await ingestSourceItems(this.prisma, source, 25, (feedItemId) => {
+          this.feedAiService.queueGeneration(feedItemId);
+        });
+        return { result, attempts: attempt };
+      } catch (error) {
+        lastError = error;
+        if (attempt > MAX_INGESTION_RETRIES) break;
+      }
+    }
+    throw lastError instanceof Error ? lastError : new Error("采集失败");
   }
 }

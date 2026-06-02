@@ -18,7 +18,20 @@ export async function CryptoPilotHomePage({
   const narrativeSlug = params.narrative?.trim() || undefined;
   let loadError: string | null = null;
   let feed: Awaited<ReturnType<typeof getFeed>> = { entity: "insight", items: [], next_cursor: null };
-  let trending: Awaited<ReturnType<typeof getTrending>> = { tokens: [], narratives: [], fear_greed_index: null };
+  let trending: Awaited<ReturnType<typeof getTrending>> = {
+    tokens: [],
+    narratives: [],
+    market_heat: {
+      score: 0,
+      velocity: 0,
+      label: "stable",
+      active_narrative_count: 0,
+      leading_narrative: null,
+      major_move: "flat",
+      updated_at: new Date().toISOString()
+    },
+    fear_greed_index: null
+  };
   try {
     [feed, trending] = await Promise.all([
       getFeed("for_you", undefined, narrativeSlug),
@@ -56,7 +69,7 @@ export async function CryptoPilotHomePage({
               </p>
             ) : null}
             <div className="mt-5">
-              <MarketHeatBar fearGreedIndex={trending.fear_greed_index} tokens={trending.tokens} />
+              <MarketHeatBar fearGreedIndex={trending.fear_greed_index} marketHeat={trending.market_heat} tokens={trending.tokens} />
             </div>
             <div className="mt-4 flex flex-wrap gap-2" data-testid="topic-chips">
               {trending.narratives.slice(0, 8).map((item) => {
