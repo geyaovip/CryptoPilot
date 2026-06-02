@@ -65,4 +65,43 @@ describe("FeedService", () => {
     expect(result.items).toHaveLength(1);
     expect(result.items[0].related_source_count).toBe(2);
   });
+
+  it("returns explainable market intelligence metrics for trending", async () => {
+    const prisma = {
+      token: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: "btc", symbol: "BTC", name: "Bitcoin", priceUsd: 100, priceChange24h: -3.5 },
+          { id: "eth", symbol: "ETH", name: "Ethereum", priceUsd: 50, priceChange24h: 1.2 },
+          { id: "sol", symbol: "SOL", name: "Solana", priceUsd: 10, priceChange24h: 5.1 }
+        ])
+      },
+      narrative: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: "n1", name: "AI", slug: "ai", heatScore: 80, trendScore24h: 12 },
+          { id: "n2", name: "Meme", slug: "meme", heatScore: 50, trendScore24h: -6 }
+        ])
+      },
+      marketInsight: {
+        aggregate: vi.fn().mockResolvedValue({ _avg: { heatScore: 66, heatVelocity: 21 }, _count: { id: 4 } }),
+        findFirst: vi.fn().mockResolvedValue({
+          primaryNarrative: { id: "n1", name: "AI", slug: "ai" }
+        }),
+        findMany: vi.fn().mockResolvedValue([
+          { sentiment: "BEARISH", heatVelocity: 21, sourcesJson: [{}, {}] },
+          { sentiment: "BEARISH", heatVelocity: 10, sourcesJson: [{}, {}] },
+          { sentiment: "BEARISH", heatVelocity: 8, sourcesJson: [{}, {}] }
+        ])
+      }
+    };
+    const service = new FeedService(prisma as never, {} as never, {} as never, { getIndex: vi.fn().mockResolvedValue(null) } as never);
+
+    const result = await service.trending();
+
+    expect(result.market_heat.breadth.advance_ratio).toBe(67);
+    expect(result.market_heat.narrative_rotation.heating[0].name).toBe("AI");
+    expect(result.market_heat.unusual_moves.map((item) => item.symbol)).toContain("SOL");
+    expect(result.market_heat.risk_signals.map((item) => item.code)).toEqual(
+      expect.arrayContaining(["major_drawdown", "bearish_insight", "high_velocity"])
+    );
+  });
 });

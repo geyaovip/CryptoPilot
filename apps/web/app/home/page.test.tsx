@@ -54,6 +54,19 @@ vi.mock("../lib/api", () => ({
       active_narrative_count: 3,
       leading_narrative: { id: "n1", name: "AI", slug: "ai" },
       major_move: "mixed",
+      breadth: {
+        advancing: 4,
+        declining: 3,
+        unchanged: 1,
+        total: 8,
+        advance_ratio: 50
+      },
+      narrative_rotation: {
+        heating: [{ id: "n1", name: "AI", slug: "ai", heat_score: 80, trend_score_24h: 12 }],
+        cooling: []
+      },
+      unusual_moves: [],
+      risk_signals: [],
       updated_at: new Date().toISOString()
     },
     fear_greed_index: {

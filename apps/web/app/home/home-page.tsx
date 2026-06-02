@@ -28,6 +28,19 @@ export async function CryptoPilotHomePage({
       active_narrative_count: 0,
       leading_narrative: null,
       major_move: "flat",
+      breadth: {
+        advancing: 0,
+        declining: 0,
+        unchanged: 0,
+        total: 0,
+        advance_ratio: 0
+      },
+      narrative_rotation: {
+        heating: [],
+        cooling: []
+      },
+      unusual_moves: [],
+      risk_signals: [],
       updated_at: new Date().toISOString()
     },
     fear_greed_index: null

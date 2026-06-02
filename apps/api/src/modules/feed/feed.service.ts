@@ -13,6 +13,14 @@ import {
 } from "./feed-cluster.util";
 import { toFeedDetail, toFeedSummary } from "./feed.mapper";
 import { FearGreedService } from "./fear-greed.service";
+import {
+  buildRiskSignals,
+  calculateMajorMove,
+  calculateMarketBreadth,
+  calculateNarrativeRotation,
+  calculateUnusualMoves,
+  toMarketHeatLabel
+} from "./market-intelligence.util";
 import { UserInterestService } from "./user-interest.service";
 
 @Injectable()
@@ -101,7 +109,7 @@ export class FeedService {
   }
 
   async trending() {
-    const [tokens, narratives, insightStats, leadingInsight, fearGreedIndex] = await Promise.all([
+    const [tokens, narratives, insightStats, leadingInsight, riskInsightStats, fearGreedIndex] = await Promise.all([
       this.prisma.token.findMany({
         where: { deletedAt: null },
         orderBy: [{ priceChange24h: "desc" }, { symbol: "asc" }],
@@ -122,9 +130,17 @@ export class FeedService {
         include: { primaryNarrative: true },
         orderBy: [{ heatVelocity: "desc" }, { heatScore: "desc" }, { updatedAt: "desc" }]
       }),
+      this.prisma.marketInsight.findMany({
+        where: { deletedAt: null, status: "PUBLISHED" },
+        select: { sentiment: true, heatVelocity: true, sourcesJson: true },
+        orderBy: [{ updatedAt: "desc" }],
+        take: 30
+      }),
       this.fearGreed.getIndex()
     ]);
     const majorMove = calculateMajorMove(tokens);
+    const marketBreadth = calculateMarketBreadth(tokens);
+    const rotation = calculateNarrativeRotation(narratives);
 
     return {
       tokens: tokens.map((token) => ({
@@ -152,6 +168,10 @@ export class FeedService {
             }
           : null,
         major_move: majorMove,
+        breadth: marketBreadth,
+        narrative_rotation: rotation,
+        unusual_moves: calculateUnusualMoves(tokens),
+        risk_signals: buildRiskSignals(tokens, insightStats._avg.heatVelocity ?? 0, riskInsightStats),
         updated_at: new Date().toISOString()
       },
       fear_greed_index: fearGreedIndex
@@ -183,20 +203,4 @@ export class FeedService {
       take: 3
     })) as ClusterFeedRow[];
   }
-}
-
-function toMarketHeatLabel(velocity: number): "heating_up" | "cooling" | "stable" {
-  if (velocity >= 12) return "heating_up";
-  if (velocity <= -8) return "cooling";
-  return "stable";
-}
-
-function calculateMajorMove(tokens: Array<{ symbol: string; priceChange24h: unknown }>): "up" | "down" | "mixed" | "flat" {
-  const majors = tokens
-    .filter((token) => token.symbol === "BTC" || token.symbol === "ETH")
-    .map((token) => Number(token.priceChange24h ?? 0));
-  if (majors.length === 0 || majors.every((move) => Math.abs(move) < 0.5)) return "flat";
-  if (majors.every((move) => move > 0)) return "up";
-  if (majors.every((move) => move < 0)) return "down";
-  return "mixed";
 }

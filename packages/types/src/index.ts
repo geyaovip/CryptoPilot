@@ -390,6 +390,24 @@ export type TrendingResponse = ApiSuccess<{
     active_narrative_count: number;
     leading_narrative: NarrativeSummary | null;
     major_move: "up" | "down" | "mixed" | "flat";
+    breadth: {
+      advancing: number;
+      declining: number;
+      unchanged: number;
+      total: number;
+      advance_ratio: number;
+    };
+    narrative_rotation: {
+      heating: Array<NarrativeSummary & { heat_score: number; trend_score_24h: number }>;
+      cooling: Array<NarrativeSummary & { heat_score: number; trend_score_24h: number }>;
+    };
+    unusual_moves: Array<TokenSummary & { move_abs: number }>;
+    risk_signals: Array<{
+      code: "bearish_insight" | "thin_sources" | "major_drawdown" | "high_velocity";
+      label: string;
+      level: "low" | "medium" | "high";
+      detail: string;
+    }>;
     updated_at: string;
   };
   fear_greed_index: {

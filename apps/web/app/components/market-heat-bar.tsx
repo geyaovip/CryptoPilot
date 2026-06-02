@@ -1,4 +1,5 @@
 import type { TokenSummary, TrendingResponse } from "@cryptopilot/types";
+import type { ReactNode } from "react";
 
 export function MarketHeatBar({
   tokens,
@@ -14,12 +15,7 @@ export function MarketHeatBar({
   return (
     <div className="space-y-3">
       {marketHeat ? (
-        <div className="grid gap-3 rounded-2xl border border-[#D9D5C9] bg-white/85 p-3 sm:grid-cols-4">
-          <Metric label="市场热度" value={`${marketHeat.score}`} hint={toHeatLabel(marketHeat.label)} />
-          <Metric label="动态速度" value={formatVelocity(marketHeat.velocity)} hint="基于 Insight 热度变化" />
-          <Metric label="活跃叙事" value={`${marketHeat.active_narrative_count}`} hint={marketHeat.leading_narrative?.name ?? "等待更多信号"} />
-          <Metric label="主要资产" value={toMajorMoveLabel(marketHeat.major_move)} hint="BTC / ETH 24h" />
-        </div>
+        <MarketIntelligencePanel marketHeat={marketHeat} />
       ) : null}
       <div className="flex flex-wrap items-start gap-3 text-xs text-[#5F6868]">
         <div className="space-y-1.5 rounded-2xl bg-[#F7F5EE] px-3 py-2">
@@ -61,6 +57,53 @@ export function MarketHeatBar({
   );
 }
 
+function MarketIntelligencePanel({ marketHeat }: { marketHeat: TrendingResponse["data"]["market_heat"] }) {
+  return (
+    <div className="rounded-2xl border border-[#D9D5C9] bg-white/85 p-3">
+      <div className="grid gap-3 sm:grid-cols-4">
+        <Metric label="市场热度" value={`${marketHeat.score}`} hint={toHeatLabel(marketHeat.label)} />
+        <Metric label="动态速度" value={formatVelocity(marketHeat.velocity)} hint="基于 Insight 热度变化" />
+        <Metric label="市场宽度" value={`${marketHeat.breadth.advance_ratio}%`} hint={`${marketHeat.breadth.advancing} 涨 / ${marketHeat.breadth.declining} 跌`} />
+        <Metric label="主要资产" value={toMajorMoveLabel(marketHeat.major_move)} hint="BTC / ETH 24h" />
+      </div>
+      <div className="mt-3 grid gap-3 border-t border-[#EDE8DA] pt-3 lg:grid-cols-3">
+        <SignalGroup title="叙事轮动" empty="暂无明显升温叙事">
+          {marketHeat.narrative_rotation.heating.slice(0, 2).map((item) => (
+            <span className="rounded-full bg-[#E8F4F6] px-2 py-1 text-[#20808D]" key={item.id}>
+              {item.name} +{item.trend_score_24h}
+            </span>
+          ))}
+        </SignalGroup>
+        <SignalGroup title="异动资产" empty="暂无明显异动">
+          {marketHeat.unusual_moves.slice(0, 2).map((item) => (
+            <span className="rounded-full bg-[#F7F5EE] px-2 py-1 text-[#5F6868]" key={item.id}>
+              {item.symbol} {item.price_change_24h && item.price_change_24h > 0 ? "+" : ""}
+              {item.price_change_24h?.toFixed(2) ?? "0.00"}%
+            </span>
+          ))}
+        </SignalGroup>
+        <SignalGroup title="风险提示" empty="暂无突出风险">
+          {marketHeat.risk_signals.slice(0, 2).map((item) => (
+            <span className={riskClass(item.level)} title={item.detail} key={item.code}>
+              {item.label}
+            </span>
+          ))}
+        </SignalGroup>
+      </div>
+    </div>
+  );
+}
+
+function SignalGroup({ title, empty, children }: { title: string; empty: string; children: ReactNode }) {
+  const items = Array.isArray(children) ? children.filter(Boolean) : children ? [children] : [];
+  return (
+    <div>
+      <p className="text-[11px] font-medium text-[#8A918C]">{title}</p>
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">{items.length ? items : <span className="text-[#8A918C]">{empty}</span>}</div>
+    </div>
+  );
+}
+
 function Metric({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
     <div className="min-w-0">
@@ -93,6 +136,13 @@ function toMajorMoveLabel(value: TrendingResponse["data"]["market_heat"]["major_
     flat: "窄幅"
   } as const;
   return map[value];
+}
+
+function riskClass(level: TrendingResponse["data"]["market_heat"]["risk_signals"][number]["level"]): string {
+  const base = "rounded-full px-2 py-1";
+  if (level === "high") return `${base} bg-red-50 text-red-700`;
+  if (level === "medium") return `${base} bg-amber-50 text-amber-700`;
+  return `${base} bg-[#F7F5EE] text-[#5F6868]`;
 }
 
 function toChineseClassification(classification: string): string {
