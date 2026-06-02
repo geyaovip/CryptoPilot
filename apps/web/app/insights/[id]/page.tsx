@@ -6,7 +6,7 @@ import { FeedTypeBadge } from "../../components/feed-type-badge";
 import { InsightCardActions } from "../../components/insight-card-actions";
 import { JsonLd } from "../../components/json-ld";
 import { getInsightDetail } from "../../lib/api";
-import { articleJsonLd, publicPageMetadata, seoTitle } from "../../lib/seo";
+import { articleJsonLd, breadcrumbJsonLd, publicPageMetadata, seoTitle } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -66,12 +66,18 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
   return (
     <main className="min-h-screen bg-[#FCFCF9] px-4 py-6 text-[#102A2C]">
       <JsonLd
-        data={articleJsonLd({
-          headline: insight.ai_insight,
-          description: insight.ai_summary,
-          path: `/insights/${insight.id}`,
-          datePublished: insight.sources[0]?.published_at
-        })}
+        data={[
+          articleJsonLd({
+            headline: insight.ai_insight,
+            description: insight.ai_summary,
+            path: `/insights/${insight.id}`,
+            datePublished: insight.sources[0]?.published_at
+          }),
+          breadcrumbJsonLd([
+            { name: "首页", path: "/" },
+            { name: "AI 市场解读", path: `/insights/${insight.id}` }
+          ])
+        ]}
       />
       <article className="mx-auto max-w-4xl space-y-5">
         <a className="text-sm font-medium text-[#20808D]" href="/">

@@ -13,6 +13,7 @@ export default function DisclaimerPage() {
       eyebrow="Disclaimer"
       title="免责声明"
       description="CryptoPilot 提供的信息用于市场研究和信息整理，不应被视为投资建议或交易指令。"
+      path="/disclaimer"
       sections={[
         {
           title: "非投资建议",

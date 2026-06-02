@@ -6,7 +6,7 @@ import { FeedTypeBadge } from "../../components/feed-type-badge";
 import { JsonLd } from "../../components/json-ld";
 import { RelatedSourcesList } from "../../components/related-sources-list";
 import { getFeedDetail } from "../../lib/api";
-import { articleJsonLd, publicPageMetadata, seoTitle } from "../../lib/seo";
+import { articleJsonLd, breadcrumbJsonLd, publicPageMetadata, seoTitle } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -45,13 +45,19 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
   return (
     <main className="min-h-screen bg-[#FCFCF9] px-4 py-6 text-[#102A2C]">
       <JsonLd
-        data={articleJsonLd({
-          headline: hook,
-          description: summary,
-          path: `/feed/${feed.id}`,
-          datePublished: feed.publish_time,
-          authorName: feed.source_name
-        })}
+        data={[
+          articleJsonLd({
+            headline: hook,
+            description: summary,
+            path: `/feed/${feed.id}`,
+            datePublished: feed.publish_time,
+            authorName: feed.source_name
+          }),
+          breadcrumbJsonLd([
+            { name: "首页", path: "/" },
+            { name: "市场动态", path: `/feed/${feed.id}` }
+          ])
+        ]}
       />
       <article className="mx-auto max-w-4xl space-y-5">
         <a className="text-sm font-medium text-[#20808D]" href="/">

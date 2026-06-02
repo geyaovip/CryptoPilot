@@ -3,9 +3,10 @@ import Link from "next/link";
 import { Card, EmptyState } from "@cryptopilot/ui";
 import { FeedCard } from "../../components/feed-card";
 import { FollowButton } from "../../components/follow-button";
+import { JsonLd } from "../../components/json-ld";
 import { WebShell } from "../../_components/web-shell";
 import { getNarrativeDetail } from "../../lib/api";
-import { publicPageMetadata } from "../../lib/seo";
+import { breadcrumbJsonLd, pageJsonLd, publicPageMetadata } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,20 @@ export default async function NarrativeDetailPage({ params }: { params: Promise<
 
   return (
     <WebShell>
+      <JsonLd
+        data={[
+          pageJsonLd({
+            name: `${narrative.name} 叙事`,
+            description: narrative.ai_summary ?? narrative.description ?? `跟踪 ${narrative.name} 在加密市场中的热度、相关资产、来源和最新动态。`,
+            path: `/narratives/${narrative.slug}`
+          }),
+          breadcrumbJsonLd([
+            { name: "首页", path: "/" },
+            { name: "市场叙事", path: "/narratives" },
+            { name: narrative.name, path: `/narratives/${narrative.slug}` }
+          ])
+        ]}
+      />
       <div className="space-y-5">
         <Card className="border-[#D9D5C9] bg-white/90 p-6">
           <Link className="text-sm text-[#5F6868] hover:underline" href="/narratives">

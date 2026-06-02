@@ -13,6 +13,7 @@ export default function MethodologyPage() {
       eyebrow="Methodology"
       title="CryptoPilot 方法论"
       description="CryptoPilot 的目标不是预测价格，而是把公开市场信息整理成更容易核验和继续研究的情报视图。"
+      path="/methodology"
       sections={[
         {
           title: "来源聚合",

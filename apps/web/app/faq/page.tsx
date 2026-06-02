@@ -35,6 +35,7 @@ export default function FaqPage() {
         eyebrow="FAQ"
         title="CryptoPilot 常见问题"
         description="这里整理 CryptoPilot 的常见问题，帮助用户和搜索引擎快速理解产品用途与边界。"
+        path="/faq"
         sections={faqItems}
       />
     </>

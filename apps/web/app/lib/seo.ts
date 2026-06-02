@@ -58,6 +58,7 @@ export function publicPageMetadata(input: {
     alternates: { canonical: input.path },
     icons: {
       icon: [
+        { url: "/icon.png", sizes: "64x64", type: "image/png" },
         { url: "/favicon.svg", sizes: "64x64", type: "image/svg+xml" },
         { url: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
         { url: "/icon.svg", sizes: "64x64", type: "image/svg+xml" }
