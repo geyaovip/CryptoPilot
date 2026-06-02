@@ -20,7 +20,12 @@ type SourceListData = {
 
 export function AdminSourcesPanel({ data }: { data: SourceListData }) {
   const router = useRouter();
-  const items = data.items;
+  const [platformFilter, setPlatformFilter] = useState("all");
+  const platforms = Array.from(new Set(data.items.map((source) => source.platform))).sort(platformSort);
+  const items =
+    platformFilter === "all"
+      ? data.items
+      : data.items.filter((source) => source.platform === platformFilter);
   const [logs, setLogs] = useState<IngestionLogSummary[]>([]);
   const [activeSource, setActiveSource] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -63,64 +68,95 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
         {message ? <p className="mt-2 text-sm text-[#20808D]">{message}</p> : null}
       </AdminPageHeader>
 
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-slate-700">平台分类</span>
+          <button
+            className={`rounded-full px-3 py-1.5 text-sm ${platformFilter === "all" ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-600"}`}
+            onClick={() => setPlatformFilter("all")}
+            type="button"
+          >
+            全部 {data.items.length}
+          </button>
+          {platforms.map((platform) => (
+            <button
+              className={`rounded-full px-3 py-1.5 text-sm ${platformFilter === platform ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-600"}`}
+              key={platform}
+              onClick={() => setPlatformFilter(platform)}
+              type="button"
+            >
+              {platformLabel(platform)} {data.items.filter((source) => source.platform === platform).length}
+            </button>
+          ))}
+        </div>
+      </Card>
+
       <Card className="overflow-hidden p-0">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500">
-            <tr>
-              {["名称", "语言", "类型", "状态", "失败次数", "错误信息", "最近成功", "最近错误", "间隔(秒)", "操作"].map((column) => (
-                <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((source) => (
-              <tr className="border-b border-slate-100" key={source.id}>
-                <td className="px-4 py-3 text-slate-700">{source.name}</td>
-                <td className="px-4 py-3 text-slate-700">
-                  {source.content_locale === "zh" ? "中文" : "英文"}
-                </td>
-                <td className="px-4 py-3 text-slate-700">{source.type}</td>
-                <td className="px-4 py-3 text-slate-700">{source.status}</td>
-                <td className="px-4 py-3 text-slate-700">{source.consecutive_failures}</td>
-                <td className="max-w-[260px] px-4 py-3 text-slate-700">
-                  <span className="line-clamp-2">{source.error_message ?? "-"}</span>
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {source.last_success_at ? new Date(source.last_success_at).toLocaleString("zh-CN") : "-"}
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {source.last_error_at ? new Date(source.last_error_at).toLocaleString("zh-CN") : "-"}
-                </td>
-                <td className="px-4 py-3 text-slate-700">{source.fetch_interval_seconds}</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      className="text-[#20808D]"
-                      disabled={pending}
-                      onClick={() =>
-                        run(
-                          () => updateAdminSource(source.id, source.status === "active" ? "paused" : "active"),
-                          "数据源状态已更新"
-                        )
-                      }
-                      type="button"
-                    >
-                      {source.status === "active" ? "暂停" : "启用"}
-                    </button>
-                    <button className="text-slate-700" disabled={pending} onClick={() => run(() => retryAdminSource(source.id), "已触发手动重试")} type="button">
-                      重试
-                    </button>
-                    <button className="text-slate-700" disabled={pending} onClick={() => loadLogs(source.id, source.name)} type="button">
-                      日志
-                    </button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-[1180px] w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500">
+              <tr>
+                {["名称", "平台", "语言", "类型", "状态", "失败次数", "错误信息", "最近成功", "最近错误", "间隔(秒)", "操作"].map((column) => (
+                  <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
+                    {column}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((source) => (
+                <tr className="border-b border-slate-100" key={source.id}>
+                  <td className="px-4 py-3 text-slate-700">
+                    <p className="font-medium text-slate-950">{source.name}</p>
+                    {source.url ? (
+                      <a className="mt-1 block max-w-[260px] truncate text-xs text-[#20808D] hover:underline" href={source.url} rel="noopener noreferrer" target="_blank">
+                        {source.url}
+                      </a>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="whitespace-nowrap rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                      {platformLabel(source.platform)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">{source.content_locale === "zh" ? "中文" : "英文"}</td>
+                  <td className="px-4 py-3 text-slate-700">{source.type}</td>
+                  <td className="px-4 py-3 text-slate-700">{source.status}</td>
+                  <td className="px-4 py-3 text-slate-700">{source.consecutive_failures}</td>
+                  <td className="max-w-[260px] px-4 py-3 text-slate-700">
+                    <span className="line-clamp-2">{source.error_message ?? "-"}</span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">{source.last_success_at ? new Date(source.last_success_at).toLocaleString("zh-CN") : "-"}</td>
+                  <td className="px-4 py-3 text-slate-700">{source.last_error_at ? new Date(source.last_error_at).toLocaleString("zh-CN") : "-"}</td>
+                  <td className="px-4 py-3 text-slate-700">{source.fetch_interval_seconds}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        className="text-[#20808D]"
+                        disabled={pending}
+                        onClick={() =>
+                          run(
+                            () => updateAdminSource(source.id, source.status === "active" ? "paused" : "active"),
+                            "数据源状态已更新"
+                          )
+                        }
+                        type="button"
+                      >
+                        {source.status === "active" ? "暂停" : "启用"}
+                      </button>
+                      <button className="text-slate-700" disabled={pending} onClick={() => run(() => retryAdminSource(source.id), "已触发手动重试")} type="button">
+                        重试
+                      </button>
+                      <button className="text-slate-700" disabled={pending} onClick={() => loadLogs(source.id, source.name)} type="button">
+                        日志
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <AdminPagination
@@ -162,4 +198,26 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
       ) : null}
     </div>
   );
+}
+
+function platformSort(a: string, b: string) {
+  const order = ["zh_media", "web3_media", "medium", "substack", "mirror", "paragraph", "project_blog", "governance_forum", "reddit", "manual", "other"];
+  return (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b));
+}
+
+function platformLabel(platform: string) {
+  const map: Record<string, string> = {
+    medium: "Medium",
+    substack: "Substack",
+    mirror: "Mirror",
+    paragraph: "Paragraph",
+    reddit: "Reddit",
+    zh_media: "中文媒体",
+    web3_media: "Web3 媒体",
+    project_blog: "项目博客",
+    governance_forum: "治理论坛",
+    manual: "手动录入",
+    other: "其他"
+  };
+  return map[platform] ?? platform;
 }

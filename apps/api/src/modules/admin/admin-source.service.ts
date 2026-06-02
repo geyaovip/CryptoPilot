@@ -31,6 +31,8 @@ export class AdminSourceService {
       items: sources.map((source) => ({
         id: source.id,
         name: source.name,
+        url: source.url,
+        platform: inferSourcePlatform(source.name, source.url, source.type.toLowerCase()),
         type: source.type.toLowerCase(),
         status: source.status.toLowerCase(),
         content_locale: source.contentLocale.toLowerCase() as "zh" | "en",
@@ -104,4 +106,25 @@ export class AdminSourceService {
     return source;
   }
 
+}
+
+function inferSourcePlatform(name: string, url: string | null, type: string): string {
+  const text = `${name} ${url ?? ""}`.toLowerCase();
+  if (type === "reddit" || text.includes("reddit.com")) return "reddit";
+  if (text.includes("medium.com")) return "medium";
+  if (text.includes("substack.com")) return "substack";
+  if (text.includes("mirror.xyz")) return "mirror";
+  if (text.includes("paragraph.")) return "paragraph";
+  if (text.includes("blockbeats") || text.includes("panewslab") || text.includes("cointelegraph-cn")) {
+    return "zh_media";
+  }
+  if (text.includes("coindesk") || text.includes("cointelegraph") || text.includes("decrypt") || text.includes("theblock.co")) {
+    return "web3_media";
+  }
+  if (text.includes("governance") || text.includes("forum")) return "governance_forum";
+  if (text.includes("blog.") || text.includes("ethereum.org") || text.includes("vitalik") || text.includes("lido")) {
+    return "project_blog";
+  }
+  if (type === "manual") return "manual";
+  return "other";
 }

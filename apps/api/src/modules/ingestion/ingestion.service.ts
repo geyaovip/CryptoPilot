@@ -4,6 +4,7 @@ import { Cron } from "@nestjs/schedule";
 import { FeedAiService } from "../ai/feed-ai.service";
 import { BackgroundJobsService } from "../common/background-jobs.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { CoinGeckoPriceService } from "./coingecko-price.service";
 import { fetchRedditItemsForSource, ingestSourceItems } from "./ingest-source.util";
 
 const MAX_CONSECUTIVE_SOURCE_FAILURES = 5;
@@ -15,7 +16,8 @@ export class IngestionService {
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(FeedAiService) private readonly feedAiService: FeedAiService,
     @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService,
-    @Inject(ConfigService) private readonly config: ConfigService
+    @Inject(ConfigService) private readonly config: ConfigService,
+    @Inject(CoinGeckoPriceService) private readonly coinGecko: CoinGeckoPriceService
   ) {}
 
   @Cron("*/5 * * * *")
@@ -44,18 +46,15 @@ export class IngestionService {
 
   @Cron("* * * * *")
   async syncCoinGeckoPrices(): Promise<void> {
-    if (!this.jobs.enabled) return;
+    if (!this.jobs.marketEnabled) return;
     const tokens = await this.prisma.token.findMany({
       where: { coingeckoId: { not: null }, deletedAt: null }
     });
     if (tokens.length === 0) return;
 
-    const ids = tokens.map((token) => token.coingeckoId).filter(Boolean).join(",");
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
-    const response = await fetch(url);
-    if (!response.ok) return;
-
-    const data = (await response.json()) as Record<string, { usd?: number; usd_24h_change?: number }>;
+    const data = await this.coinGecko.fetchPrices(
+      tokens.flatMap((token) => (token.coingeckoId ? [token.coingeckoId] : []))
+    );
     for (const token of tokens) {
       const market = token.coingeckoId ? data[token.coingeckoId] : undefined;
       if (!market) continue;

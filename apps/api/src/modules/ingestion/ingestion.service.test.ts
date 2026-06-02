@@ -27,9 +27,11 @@ function createService() {
   const feedAi = { queueGeneration: vi.fn() };
   const jobs = { enabled: true };
   const config = { get: vi.fn() };
+  const coinGecko = { fetchPrices: vi.fn() };
   return {
-    service: new IngestionService(prisma as never, feedAi as never, jobs as never, config as never),
-    prisma
+    service: new IngestionService(prisma as never, feedAi as never, jobs as never, config as never, coinGecko as never),
+    prisma,
+    coinGecko
   };
 }
 
@@ -106,7 +108,8 @@ describe("IngestionService", () => {
     const feedAi = { queueGeneration: vi.fn() };
     const jobs = { enabled: true };
     const config = { get: vi.fn((key: string) => (key === "REDDIT_CLIENT_ID" ? "id" : "secret")) };
-    const service = new IngestionService(prisma as never, feedAi as never, jobs as never, config as never);
+    const coinGecko = { fetchPrices: vi.fn() };
+    const service = new IngestionService(prisma as never, feedAi as never, jobs as never, config as never, coinGecko as never);
 
     await expect(service.ingestSource(source.id)).resolves.toEqual({ items_found: 1, items_created: 1 });
 
@@ -122,5 +125,15 @@ describe("IngestionService", () => {
       expect.any(Function),
       expect.arrayContaining([expect.objectContaining({ title: "Bitcoin ETF discussion heats up" })])
     );
+  });
+
+  it("skips CoinGecko sync when market jobs are disabled", async () => {
+    const { service, prisma, coinGecko } = createService();
+    (service as unknown as { jobs: { marketEnabled: boolean } }).jobs = { marketEnabled: false };
+
+    await service.syncCoinGeckoPrices();
+
+    expect(prisma.source.findUnique).not.toHaveBeenCalled();
+    expect(coinGecko.fetchPrices).not.toHaveBeenCalled();
   });
 });

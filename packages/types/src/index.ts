@@ -425,6 +425,8 @@ export type ContentLocale = "zh" | "en";
 export type SourceSummary = {
   id: string;
   name: string;
+  url: string | null;
+  platform: string;
   type: SourceType;
   status: SourceStatus;
   content_locale: ContentLocale;

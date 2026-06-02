@@ -8,4 +8,8 @@ export class BackgroundJobsService {
   get enabled(): boolean {
     return this.config.get<string>("ENABLE_BACKGROUND_JOBS") === "true";
   }
+
+  get marketEnabled(): boolean {
+    return this.enabled || this.config.get<string>("ENABLE_MARKET_JOBS") === "true";
+  }
 }

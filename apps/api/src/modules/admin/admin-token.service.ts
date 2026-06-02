@@ -1,5 +1,6 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { AuditService } from "../common/audit.service";
+import { CoinGeckoPriceService } from "../ingestion/coingecko-price.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { AdminPaginationDto, normalizeAdminPagination, pageMeta } from "./dto/admin-pagination.dto";
 import { UpdateAdminTokenDto } from "./dto/admin-token.dto";
@@ -8,7 +9,8 @@ import { UpdateAdminTokenDto } from "./dto/admin-token.dto";
 export class AdminTokenService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(AuditService) private readonly audit: AuditService
+    @Inject(AuditService) private readonly audit: AuditService,
+    @Inject(CoinGeckoPriceService) private readonly coinGecko: CoinGeckoPriceService
   ) {}
 
   async list(query: AdminPaginationDto = {}) {
@@ -63,14 +65,13 @@ export class AdminTokenService {
 
   async refresh(id: string, adminUserId: string) {
     const token = await this.findOrThrow(id);
-    const jitter = (Math.random() - 0.5) * 2;
-    const nextChange =
-      token.priceChange24h === null ? jitter : Number(token.priceChange24h) + jitter * 0.2;
-    const nextPrice =
-      token.priceUsd === null ? null : Number(token.priceUsd) * (1 + nextChange / 100);
+    if (!token.coingeckoId) throw new NotFoundException("Token 未配置 CoinGecko ID");
+    const prices = await this.coinGecko.fetchPrices([token.coingeckoId]);
+    const market = prices[token.coingeckoId];
+    if (!market || typeof market.usd !== "number") throw new NotFoundException("CoinGecko 未返回该 Token 价格");
     await this.prisma.token.update({
       where: { id },
-      data: { priceChange24h: nextChange, priceUsd: nextPrice }
+      data: { priceChange24h: market.usd_24h_change, priceUsd: market.usd }
     });
     await this.audit.log({
       adminUserId,

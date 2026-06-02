@@ -2,6 +2,7 @@
 
 import { Button, Card } from "@cryptopilot/ui";
 import { useState } from "react";
+import { ModalCloseButton } from "./modal-close-button";
 
 type AdminFeedCreateDialogProps = {
   open: boolean;
@@ -33,9 +34,7 @@ export function AdminFeedCreateDialog({ open, pending, onClose, onCreate }: Admi
             <h2 className="text-base font-semibold text-slate-950">创建原始内容</h2>
             <p className="mt-1 text-sm text-slate-500">用于手动录入重要来源，提交后会进入原始内容列表并排队生成 AI 摘要。</p>
           </div>
-          <button aria-label="关闭" className="rounded-full px-2 text-xl leading-none text-slate-400 hover:text-slate-700" disabled={pending} onClick={resetAndClose} type="button">
-            ×
-          </button>
+          <ModalCloseButton disabled={pending} onClick={resetAndClose} />
         </div>
         <form
           className="space-y-3"

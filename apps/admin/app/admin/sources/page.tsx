@@ -17,7 +17,7 @@ export default async function AdminSourcesPage({
 }) {
   await requireAdminSession();
   const params = await searchParams;
-  const sources = await getAdminSources({ page: pickParam(params.page), limit: pickParam(params.limit) ?? "25" });
+  const sources = await getAdminSources({ page: pickParam(params.page), limit: pickParam(params.limit) ?? "100" });
 
   return (
     <AdminShell>
