@@ -84,9 +84,6 @@ export async function CryptoPilotHomePage({
                 </Link>
               </p>
             ) : null}
-            <div className="mt-5">
-              <MarketHeatBar fearGreedIndex={trending.fear_greed_index} marketHeat={trending.market_heat} tokens={trending.tokens} />
-            </div>
             <div className="mt-4 flex flex-wrap gap-2" data-testid="topic-chips">
               {trending.narratives.slice(0, 8).map((item) => {
                 const active = narrativeSlug === item.slug;
@@ -114,16 +111,11 @@ export async function CryptoPilotHomePage({
           />
         </section>
         <aside className="hidden space-y-4 lg:block">
-          <Card className="border-[#D9D5C9] bg-[#F7F5EE]">
-            <h2 className="text-sm font-semibold text-[#102A2C]">市场快照</h2>
-            <p className="mt-2 text-sm leading-6 text-[#5F6868]">重点资产的 24h 表现，用于快速感知市场温度。</p>
-            <div className="mt-4 space-y-2">
-              {trending.tokens.slice(0, 5).map((item) => (
-                <div className="rounded-xl bg-white px-3 py-2 text-sm text-[#5F6868]" key={item.id}>
-                  <span className="font-medium text-[#102A2C]">{item.symbol}</span>
-                  <span className="ml-2">{item.price_change_24h?.toFixed(2) ?? "0.00"}%</span>
-                </div>
-              ))}
+          <Card className="sticky top-6 border-[#D9D5C9] bg-[#F7F5EE]">
+            <h2 className="text-sm font-semibold text-[#102A2C]">市场雷达</h2>
+            <p className="mt-2 text-xs leading-5 text-[#5F6868]">快速查看市场热度、情绪和重点资产变化。</p>
+            <div className="mt-4">
+              <MarketHeatBar compact fearGreedIndex={trending.fear_greed_index} marketHeat={trending.market_heat} tokens={trending.tokens} />
             </div>
           </Card>
         </aside>

@@ -4,18 +4,20 @@ import type { ReactNode } from "react";
 export function MarketHeatBar({
   tokens,
   fearGreedIndex,
-  marketHeat
+  marketHeat,
+  compact = false
 }: {
   tokens: TokenSummary[];
   fearGreedIndex: TrendingResponse["data"]["fear_greed_index"];
   marketHeat?: TrendingResponse["data"]["market_heat"];
+  compact?: boolean;
 }) {
   const majors = tokens.filter((token) => token.symbol === "BTC" || token.symbol === "ETH");
 
   return (
     <div className="space-y-3">
       {marketHeat ? (
-        <MarketIntelligencePanel marketHeat={marketHeat} />
+        <MarketIntelligencePanel compact={compact} marketHeat={marketHeat} />
       ) : null}
       <div className="flex flex-wrap items-start gap-3 text-xs text-[#5F6868]">
         <div className="space-y-1.5 rounded-2xl bg-[#F7F5EE] px-3 py-2">
@@ -38,7 +40,7 @@ export function MarketHeatBar({
           ) : null}
         </div>
       </div>
-      <div className="grid gap-3 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-3 sm:grid-cols-2">
+      <div className={compact ? "space-y-2 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-3" : "grid gap-3 rounded-2xl border border-[#D9D5C9] bg-[#FCFCF9] p-3 sm:grid-cols-2"}>
         {majors.length > 0 ? (
           majors.map((token) => (
             <div className="text-sm text-[#5F6868]" key={token.id}>
@@ -57,16 +59,22 @@ export function MarketHeatBar({
   );
 }
 
-function MarketIntelligencePanel({ marketHeat }: { marketHeat: TrendingResponse["data"]["market_heat"] }) {
+function MarketIntelligencePanel({
+  compact,
+  marketHeat
+}: {
+  compact: boolean;
+  marketHeat: TrendingResponse["data"]["market_heat"];
+}) {
   return (
     <div className="rounded-2xl border border-[#D9D5C9] bg-white/85 p-3">
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className={compact ? "grid grid-cols-2 gap-3" : "grid gap-3 sm:grid-cols-4"}>
         <Metric label="市场热度" value={`${marketHeat.score}`} hint={toHeatLabel(marketHeat.label)} />
         <Metric label="动态速度" value={formatVelocity(marketHeat.velocity)} hint="基于 Insight 热度变化" />
         <Metric label="市场宽度" value={`${marketHeat.breadth.advance_ratio}%`} hint={`${marketHeat.breadth.advancing} 涨 / ${marketHeat.breadth.declining} 跌`} />
         <Metric label="主要资产" value={toMajorMoveLabel(marketHeat.major_move)} hint="BTC / ETH 24h" />
       </div>
-      <div className="mt-3 grid gap-3 border-t border-[#EDE8DA] pt-3 lg:grid-cols-3">
+      <div className={compact ? "mt-3 space-y-3 border-t border-[#EDE8DA] pt-3" : "mt-3 grid gap-3 border-t border-[#EDE8DA] pt-3 lg:grid-cols-3"}>
         <SignalGroup title="叙事轮动" empty="暂无明显升温叙事">
           {marketHeat.narrative_rotation.heating.slice(0, 2).map((item) => (
             <span className="rounded-full bg-[#E8F4F6] px-2 py-1 text-[#20808D]" key={item.id}>
