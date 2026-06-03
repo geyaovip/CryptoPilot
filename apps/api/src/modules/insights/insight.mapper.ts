@@ -2,6 +2,7 @@ import type { InsightSourceRef, MarketInsightDetail, MarketInsightSummary } from
 import type { FeedType } from "@cryptopilot/types";
 import { toFeedSummary } from "../feed/feed.mapper";
 import { toApiFeedType } from "../feed/feed-narrative.util";
+import { pickChineseDisplayText, isChineseContent } from "../ingestion/chinese-content.util";
 
 type InsightRecord = {
   id: string;
@@ -58,7 +59,7 @@ export function toInsightSummary(insight: InsightRecord): MarketInsightSummary {
 
   return {
     id: insight.id,
-    ai_insight: insight.aiInsight,
+    ai_insight: displayInsightTitle(insight),
     ai_summary: normalizeInsightSummary(insight, sources),
     type: feedType,
     feed_type: feedType,
@@ -121,6 +122,17 @@ function parseStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === "string");
 }
 
+function displayInsightTitle(insight: InsightRecord): string {
+  const title = insight.aiInsight?.replace(/\s+/g, " ").trim();
+  if (!title) return "市场雷达更新中…";
+  if (isChineseContent(title)) return title;
+  // English insight in DB — extract Chinese from signal titles
+  const signals = insight.signals ?? [];
+  const fallback = pickChineseDisplayText(signals.map((s) => s.title));
+  if (fallback) return `洞察: ${fallback.slice(0, 80)}`;
+  return title;
+}
+
 function collectTokens(signals: SignalFeed[]) {
   const seen = new Set<string>();
   const tokens: MarketInsightSummary["related_tokens"] = [];
@@ -165,21 +177,32 @@ function collectNarratives(
 function normalizeInsightSummary(insight: InsightRecord, sources: InsightSourceRef[]): string {
   const summary = insight.aiSummary.replace(/\s+/g, " ").trim();
   const signals = insight.signals ?? [];
-  if (signals.length < 2) return summary;
+
+  if (signals.length < 2) {
+    // Single signal — just ensure Chinese
+    if (isChineseContent(summary)) return summary;
+    const fallback = pickChineseDisplayText(signals.map((s) => s.title));
+    return fallback ? `来源: ${fallback.slice(0, 160)}` : summary;
+  }
 
   const signalSummaries = signals
     .map((signal) => signal.aiSummary?.replace(/\s+/g, " ").trim())
     .filter((value): value is string => Boolean(value));
   const matchedSignalCount = signalSummaries.filter((value) => includesMeaningfulSlice(summary, value)).length;
   const shouldRewrite = matchedSignalCount >= 2 || looksLikeSourceDigest(summary, sources);
-  if (!shouldRewrite) return summary;
+  if (shouldRewrite) {
+    const topic = insight.primaryNarrative?.name ?? collectNarratives(signals, insight.primaryNarrative)[0]?.name ?? "市场";
+    const sourceNames = [...new Set(sources.map((source) => source.source_name).filter(Boolean))].slice(0, 3).join("、");
+    const firstTitle = compactText(sources[0]?.title || signals[0]?.title || "多来源市场信号", 44);
+    const secondTitle = sources[1]?.title || signals[1]?.title;
+    const secondClause = secondTitle ? `，并由「${compactText(secondTitle, 38)}」提供交叉背景` : "";
+    return `${sources.length || signals.length} 个来源${sourceNames ? `（${sourceNames}）` : ""}正在共同指向 ${topic} 相关动态：「${firstTitle}」${secondClause}。该总结用于快速理解多来源信号，不构成投资建议。`;
+  }
 
-  const topic = insight.primaryNarrative?.name ?? collectNarratives(signals, insight.primaryNarrative)[0]?.name ?? "市场";
-  const sourceNames = [...new Set(sources.map((source) => source.source_name).filter(Boolean))].slice(0, 3).join("、");
-  const firstTitle = compactText(sources[0]?.title || signals[0]?.title || "多来源市场信号", 44);
-  const secondTitle = sources[1]?.title || signals[1]?.title;
-  const secondClause = secondTitle ? `，并由「${compactText(secondTitle, 38)}」提供交叉背景` : "";
-  return `${sources.length || signals.length} 个来源${sourceNames ? `（${sourceNames}）` : ""}正在共同指向 ${topic} 相关动态：「${firstTitle}」${secondClause}。该总结用于快速理解多来源信号，不构成投资建议。`;
+  // No rewrite needed, but ensure Chinese
+  if (isChineseContent(summary)) return summary;
+  const fallback = pickChineseDisplayText(signals.map((s) => s.title));
+  return fallback ? `来源: ${fallback.slice(0, 160)}` : summary;
 }
 
 function compactText(value: string, maxLength: number): string {

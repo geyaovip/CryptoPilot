@@ -61,7 +61,9 @@ export function FeedCard({ feed }: { feed: FeedItemSummary }) {
               <a className="text-[#20808D] hover:underline" href={source.source_url} rel="noopener noreferrer" target="_blank">
                 {source.source_name}
               </a>
-              <span className="line-clamp-1 min-w-0 flex-1 text-[#8A918C]"> · {source.title}</span>
+              {source.title && /[\u4e00-\u9fff]/.test(source.title) ? (
+                <span className="line-clamp-1 min-w-0 flex-1 text-[#8A918C]"> · {source.title}</span>
+              ) : null}
             </li>
           ))}
         </ul>
