@@ -326,6 +326,15 @@ export class AdminController {
     return ok(await this.adminInsightService.resynthesize(id, req.user.id));
   }
 
+  @Patch("insights/:id")
+  async updateInsightTitle(
+    @Req() req: { user: { id: string } },
+    @Param("id") id: string,
+    @Body("aiInsight") aiInsight: string
+  ) {
+    return ok(await this.adminInsightService.updateTitle(id, aiInsight, req.user.id));
+  }
+
   @Patch("config")
   async patchConfig(@Req() req: { user: { id: string } }, @Body() dto: PatchAdminConfigDto) {
     const before = this.systemConfig.snapshot;

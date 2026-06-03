@@ -1,11 +1,64 @@
 "use client";
 
 import type { MarketInsightDetail, MarketInsightSummary } from "@cryptopilot/types";
-import { Button, Card } from "@cryptopilot/ui";
+import { Card } from "@cryptopilot/ui";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { getAdminInsightDetail, resynthesizeAdminInsight } from "../../lib/api";
+import { getAdminInsightDetail, resynthesizeAdminInsight, updateAdminInsightTitle } from "../../lib/api";
 import { AdminPagination } from "./admin-pagination";
+
+function EditableTitle({ id, value, onSaved }: { id: string; value: string; onSaved: (text: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(value);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    const trimmed = text.trim();
+    if (!trimmed || trimmed === value) {
+      setText(value);
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateAdminInsightTitle(id, trimmed);
+      onSaved(trimmed);
+      setEditing(false);
+    } catch {
+      setText(value);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-950 focus:border-[#20808D] focus:outline-none focus:ring-1 focus:ring-[#20808D]/30"
+        disabled={saving}
+        onBlur={save}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") { setText(value); setEditing(false); }
+        }}
+        value={text}
+      />
+    );
+  }
+
+  return (
+    <button
+      className="w-full cursor-text text-left font-medium leading-6 text-slate-950 hover:text-[#20808D]"
+      onClick={() => setEditing(true)}
+      title="点击编辑标题"
+      type="button"
+    >
+      {value}
+    </button>
+  );
+}
 
 type AdminInsightsPanelProps = {
   data: {
@@ -35,7 +88,12 @@ export function AdminInsightsPanel({ data }: AdminInsightsPanelProps) {
   const [selected, setSelected] = useState<MarketInsightDetail | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [items, setItems] = useState(data.items);
   const pagination = normalizePagination(data);
+
+  function handleTitleSaved(id: string, text: string) {
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ai_insight: text } : item)));
+  }
 
   async function loadDetail(id: string) {
     setPendingId(id);
@@ -85,17 +143,17 @@ export function AdminInsightsPanel({ data }: AdminInsightsPanelProps) {
               </tr>
             </thead>
             <tbody>
-              {data.items.length === 0 ? (
+              {items.length === 0 ? (
                 <tr>
                   <td className="px-4 py-8 text-slate-500" colSpan={6}>
                     暂无市场情报。
                   </td>
                 </tr>
               ) : (
-                data.items.map((item) => (
+                items.map((item) => (
                   <tr className="border-b border-slate-100 align-top" key={item.id}>
                     <td className="px-4 py-3">
-                      <p className="font-medium leading-6 text-slate-950">{item.ai_insight}</p>
+                      <EditableTitle id={item.id} onSaved={(t) => handleTitleSaved(item.id, t)} value={item.ai_insight} />
                       <p className="mt-1 line-clamp-2 max-w-3xl text-xs leading-5 text-slate-500">{item.ai_summary}</p>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-700">{sentimentLabels[item.sentiment]}</td>

@@ -86,6 +86,15 @@ export async function resynthesizeAdminInsight(id: string) {
   if (!response.ok) throw new Error("Insight 重新合成失败");
 }
 
+export async function updateAdminInsightTitle(id: string, aiInsight: string) {
+  const response = await apiFetch(`${apiUrl}/api/admin/insights/${id}`, {
+    method: "PATCH",
+    headers: { ...(await adminHeaders()), "Content-Type": "application/json" },
+    body: JSON.stringify({ aiInsight })
+  });
+  if (!response.ok) throw new Error("Insight 标题修改失败");
+}
+
 export type AdminPaginationFilters = {
   page?: string;
   limit?: string;

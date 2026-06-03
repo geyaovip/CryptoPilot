@@ -64,4 +64,25 @@ export class AdminInsightService {
     });
     return { success: true };
   }
+
+  async updateTitle(id: string, aiInsight: string, adminId: string) {
+    const before = await this.prisma.marketInsight.findFirst({
+      where: { id, deletedAt: null },
+      select: { aiInsight: true }
+    });
+    if (!before) throw new NotFoundException("Insight 不存在");
+    await this.prisma.marketInsight.update({
+      where: { id },
+      data: { aiInsight }
+    });
+    await this.audit.log({
+      adminUserId: adminId,
+      action: "insight.update_title",
+      entityType: "insight",
+      entityId: id,
+      before: { aiInsight: before.aiInsight },
+      after: { aiInsight }
+    });
+    return { success: true };
+  }
 }
