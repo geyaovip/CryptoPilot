@@ -35,9 +35,7 @@ AI 按版本路线推进，但当前仓库已经进入 V0.8 轻聚合与 V0.9 Ma
 7. `docs/versions/CryptoPilot_V0.8_Narrative_Feed.md` — **当前重点补齐**：Phase 2 Narrative Layer + 方案 B 轻聚合（`cluster_id` + 信号流 Tab）
 8. `docs/versions/CryptoPilot_V0.9_Market_Intelligence.md` — **当前部分实现，继续补齐**：Phase 3 Insight 实体与市场雷达
 
-**延后至 MVP 主线完成之后（单独版本，不插队）：**
-
-9. `docs/versions/CryptoPilot_V0.5_Telegram_Push.md` — Telegram 绑定与推送（最后做，不着急）
+9. `docs/versions/CryptoPilot_V0.5_Telegram_Push.md` — **已实现，当前补充验收**：Telegram 绑定、Bot 命令、Webhook、Daily Digest / Market Alert / Watchlist Alert、Push 限流、Admin Push 管理
 
 Smart Money、Pro 订阅、Native App、支付、交易等仍然禁止进入 MVP。Insight 已进入 V0.9 路线，相关功能应继续按 V0.9 验收补齐。
 

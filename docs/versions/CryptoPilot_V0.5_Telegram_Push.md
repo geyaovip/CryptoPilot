@@ -1,9 +1,8 @@
 # CryptoPilot V0.5 Telegram Push 开发规格
 
-> **当前状态**：产品方已明确启动 V0.5 Telegram Push 专项，本版本进入实现与验收阶段。
+> **当前状态**：Telegram 绑定、Bot 命令、Webhook、Push 类型（daily_digest / market_alert / watchlist_alert / manual）、限流、通知设置、Admin Push 管理均已进入代码实现。后续以补充验收和端到端测试为主。  
 
-版本目标：实现 Telegram 绑定、每日总结、市场异动、Watchlist 异动、Push 管理、通知设置和限流。  
-依赖版本：V0.6 MVP Beta 已完成，或产品方明确启动 Telegram 专项。
+版本目标：实现 Telegram 绑定、每日总结、市场异动、Watchlist 异动、Push 管理、通知设置和限流。
 
 ---
 
