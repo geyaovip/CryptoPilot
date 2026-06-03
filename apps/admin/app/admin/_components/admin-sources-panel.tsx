@@ -93,11 +93,11 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
 
       <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto">
-          <table className="min-w-[1180px] w-full text-left text-sm">
+          <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
-                {["名称", "平台", "语言", "类型", "状态", "失败次数", "错误信息", "最近成功", "最近错误", "间隔(秒)", "操作"].map((column) => (
-                  <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
+                {["名称", "平台", "状态", "错误信息", "最近采集", "操作"].map((column) => (
+                  <th className="border-b border-slate-200 px-3 py-3 font-medium whitespace-nowrap" key={column}>
                     {column}
                   </th>
                 ))}
@@ -105,34 +105,46 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
             </thead>
             <tbody>
               {items.map((source) => (
-                <tr className="border-b border-slate-100" key={source.id}>
-                  <td className="px-4 py-3 text-slate-700">
-                    <p className="font-medium text-slate-950">{source.name}</p>
+                <tr className="border-b border-slate-100 hover:bg-slate-50/50" key={source.id}>
+                  <td className="px-3 py-3 max-w-[280px]">
+                    <p className="font-medium text-slate-950 truncate">{source.name}</p>
                     {source.url ? (
-                      <a className="mt-1 block max-w-[260px] truncate text-xs text-[#20808D] hover:underline" href={source.url} rel="noopener noreferrer" target="_blank">
+                      <a className="mt-0.5 block max-w-[240px] truncate text-xs text-[#20808D] hover:underline" href={source.url} rel="noopener noreferrer" target="_blank">
                         {source.url}
                       </a>
-                    ) : null}
+                    ) : <p className="text-xs text-slate-400">-</p>}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className="whitespace-nowrap rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                  <td className="px-3 py-3">
+                    <span className="whitespace-nowrap rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
                       {platformLabel(source.platform)}
                     </span>
+                    <span className="ml-1.5 text-xs text-slate-400">{source.content_locale === "zh" ? "中" : "EN"}</span>
                   </td>
-                  <td className="px-4 py-3 text-slate-700">{source.content_locale === "zh" ? "中文" : "英文"}</td>
-                  <td className="px-4 py-3 text-slate-700">{source.type}</td>
-                  <td className="px-4 py-3 text-slate-700">{source.status}</td>
-                  <td className="px-4 py-3 text-slate-700">{source.consecutive_failures}</td>
-                  <td className="max-w-[260px] px-4 py-3 text-slate-700">
-                    <span className="line-clamp-2">{source.error_message ?? "-"}</span>
+                  <td className="px-3 py-3 whitespace-nowrap">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${source.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                      <span className={`block h-1.5 w-1.5 rounded-full ${source.status === "active" ? "bg-emerald-500" : "bg-amber-500"}`} />
+                      {source.status === "active" ? "启用" : "暂停"}
+                    </span>
+                    {source.consecutive_failures > 0 ? (
+                      <span className="ml-1.5 text-xs text-red-500">{source.consecutive_failures}次失败</span>
+                    ) : null}
                   </td>
-                  <td className="px-4 py-3 text-slate-700">{source.last_success_at ? new Date(source.last_success_at).toLocaleString("zh-CN") : "-"}</td>
-                  <td className="px-4 py-3 text-slate-700">{source.last_error_at ? new Date(source.last_error_at).toLocaleString("zh-CN") : "-"}</td>
-                  <td className="px-4 py-3 text-slate-700">{source.fetch_interval_seconds}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-2">
+                  <td className="px-3 py-3 max-w-[200px]">
+                    <span className="line-clamp-2 text-xs text-slate-500">{source.error_message ?? "-"}</span>
+                  </td>
+                  <td className="px-3 py-3 text-xs text-slate-500 whitespace-nowrap">
+                    {source.last_success_at ? (
+                      <span className="text-emerald-600">{new Date(source.last_success_at).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                    ) : source.last_error_at ? (
+                      <span className="text-red-500">{new Date(source.last_error_at).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                    ) : (
+                      <span className="text-slate-400">-</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex items-center gap-1">
                       <button
-                        className="text-[#20808D]"
+                        className="rounded px-2 py-1 text-xs text-[#20808D] hover:bg-slate-100"
                         disabled={pending}
                         onClick={() =>
                           run(
@@ -144,10 +156,10 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
                       >
                         {source.status === "active" ? "暂停" : "启用"}
                       </button>
-                      <button className="text-slate-700" disabled={pending} onClick={() => run(() => retryAdminSource(source.id), "已触发手动重试")} type="button">
+                      <button className="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100" disabled={pending} onClick={() => run(() => retryAdminSource(source.id), "已触发手动重试")} type="button">
                         重试
                       </button>
-                      <button className="text-slate-700" disabled={pending} onClick={() => loadLogs(source.id, source.name)} type="button">
+                      <button className="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100" disabled={pending} onClick={() => loadLogs(source.id, source.name)} type="button">
                         日志
                       </button>
                     </div>
