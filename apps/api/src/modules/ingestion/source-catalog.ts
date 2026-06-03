@@ -85,24 +85,21 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     url: "https://medium.com/feed/flashbots",
     locale: "EN",
     sourceWeight: 56,
-    ingest: "rss",
-    defaultActive: false
+    ingest: "rss"
   },
   {
     name: "Dragonfly Research Medium",
     url: "https://medium.com/feed/dragonfly-research",
     locale: "EN",
     sourceWeight: 54,
-    ingest: "rss",
-    defaultActive: false
+    ingest: "rss"
   },
   {
     name: "The Crypto Times Medium",
     url: "https://medium.com/feed/the-crypto-times",
     locale: "EN",
     sourceWeight: 48,
-    ingest: "rss",
-    defaultActive: false
+    ingest: "rss"
   },
   {
     name: "Vitalik Blog",
