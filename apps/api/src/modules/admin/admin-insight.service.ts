@@ -1,13 +1,10 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuditService } from "../common/audit.service";
 import { toInsightDetail, toInsightSummary } from "../insights/insight.mapper";
 import { InsightSynthesisService } from "../insights/insight-synthesis.service";
-import {
-  AdminPaginationDto,
-  normalizeAdminPagination,
-  pageMeta
-} from "./dto/admin-pagination.dto";
+import { normalizeAdminPagination, pageMeta } from "./dto/admin-pagination.dto";
 import { AdminInsightQueryDto } from "./dto/admin-insight.dto";
 
 const include = {
@@ -32,7 +29,7 @@ export class AdminInsightService {
 
   async list(query: AdminInsightQueryDto = {}) {
     const { page, limit, skip } = normalizeAdminPagination(query);
-    const where: Record<string, unknown> = { deletedAt: null };
+    const where: Prisma.MarketInsightWhereInput = { deletedAt: null };
     if (query.search) {
       where.OR = [
         { aiInsight: { contains: query.search, mode: "insensitive" } },
