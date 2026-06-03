@@ -52,12 +52,13 @@ jobs:
       - name: Validate deploy secrets
         env:
           API_DEPLOY_SSH_KEY: ${{ secrets.API_DEPLOY_SSH_KEY }}
+          API_DEPLOY_SSH_KEY_B64: ${{ secrets.API_DEPLOY_SSH_KEY_B64 }}
           API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
           API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
           API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
           API_HEALTH_URL: ${{ secrets.API_HEALTH_URL }}
         run: |
-          test -n "$API_DEPLOY_SSH_KEY"
+          test -n "$API_DEPLOY_SSH_KEY" || test -n "$API_DEPLOY_SSH_KEY_B64"
           test -n "$API_DEPLOY_HOST"
           test -n "$API_DEPLOY_USER"
           test -n "$API_DEPLOY_PATH"
@@ -66,13 +67,60 @@ jobs:
       - name: Configure SSH
         env:
           API_DEPLOY_SSH_KEY: ${{ secrets.API_DEPLOY_SSH_KEY }}
+          API_DEPLOY_SSH_KEY_B64: ${{ secrets.API_DEPLOY_SSH_KEY_B64 }}
           API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
           API_DEPLOY_PORT: ${{ secrets.API_DEPLOY_PORT }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          printf '%s\n' "$API_DEPLOY_SSH_KEY" > ~/.ssh/api_deploy_key
-          chmod 600 ~/.ssh/api_deploy_key
+          key_file=~/.ssh/api_deploy_key
+
+          load_key() {
+            content="$1"
+            mode="$2"
+
+            if [ -z "$content" ]; then
+              return 1
+            fi
+
+            if [ "$mode" = "base64" ]; then
+              printf '%s' "$content" | base64 -d > "$key_file"
+            elif [ "$mode" = "escaped" ]; then
+              printf '%b\n' "$content" | tr -d '\r' > "$key_file"
+            else
+              printf '%s\n' "$content" | tr -d '\r' > "$key_file"
+            fi
+
+            chmod 600 "$key_file"
+            ssh-keygen -y -f "$key_file" >/dev/null 2>&1
+          }
+
+          if load_key "$API_DEPLOY_SSH_KEY_B64" "base64"; then
+            echo "Loaded base64-encoded deploy key."
+          elif load_key "$API_DEPLOY_SSH_KEY" "raw"; then
+            echo "Loaded raw deploy key."
+          elif load_key "$API_DEPLOY_SSH_KEY" "escaped"; then
+            echo "Loaded single-line escaped deploy key."
+          else
+            echo "Missing or invalid API_DEPLOY_SSH_KEY_B64/API_DEPLOY_SSH_KEY."
+            exit 1
+          fi
+
           ssh-keyscan -p "${API_DEPLOY_PORT:-22}" "$API_DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Verify SSH connection
+        env:
+          API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
+          API_DEPLOY_PORT: ${{ secrets.API_DEPLOY_PORT }}
+          API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
+        run: |
+          ssh \
+            -i ~/.ssh/api_deploy_key \
+            -p "${API_DEPLOY_PORT:-22}" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
+            "echo API deploy SSH connection verified"
 
       - name: Sync API release files
         env:
@@ -89,7 +137,7 @@ jobs:
             --exclude ".env*" \
             --exclude "*.test.ts" \
             --exclude "*.spec.ts" \
-            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22}" \
+            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22} -o BatchMode=yes -o IdentitiesOnly=yes" \
             apps/api/ "$API_DEPLOY_USER@$API_DEPLOY_HOST:$API_DEPLOY_PATH/apps/api/"
 
       - name: Sync shared packages
@@ -105,7 +153,7 @@ jobs:
             --exclude .turbo \
             --exclude "*.test.ts" \
             --exclude "*.spec.ts" \
-            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22}" \
+            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22} -o BatchMode=yes -o IdentitiesOnly=yes" \
             packages/ "$API_DEPLOY_USER@$API_DEPLOY_HOST:$API_DEPLOY_PATH/packages/"
 
       - name: Sync workspace manifests
@@ -116,7 +164,7 @@ jobs:
           API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
         run: |
           rsync -az \
-            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22}" \
+            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22} -o BatchMode=yes -o IdentitiesOnly=yes" \
             package.json pnpm-lock.yaml pnpm-workspace.yaml \
             "$API_DEPLOY_USER@$API_DEPLOY_HOST:$API_DEPLOY_PATH/"
 
@@ -128,7 +176,7 @@ jobs:
           API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
           API_DEPLOY_SERVICE: ${{ secrets.API_DEPLOY_SERVICE }}
         run: |
-          ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
+          ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
             "cd '$API_DEPLOY_PATH' && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @cryptopilot/api db:generate && sudo systemctl restart '${API_DEPLOY_SERVICE:-cryptopilot-api}'"
 
       - name: Verify API health
