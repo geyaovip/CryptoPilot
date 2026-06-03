@@ -1,17 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Button, Card, EmptyState } from "@cryptopilot/ui";
+import { Button, Card, EmptyState, ErrorState, LoadingState } from "@cryptopilot/ui";
 import type { WatchlistItemView } from "@cryptopilot/types";
 import {
   addWatchlist,
   getKols,
   getNarratives,
   getTokens,
+  getWatchlist,
   patchWatchlistNotification,
   removeWatchlist
 } from "../lib/api";
+import { useAuthStore } from "../lib/auth-store";
 
 type Tab = "all" | "token" | "narrative" | "kol";
 
@@ -22,10 +24,45 @@ const tabLabels: Record<Tab, string> = {
   kol: "观点源"
 };
 
-export function WatchlistPanel({ initialItems }: { initialItems: WatchlistItemView[] }) {
-  const [items, setItems] = useState(initialItems);
+function getFriendlyError(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  if (message.includes("关注列表加载失败")) {
+    return "请先登录后查看关注列表。如果已经登录，请刷新页面重试。";
+  }
+  return "关注列表暂时无法加载，请稍后重试。";
+}
+
+export function WatchlistPanel() {
+  const token = useAuthStore((state) => state.accessToken);
+  const [items, setItems] = useState<WatchlistItemView[]>([]);
   const [tab, setTab] = useState<Tab>("all");
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  async function loadWatchlist() {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const data = await getWatchlist();
+      setItems(data.items);
+    } catch (error) {
+      setItems([]);
+      setLoadError(getFriendlyError(error));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!token) {
+      setItems([]);
+      setLoadError("请先登录后查看关注列表。");
+      setLoading(false);
+      return;
+    }
+    void loadWatchlist();
+  }, [token]);
 
   const filtered = useMemo(() => {
     if (tab === "all") return items;
@@ -67,10 +104,31 @@ export function WatchlistPanel({ initialItems }: { initialItems: WatchlistItemVi
             : (await getKols()).items[0];
       if (!target) return;
       await addWatchlist(type, target.id);
-      window.location.reload();
+      await loadWatchlist();
     } finally {
       setBusy(false);
     }
+  }
+
+  if (loading) {
+    return <LoadingState title="正在加载关注列表" />;
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        title="关注列表加载失败"
+        description={loadError}
+        actionLabel={token ? "重新加载" : "前往登录"}
+        onAction={() => {
+          if (!token) {
+            window.location.href = "/login";
+            return;
+          }
+          void loadWatchlist();
+        }}
+      />
+    );
   }
 
   if (items.length === 0) {
