@@ -15,6 +15,7 @@ alwaysApply: true
 - Put shared UI primitives in `packages/ui`.
 - Do not commit secrets, disable lint/tests, or mark acceptance complete without verification.
 - All AI market output must include sources and must not be investment advice.
+- All user-facing text (feed titles, summaries, insights, narrative hooks) must be Chinese. Validate AI output with `isChineseContent()`, apply display-time fallback in every mapper (see `.cursor/rules/chinese-content.mdc`).
 
 ## FORBIDDEN
 - No dark theme, theme switcher, React Native app, Smart Money, Pro subscription, payment, wallet login, wallet tracking, trading, or AI auto-trading in MVP.

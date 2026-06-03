@@ -1,0 +1,50 @@
+---
+description: Chinese content display-time fallback rules for all API mappers and UI
+globs: apps/api/src/modules/feed/**/*,apps/api/src/modules/insights/**/*,apps/web/app/**/*,apps/admin/app/**/*
+alwaysApply: true
+---
+
+# Chinese Content Display Rules
+
+目标用户为中文读者。AI 可能产出英文标题/摘要，DB 存量也可能存有英文标题。
+
+## MUST — 后端 Mapper（display-time 回落）
+
+**所有 API 返回给前端的 `ai_summary`、`narrative_hook`、`ai_insight` 字段，必须在 mapper 中做中文检测和回落。** 不允许直接透传 DB 值。
+
+```typescript
+// ✅ 正确：mapped 字段经过中文判断
+ai_summary: displaySummary(feed.aiSummary, feed.title),
+narrative_hook: buildNarrativeHook(feed),
+ai_insight: displayInsightTitle(insight),
+
+// ❌ 错误：直接透传 DB 值
+ai_summary: feed.aiSummary,
+ai_insight: insight.aiInsight,
+```
+
+回落逻辑：用 `isChineseContent()` 检测 → 不是中文则用 `pickChineseDisplayText()` 从原文 title/content 中提取。
+
+相关工具函数位于 `apps/api/src/modules/ingestion/chinese-content.util.ts`：
+- `isChineseContent(text)` — 是否包含 ≥8% CJK 字符
+- `pickChineseDisplayText(texts)` — 从数组中挑第一个含中文的
+
+## MUST — 新增 AI 写入点
+
+任何新增的 AI 生成入口（prompt、cron、service），写入 DB 前必须调用 `isChineseContent()` 校验输出，英文则重试或回落到原文中文。
+
+## MUST — 前端展示
+
+前端展示任何后台返回或 DB 写入的文本时，优先渲染中文。英文源标题仅在含 CJK 字符时才展示。
+
+## MUST — 新增字段检查清单
+
+新增/修改一个 API 返回字段或 mapper 时，检查：
+1. 这个字段最终会展示给中文用户吗？
+2. 如果会，mapper 中加了中文回落吗？
+3. 如果不会，为什么？
+
+## FORBIDDEN
+- 不在 mapper 中直接透传 `aiSummary`/`aiInsight`/`narrativeHook` 给前端
+- 不假设 AI 一定会产出中文，任何时候都要做 display-time fallback
+- 不在前端渲染非中文的 source.title

@@ -31,3 +31,4 @@ alwaysApply: false
 - No speculation presented as fact.
 - No hardcoded prompt body in business code.
 - No publishing AI output that failed schema validation.
+- No writing AI output to DB without checking `isChineseContent()` first (see `.cursor/rules/chinese-content.mdc`).

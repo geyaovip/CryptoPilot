@@ -7,7 +7,7 @@ alwaysApply: false
 # Backend API Rules
 
 ## MUST
-- Follow `docs/rules/backend-rules.md` and `docs/rules/api-rules.md`.
+- Follow `docs/rules/backend-rules.md`、`docs/rules/api-rules.md`、`.cursor/rules/chinese-content.mdc`。
 - Use NestJS modules by domain.
 - Use DTO validation for all inputs.
 - Keep business orchestration in services.
