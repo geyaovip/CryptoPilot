@@ -16,21 +16,60 @@ function isChinese(text: string | null | undefined): boolean {
   return CJK.test(text);
 }
 
-function extractChinese(text: string, maxLen: number): string {
-  if (!text) return "";
-  const matches = text.match(/[\u4e00-\u9fff][\u4e00-\u9fff\uff0c\u3002\uff1a\uff1b\uff01\u2018\u2019\u201c\u201d\u300a\u300b\s]{3,}/g);
-  if (!matches) return "";
-  const longest = matches.reduce((a, b) => a.length >= b.length ? a : b);
-  return longest.replace(/\s+/g, " ").trim().slice(0, maxLen);
+const LLM_URL = process.env.OPENAI_BASE_URL || process.env.MOONSHOT_BASE_URL || "https://api.moonshot.cn/v1";
+const LLM_MODEL = process.env.OPENAI_CHAT_MODEL || process.env.MOONSHOT_CHAT_MODEL || "kimi-k2.5";
+const LLM_KEY =
+  process.env.OPENAI_API_KEY ||
+  process.env.MOONSHOT_API_KEY ||
+  process.env.DEEPSEEK_API_KEY ||
+  "";
+
+if (!LLM_KEY) {
+  console.error("No LLM API key found. Set MOONSHOT_API_KEY or OPENAI_API_KEY in .env");
+  process.exit(1);
+}
+
+async function translate(text: string, context: string): Promise<string> {
+  const system = "你是CryptoPilot的翻译助手。将英文加密货币新闻标题/摘要翻译成简洁精准的中文，保留专业术语，100字以内。只输出译文，不要解释。";
+  const user = `原文: ${text.slice(0, 800)}\n${context ? `上下文: ${context.slice(0, 300)}` : ""}`;
+
+  const res = await fetch(`${LLM_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${LLM_KEY}`
+    },
+    body: JSON.stringify({
+      model: LLM_MODEL,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ],
+      temperature: 0.3,
+      max_tokens: 300
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    throw new Error(`LLM ${res.status}: ${err.slice(0, 200)}`);
+  }
+
+  const data = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  return data.choices?.[0]?.message?.content?.trim() ?? "";
 }
 
 async function main() {
   let fixedFeeds = 0;
   let fixedInsights = 0;
+  let total = 0;
 
+  // Feed items with English content
   const feeds = await prisma.feedItem.findMany({
     where: { deletedAt: null, status: "PUBLISHED", aiGeneratedAt: { not: null } },
-    select: { id: true, title: true, content: true, narrativeHook: true, aiSummary: true, feedItemNarratives: { include: { narrative: { select: { name: true } } } } }
+    select: { id: true, title: true, content: true, narrativeHook: true, aiSummary: true }
   });
 
   for (const feed of feeds) {
@@ -38,31 +77,42 @@ async function main() {
     const summaryOk = isChinese(feed.aiSummary);
     if (hookOk && summaryOk) continue;
 
-    const chinese = extractChinese((feed.title ?? "") + "\n" + (feed.content ?? ""), 200);
-    const primaryName = feed.feedItemNarratives?.[0]?.narrative?.name ?? "市场";
+    total += 1;
 
-    const data: Record<string, string> = {};
-    if (!hookOk) {
-      data.narrativeHook = chinese
-        ? chinese.slice(0, 60)
-        : `${primaryName}叙事持续受到关注`;
-    }
-    if (!summaryOk) {
-      data.aiSummary = chinese
-        ? chinese.slice(0, 200)
-        : `${primaryName}相关动态更新`;
-    }
-    if (Object.keys(data).length === 0) continue;
+    try {
+      const data: Record<string, string> = {};
 
-    await prisma.feedItem.update({ where: { id: feed.id }, data });
-    fixedFeeds += 1;
+      if (!hookOk) {
+        const text = feed.narrativeHook ?? feed.title;
+        if (text && !isChinese(text)) {
+          data.narrativeHook = await translate(text, feed.title ?? "");
+        }
+      }
+      if (!summaryOk) {
+        const text = feed.aiSummary ?? feed.title;
+        if (text && !isChinese(text)) {
+          data.aiSummary = await translate(text, feed.title ?? "");
+        }
+      }
+
+      if (Object.keys(data).length > 0) {
+        await prisma.feedItem.update({ where: { id: feed.id }, data });
+        fixedFeeds += 1;
+      }
+    } catch (e) {
+      console.error(`Feed ${feed.id} failed:`, (e as Error).message);
+    }
+
+    // Rate limit: wait 1s between LLM calls
+    if (total % 5 === 0) console.log(`Progress: ${total} items processed, ${fixedFeeds} feeds fixed...`);
+    await new Promise((r) => setTimeout(r, 200));
   }
 
-  console.log(`Feeds fixed: ${fixedFeeds}`);
-
+  // Insights with English content
   const insights = await prisma.marketInsight.findMany({
     where: { deletedAt: null, status: "PUBLISHED" },
-    select: { id: true, aiInsight: true, aiSummary: true, sourcesJson: true, primaryNarrative: { select: { name: true } } }
+    select: { id: true, aiInsight: true, aiSummary: true, sourcesJson: true, primaryNarrative: { select: { name: true } } },
+    orderBy: { id: "asc" }
   });
 
   for (const insight of insights) {
@@ -70,37 +120,52 @@ async function main() {
     const summaryOk = isChinese(insight.aiSummary);
     if (insightOk && summaryOk) continue;
 
-    let sourceText = "";
-    let sourceNames: string[] = [];
+    total += 1;
+
+    // Build context from source titles
+    let sourceContext = "";
     try {
       const sources = JSON.parse(String(insight.sourcesJson ?? "[]"));
       if (Array.isArray(sources)) {
-        sourceText = sources.map((s: { title?: string }) => s.title ?? "").join("\n");
-        sourceNames = sources.map((s: { source_name?: string }) => s.source_name ?? "").filter(Boolean);
+        sourceContext = sources
+          .map((s: { title?: string }) => s.title ?? "")
+          .filter(Boolean)
+          .slice(0, 3)
+          .join(" | ");
       }
     } catch { /* ignore */ }
 
-    const chinese = extractChinese(sourceText, 200);
-    const topic = insight.primaryNarrative?.name ?? "市场";
-    const nameSuffix = [...new Set(sourceNames)].slice(0, 2).join(", ") || "";
+    const topic = insight.primaryNarrative?.name ?? "加密市场";
 
-    const data: Record<string, string> = {};
-    if (!insightOk) {
-      data.aiInsight = chinese
-        ? chinese.slice(0, 60)
-        : `${nameSuffix ? nameSuffix + "等来源" : ""}关于${topic}的最新分析`;
+    try {
+      const data: Record<string, string> = {};
+
+      if (!insightOk) {
+        const text = insight.aiInsight ?? sourceContext;
+        if (text && !isChinese(text)) {
+          data.aiInsight = await translate(text, `主题: ${topic}\n${sourceContext}`);
+        }
+      }
+      if (!summaryOk) {
+        const text = insight.aiSummary ?? sourceContext;
+        if (text && !isChinese(text)) {
+          data.aiSummary = await translate(text, `主题: ${topic}\n${sourceContext}`);
+        }
+      }
+
+      if (Object.keys(data).length > 0) {
+        await prisma.marketInsight.update({ where: { id: insight.id }, data });
+        fixedInsights += 1;
+      }
+    } catch (e) {
+      console.error(`Insight ${insight.id} failed:`, (e as Error).message);
     }
-    if (!summaryOk) {
-      data.aiSummary = chinese
-        ? chinese.slice(0, 200)
-        : `${(sourceNames.length || 2)}个来源关于${topic}的相关讨论`;
-    }
-    await prisma.marketInsight.update({ where: { id: insight.id }, data });
-    fixedInsights += 1;
+
+    if (total % 5 === 0) console.log(`Progress: ${total} items, ${fixedInsights} insights fixed...`);
+    await new Promise((r) => setTimeout(r, 200));
   }
 
-  console.log(`Insights fixed: ${fixedInsights}`);
-  console.log("Done.");
+  console.log(`Done. Feeds: ${fixedFeeds}, Insights: ${fixedInsights}, Total: ${total}`);
 }
 
 main()
