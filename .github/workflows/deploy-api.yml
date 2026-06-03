@@ -189,7 +189,7 @@ jobs:
           API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
         run: |
           ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
-            "cd '$API_DEPLOY_PATH' && pnpm db:fix-english-data"
+            "cd '$API_DEPLOY_PATH' && pnpm --filter @cryptopilot/api db:fix-english-data"
 
       - name: Verify API health
         env:
@@ -229,4 +229,4 @@ jobs:
           API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
         run: |
           ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
-            "cd '$API_DEPLOY_PATH' && pnpm db:sync"
+            "cd '$API_DEPLOY_PATH' && pnpm --filter @cryptopilot/api db:sync"
