@@ -4,6 +4,7 @@ import { LlmService } from "../llm/llm.service";
 import { PromptService } from "../prompt/prompt.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { EmbeddingService } from "../ai/embedding.service";
+import { chineseTextRatio, pickChineseDisplayText } from "../ingestion/chinese-content.util";
 import { buildSourcesFromSignals, parseSourcesJson } from "./insight.mapper";
 import { parseInsightSynthesisOutput } from "./insight-synthesis.schema";
 import type { InsightSynthesisOutput } from "./insight-synthesis.schema";
@@ -58,6 +59,19 @@ export class InsightSynthesisService {
       const parsed = parseInsightSynthesisOutput(llm.data);
       if (!parsed.success) return false;
       const output = parsed.data;
+
+      // Validate Chinese output — LLM may ignore the "中文为主" instruction
+      const insightIsChinese = chineseTextRatio(output.ai_insight) >= 0.08;
+      const summaryIsChinese = chineseTextRatio(output.ai_summary) >= 0.08;
+      if (!insightIsChinese || !summaryIsChinese) {
+        const signalText = insight.signals.map((s) => s.title).join(" ");
+        const fallback = pickChineseDisplayText([signalText, ...insight.signals.map((s) => s.content)]);
+        if (fallback) {
+          if (!insightIsChinese) output.ai_insight = fallback.slice(0, 80);
+          if (!summaryIsChinese) output.ai_summary = fallback.slice(0, 160);
+        }
+      }
+
       await this.publishInsight(insightId, insight, sources, output);
 
       await this.embeddingService
