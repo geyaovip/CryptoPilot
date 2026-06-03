@@ -117,6 +117,7 @@ export async function CryptoPilotHomePage({
             </div>
           </Card>
           <HomeFeedPanel
+            key={narrativeSlug ?? "_all"}
             initialCursor={feed.next_cursor}
             initialItems={(feed.entity === "insight" ? feed.items : []) as MarketInsightSummary[]}
             initialTab="for_you"
