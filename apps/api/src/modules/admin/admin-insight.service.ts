@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuditService } from "../common/audit.service";
@@ -21,6 +21,8 @@ const include = {
 
 @Injectable()
 export class AdminInsightService {
+  private readonly logger = new Logger(AdminInsightService.name);
+
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(InsightSynthesisService) private readonly synthesis: InsightSynthesisService,
@@ -29,13 +31,9 @@ export class AdminInsightService {
 
   async list(query: AdminInsightQueryDto = {}) {
     const { page, limit, skip } = normalizeAdminPagination(query);
-    const where: Prisma.MarketInsightWhereInput = { deletedAt: null };
-    if (query.search) {
-      where.OR = [
-        { aiInsight: { contains: query.search, mode: "insensitive" } },
-        { aiSummary: { contains: query.search, mode: "insensitive" } }
-      ];
-    }
+    this.logger.log(`search="${query.search}" page=${page} limit=${limit}`);
+
+    const where = this.buildWhere(query.search);
     const [total, rows] = await this.prisma.$transaction([
       this.prisma.marketInsight.count({ where }),
       this.prisma.marketInsight.findMany({
@@ -49,6 +47,17 @@ export class AdminInsightService {
     return {
       ...pageMeta(total, page, limit),
       items: rows.map((row) => toInsightSummary(row))
+    };
+  }
+
+  private buildWhere(search?: string): Prisma.MarketInsightWhereInput {
+    if (!search) return { deletedAt: null };
+    return {
+      deletedAt: null,
+      OR: [
+        { aiInsight: { contains: search, mode: "insensitive" } },
+        { aiSummary: { contains: search, mode: "insensitive" } }
+      ]
     };
   }
 
