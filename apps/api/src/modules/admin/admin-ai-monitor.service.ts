@@ -6,8 +6,7 @@ export class AdminAiMonitorService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async getStats() {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
+    const start = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const logs = await this.prisma.llmCallLog.findMany({
       where: { createdAt: { gte: start } },

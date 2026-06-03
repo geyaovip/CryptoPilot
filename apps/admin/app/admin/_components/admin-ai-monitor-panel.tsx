@@ -7,12 +7,12 @@ import { AdminPageHeader } from "./admin-page-header";
 export function AdminAiMonitorPanel({ stats }: { stats: AiMonitorStats }) {
   return (
     <div className="space-y-4">
-      <AdminPageHeader title="AI 监控" description="今日大模型调用、成本、延迟和错误概览。" />
+      <AdminPageHeader title="AI 监控" description="近 24 小时大模型调用、成本、延迟和错误概览。" />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="今日调用" value={String(stats.calls_today)} />
-        <MetricCard label="今日 Token" value={String(stats.tokens_today)} />
-        <MetricCard label="今日成本 (USD)" value={stats.cost_usd_today.toFixed(4)} />
+        <MetricCard label="近 24h 调用" value={String(stats.calls_today)} />
+        <MetricCard label="近 24h Token" value={String(stats.tokens_today)} />
+        <MetricCard label="近 24h 成本 (USD)" value={stats.cost_usd_today.toFixed(4)} />
         <MetricCard label="平均延迟 (ms)" value={String(stats.avg_latency_ms)} />
       </div>
 

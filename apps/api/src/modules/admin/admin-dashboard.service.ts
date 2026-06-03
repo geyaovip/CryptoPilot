@@ -2,10 +2,8 @@ import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AdminAiMonitorService } from "./admin-ai-monitor.service";
 
-function startOfToday(): Date {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  return start;
+function rolling24hStart(): Date {
+  return new Date(Date.now() - 24 * 60 * 60 * 1000);
 }
 
 @Injectable()
@@ -16,7 +14,7 @@ export class AdminDashboardService {
   ) {}
 
   async getOverview() {
-    const since = startOfToday();
+    const since = rolling24hStart();
     const ai = await this.aiMonitor.getStats();
 
     const [

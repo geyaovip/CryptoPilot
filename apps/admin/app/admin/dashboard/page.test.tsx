@@ -32,6 +32,6 @@ describe("AdminDashboardPage", () => {
     render(await AdminDashboardPage());
     expect(screen.getByRole("heading", { name: "仪表盘", level: 1 })).toBeTruthy();
     expect(screen.getByText("12")).toBeTruthy();
-    expect(screen.getByText("今日 Insight")).toBeTruthy();
+    expect(screen.getByText("近 24h Insight")).toBeTruthy();
   });
 });
