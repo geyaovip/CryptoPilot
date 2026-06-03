@@ -1,5 +1,6 @@
 import type { FeedItemDetail, FeedItemSummary } from "@cryptopilot/types";
-import { buildNarrativeHook, pickPrimaryNarrative, toApiFeedType } from "./feed-narrative.util";
+import { buildNarrativeHook, cleanFeedDisplayText, pickPrimaryNarrative, toApiFeedType } from "./feed-narrative.util";
+import { pickChineseDisplayText, isChineseContent } from "../ingestion/chinese-content.util";
 
 type FeedRecord = {
   id: string;
@@ -32,7 +33,7 @@ export function toFeedSummary(feed: FeedRecord, relatedSourceCount = 1): FeedIte
   return {
     id: feed.id,
     title: feed.title,
-    ai_summary: feed.aiSummary,
+    ai_summary: displaySummary(feed.aiSummary, feed.title),
     narrative_hook: buildNarrativeHook(feed),
     primary_narrative: primary
       ? { id: primary.id, name: primary.name, slug: primary.slug }
@@ -73,6 +74,14 @@ export function toFeedDetail(feed: FeedRecord, similar: FeedRecord[]): FeedItemD
     market_impact: feed.aiMarketImpact ?? null,
     similar_feed: similar.map((item) => toFeedSummary(item, 1))
   };
+}
+
+function displaySummary(aiSummary: string, title: string): string {
+  const cleaned = cleanFeedDisplayText(aiSummary);
+  if (isChineseContent(cleaned)) return cleaned;
+  const chinese = pickChineseDisplayText([title]);
+  if (chinese) return `来源: ${chinese.slice(0, 200)}`;
+  return cleaned || "AI 摘要生成中，请稍后刷新。";
 }
 
 function parseKeyReasons(value: unknown): string[] {
