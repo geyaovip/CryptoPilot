@@ -34,7 +34,10 @@ export class AdminInsightService {
     const { page, limit, skip } = normalizeAdminPagination(query);
     const where: Record<string, unknown> = { deletedAt: null };
     if (query.search) {
-      where.aiInsight = { contains: query.search, mode: "insensitive" };
+      where.OR = [
+        { aiInsight: { contains: query.search, mode: "insensitive" } },
+        { aiSummary: { contains: query.search, mode: "insensitive" } }
+      ];
     }
     const [total, rows] = await this.prisma.$transaction([
       this.prisma.marketInsight.count({ where }),
