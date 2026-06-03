@@ -6,6 +6,7 @@ import { LlmService } from "../llm/llm.service";
 import { PromptService } from "../prompt/prompt.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { classifyFeedContentType } from "../feed/feed-content-type.util";
+import { pickChineseDisplayText, chineseTextRatio } from "../ingestion/chinese-content.util";
 import { EmbeddingService } from "./embedding.service";
 import { parseFeedSummaryOutput } from "./schemas";
 
@@ -81,7 +82,28 @@ export class FeedAiService {
           continue;
         }
         const output = parsed.data;
-        const headline = output.headline?.trim() || output.summary.trim().slice(0, 50);
+        let headline = output.headline?.trim() || output.summary.trim().slice(0, 50);
+        let summary = output.summary.trim();
+
+        // If the LLM didn't produce Chinese headline / summary, retry or fallback
+        const headlineIsChinese = chineseTextRatio(headline) >= 0.08;
+        const summaryIsChinese = chineseTextRatio(summary) >= 0.08;
+
+        if (!headlineIsChinese || !summaryIsChinese) {
+          // Use Chinese text from the source as a fallback headline
+          const fallbackFromSource = pickChineseDisplayText([feed.title, feed.content]);
+          if (fallbackFromSource) {
+            headline = fallbackFromSource.slice(0, 50);
+          }
+          // If summary isn't Chinese either, try once more before accepting
+          if (!summaryIsChinese && attempt < 2) {
+            this.logger.warn(
+              `AI output not Chinese for ${feedItemId} (attempt ${attempt + 1}), retrying`
+            );
+            continue;
+          }
+        }
+
         const reclassifiedType = classifyFeedContentType({
           title: feed.title,
           content: feed.content,
@@ -94,7 +116,7 @@ export class FeedAiService {
           where: { id: feedItemId },
           data: {
             type: reclassifiedType,
-            aiSummary: output.summary,
+            aiSummary: summary,
             narrativeHook: headline,
             aiKeyReasons: output.key_reasons,
             aiMarketImpact: output.market_impact,
