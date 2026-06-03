@@ -1,0 +1,135 @@
+name: Deploy API Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/api/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: api-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Sync and restart API server
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @cryptopilot/api db:generate
+
+      - name: Typecheck API
+        run: pnpm --filter @cryptopilot/api typecheck
+
+      - name: Validate deploy secrets
+        env:
+          API_DEPLOY_SSH_KEY: ${{ secrets.API_DEPLOY_SSH_KEY }}
+          API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
+          API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
+          API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
+          API_HEALTH_URL: ${{ secrets.API_HEALTH_URL }}
+        run: |
+          test -n "$API_DEPLOY_SSH_KEY"
+          test -n "$API_DEPLOY_HOST"
+          test -n "$API_DEPLOY_USER"
+          test -n "$API_DEPLOY_PATH"
+          test -n "$API_HEALTH_URL"
+
+      - name: Configure SSH
+        env:
+          API_DEPLOY_SSH_KEY: ${{ secrets.API_DEPLOY_SSH_KEY }}
+          API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
+          API_DEPLOY_PORT: ${{ secrets.API_DEPLOY_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$API_DEPLOY_SSH_KEY" > ~/.ssh/api_deploy_key
+          chmod 600 ~/.ssh/api_deploy_key
+          ssh-keyscan -p "${API_DEPLOY_PORT:-22}" "$API_DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync API release files
+        env:
+          API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
+          API_DEPLOY_PORT: ${{ secrets.API_DEPLOY_PORT }}
+          API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
+          API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
+        run: |
+          rsync -az --delete \
+            --exclude node_modules \
+            --exclude dist \
+            --exclude .turbo \
+            --exclude .env \
+            --exclude ".env*" \
+            --exclude "*.test.ts" \
+            --exclude "*.spec.ts" \
+            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22}" \
+            apps/api/ "$API_DEPLOY_USER@$API_DEPLOY_HOST:$API_DEPLOY_PATH/apps/api/"
+
+      - name: Sync shared packages
+        env:
+          API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
+          API_DEPLOY_PORT: ${{ secrets.API_DEPLOY_PORT }}
+          API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
+          API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
+        run: |
+          rsync -az --delete \
+            --exclude node_modules \
+            --exclude dist \
+            --exclude .turbo \
+            --exclude "*.test.ts" \
+            --exclude "*.spec.ts" \
+            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22}" \
+            packages/ "$API_DEPLOY_USER@$API_DEPLOY_HOST:$API_DEPLOY_PATH/packages/"
+
+      - name: Sync workspace manifests
+        env:
+          API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
+          API_DEPLOY_PORT: ${{ secrets.API_DEPLOY_PORT }}
+          API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
+          API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
+        run: |
+          rsync -az \
+            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22}" \
+            package.json pnpm-lock.yaml pnpm-workspace.yaml \
+            "$API_DEPLOY_USER@$API_DEPLOY_HOST:$API_DEPLOY_PATH/"
+
+      - name: Install production dependencies and restart API
+        env:
+          API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
+          API_DEPLOY_PORT: ${{ secrets.API_DEPLOY_PORT }}
+          API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
+          API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
+          API_DEPLOY_SERVICE: ${{ secrets.API_DEPLOY_SERVICE }}
+        run: |
+          ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
+            "cd '$API_DEPLOY_PATH' && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @cryptopilot/api db:generate && sudo systemctl restart '${API_DEPLOY_SERVICE:-cryptopilot-api}'"
+
+      - name: Verify API health
+        env:
+          API_HEALTH_URL: ${{ secrets.API_HEALTH_URL }}
+        run: curl -fsS "$API_HEALTH_URL"
