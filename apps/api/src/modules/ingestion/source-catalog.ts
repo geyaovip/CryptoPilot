@@ -73,10 +73,34 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     ingest: "rss"
   },
   {
-    name: "a16z crypto Medium",
-    url: "https://medium.com/feed/a16zcrypto",
+    name: "a16z crypto Substack",
+    url: "https://a16zcrypto.substack.com/feed",
     locale: "EN",
     sourceWeight: 58,
+    ingest: "rss",
+    defaultActive: false
+  },
+  {
+    name: "Flashbots Medium",
+    url: "https://medium.com/feed/flashbots",
+    locale: "EN",
+    sourceWeight: 56,
+    ingest: "rss",
+    defaultActive: false
+  },
+  {
+    name: "Dragonfly Research Medium",
+    url: "https://medium.com/feed/dragonfly-research",
+    locale: "EN",
+    sourceWeight: 54,
+    ingest: "rss",
+    defaultActive: false
+  },
+  {
+    name: "The Crypto Times Medium",
+    url: "https://medium.com/feed/the-crypto-times",
+    locale: "EN",
+    sourceWeight: 48,
     ingest: "rss",
     defaultActive: false
   },
@@ -88,10 +112,26 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     ingest: "rss"
   },
   {
-    name: "Bankless Substack",
-    url: "https://bankless.substack.com/feed",
+    name: "Bankless",
+    url: "https://www.bankless.com/feed",
     locale: "EN",
     sourceWeight: 55,
+    ingest: "rss",
+    defaultActive: false
+  },
+  {
+    name: "Messari Substack",
+    url: "https://messari.substack.com/feed",
+    locale: "EN",
+    sourceWeight: 56,
+    ingest: "rss",
+    defaultActive: false
+  },
+  {
+    name: "Milk Road Substack",
+    url: "https://milkroad.substack.com/feed",
+    locale: "EN",
+    sourceWeight: 48,
     ingest: "rss",
     defaultActive: false
   },
@@ -110,24 +150,10 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     ingest: "rss"
   },
   {
-    name: "Aave Mirror",
-    url: "https://aave.mirror.xyz/feed/atom",
-    locale: "EN",
-    sourceWeight: 58,
-    ingest: "rss"
-  },
-  {
-    name: "Optimism Mirror",
-    url: "https://optimism.mirror.xyz/feed/atom",
-    locale: "EN",
-    sourceWeight: 58,
-    ingest: "rss"
-  },
-  {
-    name: "Safe Mirror",
-    url: "https://safe.mirror.xyz/feed/atom",
-    locale: "EN",
-    sourceWeight: 54,
+    name: "BTC Study",
+    url: "https://www.btcstudy.org/atom.xml",
+    locale: "ZH",
+    sourceWeight: 62,
     ingest: "rss"
   },
   {
@@ -135,7 +161,8 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     url: "https://mirror.xyz/chainfeeds.eth/feed/atom",
     locale: "ZH",
     sourceWeight: 64,
-    ingest: "rss"
+    ingest: "rss",
+    defaultActive: false
   },
   {
     name: "EthDaily Paragraph",
