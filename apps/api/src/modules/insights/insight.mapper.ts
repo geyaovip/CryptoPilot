@@ -127,7 +127,7 @@ function parseStringArray(value: unknown): string[] {
 function displayInsightTitle(insight: InsightRecord): string {
   const title = insight.aiInsight?.replace(/\s+/g, " ").trim();
   if (!title) return "市场雷达更新中…";
-  if (isChineseContent(title)) return title;
+  if (isChineseContent(title, 0.3)) return title;
   // English insight — extract Chinese from signals or use narrative name
   const signals = insight.signals ?? [];
   const fallback = pickChineseDisplayText(signals.map((s) => s.title));
