@@ -84,6 +84,7 @@ export type MarketInsightSummary = {
   narrative_tags: NarrativeSummary[];
   source_count: number;
   sources: InsightSourceRef[];
+  created_at: string;
 };
 
 export type MarketInsightDetail = MarketInsightSummary & {

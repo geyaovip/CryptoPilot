@@ -50,6 +50,7 @@ describe("insight mapper", () => {
       ],
       keyReasons: [],
       marketImpact: null,
+      createdAt: new Date(),
       signals: [
         baseSignal,
         {
@@ -100,6 +101,7 @@ describe("insight mapper", () => {
       ],
       keyReasons: [],
       marketImpact: null,
+      createdAt: new Date(),
       signals: [
         baseSignal,
         {

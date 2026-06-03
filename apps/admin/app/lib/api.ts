@@ -58,7 +58,11 @@ export async function getAdminFeed(filters: AdminFeedFilters = {}): Promise<Admi
   return body.data;
 }
 
-export async function getAdminInsights(filters: AdminPaginationFilters = {}): Promise<AdminListData<MarketInsightSummary>> {
+export type AdminInsightFilters = AdminPaginationFilters & {
+  search?: string;
+};
+
+export async function getAdminInsights(filters: AdminInsightFilters = {}): Promise<AdminListData<MarketInsightSummary>> {
   const response = await apiFetch(`${apiUrl}/api/admin/insights${toQuery(filters)}`, {
     cache: "no-store",
     headers: await adminHeaders()

@@ -11,6 +11,7 @@ type AdminPaginationProps = {
   hasPrev: boolean;
   hasNext: boolean;
   limit?: number;
+  extraParams?: Record<string, string>;
 };
 
 export function AdminPagination({
@@ -20,7 +21,8 @@ export function AdminPagination({
   totalPages,
   hasPrev,
   hasNext,
-  limit
+  limit,
+  extraParams
 }: AdminPaginationProps) {
   const router = useRouter();
 
@@ -28,6 +30,11 @@ export function AdminPagination({
     const params = new URLSearchParams();
     params.set("page", String(nextPage));
     if (limit) params.set("limit", String(limit));
+    if (extraParams) {
+      Object.entries(extraParams).forEach(([k, v]) => {
+        if (v) params.set(k, v);
+      });
+    }
     router.push(`${basePath}?${params.toString()}`);
   };
 

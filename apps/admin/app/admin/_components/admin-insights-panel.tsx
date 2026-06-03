@@ -4,6 +4,7 @@ import type { MarketInsightDetail, MarketInsightSummary } from "@cryptopilot/typ
 import { Card } from "@cryptopilot/ui";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { getAdminInsightDetail, resynthesizeAdminInsight, updateAdminInsightTitle } from "../../lib/api";
 import { AdminPagination } from "./admin-pagination";
 
@@ -70,6 +71,7 @@ type AdminInsightsPanelProps = {
     has_prev: boolean;
     has_next: boolean;
   };
+  search: string;
 };
 
 const heatLabels: Record<MarketInsightSummary["heat_label"], string> = {
@@ -84,7 +86,8 @@ const sentimentLabels: Record<MarketInsightSummary["sentiment"], string> = {
   bearish: "偏谨慎"
 };
 
-export function AdminInsightsPanel({ data }: AdminInsightsPanelProps) {
+export function AdminInsightsPanel({ data, search }: AdminInsightsPanelProps) {
+  const router = useRouter();
   const [selected, setSelected] = useState<MarketInsightDetail | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -93,6 +96,15 @@ export function AdminInsightsPanel({ data }: AdminInsightsPanelProps) {
 
   function handleTitleSaved(id: string, text: string) {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ai_insight: text } : item)));
+  }
+
+  function doSearch(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const q = String(form.get("search") ?? "").trim();
+    const params = new URLSearchParams();
+    if (q) params.set("search", q);
+    router.push(q ? `/admin/insights?${params.toString()}` : "/admin/insights");
   }
 
   async function loadDetail(id: string) {
@@ -125,8 +137,32 @@ export function AdminInsightsPanel({ data }: AdminInsightsPanelProps) {
       <Card className="p-4">
         <h2 className="text-sm font-semibold text-slate-950">情报操作</h2>
         <p className="mt-1 text-sm text-slate-500">
-          用于核验市场情报的来源、关联信号和 AI 合成质量；发布前至少需要 2 个可点击来源。
+          用于核验市场情报的来源、关联信号和 AI 合成质量；发布前至少需要 2 个可点击来源。列表按更新时间倒序排列，重新合成后会自动排到顶部。
         </p>
+        <form className="mt-3 flex items-center gap-2" onSubmit={doSearch}>
+          <input
+            className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#20808D] focus:outline-none focus:ring-1 focus:ring-[#20808D]/30"
+            defaultValue={search}
+            name="search"
+            placeholder="搜索情报标题..."
+            type="search"
+          />
+          <button
+            className="inline-flex h-9 items-center rounded-lg bg-slate-950 px-4 text-sm font-medium text-white transition hover:bg-slate-800"
+            type="submit"
+          >
+            搜索
+          </button>
+          {search ? (
+            <button
+              className="text-sm text-slate-500 hover:text-slate-700"
+              onClick={() => router.push("/admin/insights")}
+              type="button"
+            >
+              清除
+            </button>
+          ) : null}
+        </form>
         {message ? <p className="mt-2 text-sm text-[#20808D]">{message}</p> : null}
       </Card>
 
@@ -135,7 +171,7 @@ export function AdminInsightsPanel({ data }: AdminInsightsPanelProps) {
           <table className="w-full min-w-[980px] text-left text-sm">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
-                {["市场情报", "情绪", "热度", "叙事", "来源", "操作"].map((column) => (
+                {["市场情报", "情绪", "热度", "叙事", "来源", "创建时间", "操作"].map((column) => (
                   <th className="border-b border-slate-200 px-4 py-3 font-medium" key={column}>
                     {column}
                   </th>
@@ -145,7 +181,7 @@ export function AdminInsightsPanel({ data }: AdminInsightsPanelProps) {
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-8 text-slate-500" colSpan={6}>
+                  <td className="px-4 py-8 text-slate-500" colSpan={7}>
                     暂无市场情报。
                   </td>
                 </tr>
@@ -163,6 +199,7 @@ export function AdminInsightsPanel({ data }: AdminInsightsPanelProps) {
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-700">{item.primary_narrative?.name ?? "-"}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-700">{item.source_count}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{new Date(item.created_at).toLocaleString("zh-CN")}</td>
                     <td className="whitespace-nowrap px-4 py-3">
                       <div className="flex flex-wrap gap-2">
                         <button className="text-[#20808D]" disabled={pendingId === item.id} onClick={() => loadDetail(item.id)} type="button">
@@ -183,6 +220,7 @@ export function AdminInsightsPanel({ data }: AdminInsightsPanelProps) {
 
       <AdminPagination
         basePath="/admin/insights"
+        extraParams={search ? { search } : undefined}
         hasNext={pagination.has_next}
         hasPrev={pagination.has_prev}
         limit={pagination.limit}

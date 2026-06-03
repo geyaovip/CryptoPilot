@@ -3,7 +3,12 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AuditService } from "../common/audit.service";
 import { toInsightDetail, toInsightSummary } from "../insights/insight.mapper";
 import { InsightSynthesisService } from "../insights/insight-synthesis.service";
-import { AdminPaginationDto, normalizeAdminPagination, pageMeta } from "./dto/admin-pagination.dto";
+import {
+  AdminPaginationDto,
+  normalizeAdminPagination,
+  pageMeta
+} from "./dto/admin-pagination.dto";
+import { AdminInsightQueryDto } from "./dto/admin-insight.dto";
 
 const include = {
   primaryNarrative: true,
@@ -25,9 +30,12 @@ export class AdminInsightService {
     @Inject(AuditService) private readonly audit: AuditService
   ) {}
 
-  async list(query: AdminPaginationDto = {}) {
+  async list(query: AdminInsightQueryDto = {}) {
     const { page, limit, skip } = normalizeAdminPagination(query);
-    const where = { deletedAt: null };
+    const where: Record<string, unknown> = { deletedAt: null };
+    if (query.search) {
+      where.aiInsight = { contains: query.search, mode: "insensitive" };
+    }
     const [total, rows] = await this.prisma.$transaction([
       this.prisma.marketInsight.count({ where }),
       this.prisma.marketInsight.findMany({

@@ -30,7 +30,11 @@ export default async function AdminInsightsPage({
   };
 
   try {
-    data = await getAdminInsights({ page: pickParam(params.page), limit: pickParam(params.limit) ?? "25" });
+    data = await getAdminInsights({
+      page: pickParam(params.page),
+      limit: pickParam(params.limit) ?? "25",
+      search: pickParam(params.search)
+    });
   } catch (error) {
     loadError = error instanceof Error ? error.message : "市场情报数据加载失败";
   }
@@ -44,7 +48,7 @@ export default async function AdminInsightsPage({
         />
       </div>
       {loadError ? <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</p> : null}
-      <AdminInsightsPanel data={data} />
+      <AdminInsightsPanel data={data} search={pickParam(params.search) ?? ""} />
     </AdminShell>
   );
 }

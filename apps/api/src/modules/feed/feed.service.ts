@@ -197,7 +197,7 @@ export class FeedService {
   }
 
   private orderBy(tab?: string): Prisma.FeedItemOrderByWithRelationInput[] {
-    if (tab === "latest") return [{ publishTime: "desc" }];
+    if (tab === "latest") return [{ updatedAt: "desc" }];
     return [{ isPinned: "desc" }, { rankScore: "desc" }, { publishTime: "desc" }];
   }
 

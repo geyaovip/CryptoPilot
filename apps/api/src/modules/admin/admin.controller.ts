@@ -20,6 +20,7 @@ import { CreateAdminKolDto, UpdateAdminKolDto } from "./dto/admin-kol.dto";
 import { CreateAdminNarrativeDto, MergeAdminNarrativeDto, UpdateAdminNarrativeDto } from "./dto/admin-narrative.dto";
 import { UpdateAdminTokenDto } from "./dto/admin-token.dto";
 import { AdminFeedQueryDto, CreateAdminFeedDto, UpdateAdminFeedDto } from "./dto/admin-feed.dto";
+import { AdminInsightQueryDto } from "./dto/admin-insight.dto";
 import { CreatePromptDto, PromptQueryDto, TestPromptDto, UpdatePromptDto } from "./dto/admin-prompt.dto";
 import { UpdateSourceDto } from "./dto/admin-source.dto";
 import { PatchAdminConfigDto } from "./dto/admin-config.dto";
@@ -312,7 +313,7 @@ export class AdminController {
   }
 
   @Get("insights")
-  async insights(@Query() query: AdminPaginationDto) {
+  async insights(@Query() query: AdminInsightQueryDto) {
     return ok(await this.adminInsightService.list(query));
   }
 

@@ -25,6 +25,7 @@ describe("BookmarksService", () => {
             sourcesJson: [{ feed_item_id: "f1", source_name: "A", source_url: "https://a.com" }],
             keyReasons: [],
             marketImpact: null,
+            createdAt: new Date(),
             primaryNarrative: null,
             signals: []
           },
@@ -44,6 +45,7 @@ describe("BookmarksService", () => {
             ],
             keyReasons: [],
             marketImpact: null,
+            createdAt: new Date(),
             primaryNarrative: null,
             signals: []
           }
