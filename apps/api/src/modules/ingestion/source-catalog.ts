@@ -77,7 +77,8 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     url: "https://medium.com/feed/a16zcrypto",
     locale: "EN",
     sourceWeight: 58,
-    ingest: "rss"
+    ingest: "rss",
+    defaultActive: false
   },
   {
     name: "Vitalik Blog",
@@ -91,7 +92,8 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     url: "https://bankless.substack.com/feed",
     locale: "EN",
     sourceWeight: 55,
-    ingest: "rss"
+    ingest: "rss",
+    defaultActive: false
   },
   {
     name: "Lido Blog",
