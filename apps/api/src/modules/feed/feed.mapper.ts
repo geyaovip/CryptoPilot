@@ -81,7 +81,7 @@ function displaySummary(aiSummary: string, title: string): string {
   if (isChineseContent(cleaned)) return cleaned;
   const chinese = pickChineseDisplayText([title]);
   if (chinese) return `来源: ${chinese.slice(0, 200)}`;
-  return cleaned || "AI 摘要生成中，请稍后刷新。";
+  return "AI 摘要生成中，请稍后刷新。";
 }
 
 function parseKeyReasons(value: unknown): string[] {

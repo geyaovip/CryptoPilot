@@ -30,7 +30,7 @@ async function main() {
 
   const feeds = await prisma.feedItem.findMany({
     where: { deletedAt: null, status: "PUBLISHED", aiGeneratedAt: { not: null } },
-    select: { id: true, title: true, content: true, narrativeHook: true, aiSummary: true }
+    select: { id: true, title: true, content: true, narrativeHook: true, aiSummary: true, feedItemNarratives: { include: { narrative: { select: { name: true } } } } }
   });
 
   for (const feed of feeds) {
@@ -39,11 +39,21 @@ async function main() {
     if (hookOk && summaryOk) continue;
 
     const chinese = extractChinese((feed.title ?? "") + "\n" + (feed.content ?? ""), 200);
-    if (!chinese) continue;
+    const primaryName = feed.feedItemNarratives?.[0]?.narrative?.name ?? "市场";
 
     const data: Record<string, string> = {};
-    if (!hookOk) data.narrativeHook = chinese.slice(0, 60);
-    if (!summaryOk) data.aiSummary = chinese.slice(0, 200);
+    if (!hookOk) {
+      data.narrativeHook = chinese
+        ? chinese.slice(0, 60)
+        : `${primaryName}叙事持续受到关注`;
+    }
+    if (!summaryOk) {
+      data.aiSummary = chinese
+        ? chinese.slice(0, 200)
+        : `${primaryName}相关动态更新`;
+    }
+    if (Object.keys(data).length === 0) continue;
+
     await prisma.feedItem.update({ where: { id: feed.id }, data });
     fixedFeeds += 1;
   }
@@ -52,7 +62,7 @@ async function main() {
 
   const insights = await prisma.marketInsight.findMany({
     where: { deletedAt: null, status: "PUBLISHED" },
-    select: { id: true, aiInsight: true, aiSummary: true, sourcesJson: true }
+    select: { id: true, aiInsight: true, aiSummary: true, sourcesJson: true, primaryNarrative: { select: { name: true } } }
   });
 
   for (const insight of insights) {
@@ -61,19 +71,30 @@ async function main() {
     if (insightOk && summaryOk) continue;
 
     let sourceText = "";
+    let sourceNames: string[] = [];
     try {
       const sources = JSON.parse(String(insight.sourcesJson ?? "[]"));
       if (Array.isArray(sources)) {
         sourceText = sources.map((s: { title?: string }) => s.title ?? "").join("\n");
+        sourceNames = sources.map((s: { source_name?: string }) => s.source_name ?? "").filter(Boolean);
       }
     } catch { /* ignore */ }
 
     const chinese = extractChinese(sourceText, 200);
-    if (!chinese) continue;
+    const topic = insight.primaryNarrative?.name ?? "市场";
+    const nameSuffix = [...new Set(sourceNames)].slice(0, 2).join(", ") || "";
 
     const data: Record<string, string> = {};
-    if (!insightOk) data.aiInsight = chinese.slice(0, 60);
-    if (!summaryOk) data.aiSummary = chinese.slice(0, 200);
+    if (!insightOk) {
+      data.aiInsight = chinese
+        ? chinese.slice(0, 60)
+        : `${nameSuffix ? nameSuffix + "等来源" : ""}关于${topic}的最新分析`;
+    }
+    if (!summaryOk) {
+      data.aiSummary = chinese
+        ? chinese.slice(0, 200)
+        : `${(sourceNames.length || 2)}个来源关于${topic}的相关讨论`;
+    }
     await prisma.marketInsight.update({ where: { id: insight.id }, data });
     fixedInsights += 1;
   }

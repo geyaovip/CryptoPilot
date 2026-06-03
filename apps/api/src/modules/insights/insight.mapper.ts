@@ -126,11 +126,17 @@ function displayInsightTitle(insight: InsightRecord): string {
   const title = insight.aiInsight?.replace(/\s+/g, " ").trim();
   if (!title) return "市场雷达更新中…";
   if (isChineseContent(title)) return title;
-  // English insight in DB — extract Chinese from signal titles
+  // English insight — extract Chinese from signals or use narrative name
   const signals = insight.signals ?? [];
   const fallback = pickChineseDisplayText(signals.map((s) => s.title));
   if (fallback) return `洞察: ${fallback.slice(0, 80)}`;
-  return title;
+  // Last resort: use narrative name to synthesize a Chinese headline
+  const name = insight.primaryNarrative?.name ?? "市场";
+  const sourceNames = [...new Set(
+    parseSourcesJson(insight.sourcesJson).map(s => s.source_name).filter(Boolean)
+  )].slice(0, 2);
+  const sourceSuffix = sourceNames.length > 0 ? `${sourceNames.join(", ")}等来源` : "";
+  return `${sourceSuffix}关于${name}的最新分析`;
 }
 
 function collectTokens(signals: SignalFeed[]) {
@@ -202,7 +208,9 @@ function normalizeInsightSummary(insight: InsightRecord, sources: InsightSourceR
   // No rewrite needed, but ensure Chinese
   if (isChineseContent(summary)) return summary;
   const fallback = pickChineseDisplayText(signals.map((s) => s.title));
-  return fallback ? `来源: ${fallback.slice(0, 160)}` : summary;
+  if (fallback) return `来源: ${fallback.slice(0, 160)}`;
+  const topic = insight.primaryNarrative?.name ?? "市场";
+  return `${sources.length}个来源关于${topic}的相关讨论`;
 }
 
 function compactText(value: string, maxLength: number): string {
