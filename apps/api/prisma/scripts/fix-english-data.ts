@@ -29,143 +29,89 @@ if (!LLM_KEY) {
   process.exit(1);
 }
 
-async function translate(text: string, context: string): Promise<string> {
-  const system = "你是CryptoPilot的翻译助手。将英文加密货币新闻标题/摘要翻译成简洁精准的中文，保留专业术语，100字以内。只输出译文，不要解释。";
-  const user = `原文: ${text.slice(0, 800)}\n${context ? `上下文: ${context.slice(0, 300)}` : ""}`;
-
+async function translateHeadline(text: string): Promise<string> {
   const res = await fetch(`${LLM_URL}/chat/completions`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${LLM_KEY}`
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${LLM_KEY}` },
     body: JSON.stringify({
       model: LLM_MODEL,
       messages: [
-        { role: "system", content: system },
-        { role: "user", content: user }
+        { role: "system", content: "把英文加密货币标题翻译成简洁中文，保留专业术语，只输出译文。" },
+        { role: "user", content: text.slice(0, 300) }
       ],
       temperature: 0.3,
-      max_tokens: 300
+      max_tokens: 200
     })
   });
 
-  if (!res.ok) {
-    const err = await res.text().catch(() => "");
-    throw new Error(`LLM ${res.status}: ${err.slice(0, 200)}`);
-  }
-
-  const data = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
+  if (!res.ok) throw new Error(`LLM ${res.status}`);
+  const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
   return data.choices?.[0]?.message?.content?.trim() ?? "";
 }
 
 async function main() {
   let fixedFeeds = 0;
   let fixedInsights = 0;
-  let total = 0;
 
-  // Feed items with English content
+  // Feed items: only fix English narrative hooks (short headlines)
   const feeds = await prisma.feedItem.findMany({
     where: { deletedAt: null, status: "PUBLISHED", aiGeneratedAt: { not: null } },
-    select: { id: true, title: true, content: true, narrativeHook: true, aiSummary: true }
+    select: { id: true, narrativeHook: true },
+    orderBy: { publishTime: "desc" },
+    take: 500
   });
 
   for (const feed of feeds) {
-    const hookOk = isChinese(feed.narrativeHook);
-    const summaryOk = isChinese(feed.aiSummary);
-    if (hookOk && summaryOk) continue;
-
-    total += 1;
+    const hook = feed.narrativeHook?.trim();
+    if (!hook || isChinese(hook)) continue;
 
     try {
-      const data: Record<string, string> = {};
-
-      if (!hookOk) {
-        const text = feed.narrativeHook ?? feed.title;
-        if (text && !isChinese(text)) {
-          data.narrativeHook = await translate(text, feed.title ?? "");
-        }
-      }
-      if (!summaryOk) {
-        const text = feed.aiSummary ?? feed.title;
-        if (text && !isChinese(text)) {
-          data.aiSummary = await translate(text, feed.title ?? "");
-        }
-      }
-
-      if (Object.keys(data).length > 0) {
-        await prisma.feedItem.update({ where: { id: feed.id }, data });
+      const cn = await translateHeadline(hook);
+      if (cn && isChinese(cn)) {
+        await prisma.feedItem.update({
+          where: { id: feed.id },
+          data: { narrativeHook: cn.slice(0, 80) }
+        });
         fixedFeeds += 1;
       }
     } catch (e) {
-      console.error(`Feed ${feed.id} failed:`, (e as Error).message);
+      console.error(`Feed ${feed.id}:`, (e as Error).message);
     }
-
-    // Rate limit: wait 1s between LLM calls
-    if (total % 5 === 0) console.log(`Progress: ${total} items processed, ${fixedFeeds} feeds fixed...`);
-    await new Promise((r) => setTimeout(r, 200));
+    if (fixedFeeds % 10 === 0) console.log(`Feeds done: ${fixedFeeds}...`);
+    await new Promise((r) => setTimeout(r, 100));
   }
 
-  // Insights with English content
+  console.log(`Feeds fixed: ${fixedFeeds}`);
+
+  // Insights: only fix English aiInsight headlines
   const insights = await prisma.marketInsight.findMany({
     where: { deletedAt: null, status: "PUBLISHED" },
-    select: { id: true, aiInsight: true, aiSummary: true, sourcesJson: true, primaryNarrative: { select: { name: true } } },
-    orderBy: { id: "asc" }
+    select: { id: true, aiInsight: true },
+    orderBy: { publishedAt: "desc" },
+    take: 200
   });
 
   for (const insight of insights) {
-    const insightOk = isChinese(insight.aiInsight);
-    const summaryOk = isChinese(insight.aiSummary);
-    if (insightOk && summaryOk) continue;
-
-    total += 1;
-
-    // Build context from source titles
-    let sourceContext = "";
-    try {
-      const sources = JSON.parse(String(insight.sourcesJson ?? "[]"));
-      if (Array.isArray(sources)) {
-        sourceContext = sources
-          .map((s: { title?: string }) => s.title ?? "")
-          .filter(Boolean)
-          .slice(0, 3)
-          .join(" | ");
-      }
-    } catch { /* ignore */ }
-
-    const topic = insight.primaryNarrative?.name ?? "加密市场";
+    const title = insight.aiInsight?.trim();
+    if (!title || isChinese(title)) continue;
 
     try {
-      const data: Record<string, string> = {};
-
-      if (!insightOk) {
-        const text = insight.aiInsight ?? sourceContext;
-        if (text && !isChinese(text)) {
-          data.aiInsight = await translate(text, `主题: ${topic}\n${sourceContext}`);
-        }
-      }
-      if (!summaryOk) {
-        const text = insight.aiSummary ?? sourceContext;
-        if (text && !isChinese(text)) {
-          data.aiSummary = await translate(text, `主题: ${topic}\n${sourceContext}`);
-        }
-      }
-
-      if (Object.keys(data).length > 0) {
-        await prisma.marketInsight.update({ where: { id: insight.id }, data });
+      const cn = await translateHeadline(title);
+      if (cn && isChinese(cn)) {
+        await prisma.marketInsight.update({
+          where: { id: insight.id },
+          data: { aiInsight: cn.slice(0, 80) }
+        });
         fixedInsights += 1;
       }
     } catch (e) {
-      console.error(`Insight ${insight.id} failed:`, (e as Error).message);
+      console.error(`Insight ${insight.id}:`, (e as Error).message);
     }
-
-    if (total % 5 === 0) console.log(`Progress: ${total} items, ${fixedInsights} insights fixed...`);
-    await new Promise((r) => setTimeout(r, 200));
+    if (fixedInsights % 10 === 0) console.log(`Insights done: ${fixedInsights}...`);
+    await new Promise((r) => setTimeout(r, 100));
   }
 
-  console.log(`Done. Feeds: ${fixedFeeds}, Insights: ${fixedInsights}, Total: ${total}`);
+  console.log(`Done. Feeds: ${fixedFeeds}, Insights: ${fixedInsights}`);
 }
 
 main()
