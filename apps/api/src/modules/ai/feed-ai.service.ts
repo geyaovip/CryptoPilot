@@ -5,6 +5,7 @@ import { AppHttpException } from "../common/app-http.exception";
 import { LlmService } from "../llm/llm.service";
 import { PromptService } from "../prompt/prompt.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { classifyFeedContentType } from "../feed/feed-content-type.util";
 import { EmbeddingService } from "./embedding.service";
 import { parseFeedSummaryOutput } from "./schemas";
 
@@ -81,9 +82,18 @@ export class FeedAiService {
         }
         const output = parsed.data;
         const headline = output.headline?.trim() || output.summary.trim().slice(0, 50);
+        const reclassifiedType = classifyFeedContentType({
+          title: feed.title,
+          content: feed.content,
+          source: { name: feed.source.name },
+          sentiment: output.sentiment.toUpperCase(),
+          feedItemNarratives: output.narrative_tags.map((slug) => ({ narrativeId: slug })),
+          feedItemTokens: output.related_tokens.map((symbol) => ({ tokenId: symbol }))
+        });
         await this.prisma.feedItem.update({
           where: { id: feedItemId },
           data: {
+            type: reclassifiedType,
             aiSummary: output.summary,
             narrativeHook: headline,
             aiKeyReasons: output.key_reasons,

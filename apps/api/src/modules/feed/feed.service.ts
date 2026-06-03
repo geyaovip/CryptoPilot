@@ -179,6 +179,7 @@ export class FeedService {
 
   private buildWhere(query: FeedQueryDto): Prisma.FeedItemWhereInput {
     const where: Prisma.FeedItemWhereInput = { deletedAt: null, status: "PUBLISHED" };
+    if (query.tab === "for_you") where.type = { not: "NEWS" };
     if (query.tab === "breaking") where.OR = [{ type: "BREAKING" }, { heatScore: { gte: 90 } }];
     if (query.narrative) {
       where.feedItemNarratives = {

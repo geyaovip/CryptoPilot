@@ -6,6 +6,7 @@ import { calculateHeatScore } from "./heat-score";
 import { evaluateFeedQuality } from "./feed-quality.util";
 import { fetchRedditSignals, type RedditCredentials } from "./reddit-provider";
 import { cleanRssItems, type CleanRssItem } from "./rss-cleaner";
+import { classifyFeedContentType } from "../feed/feed-content-type.util";
 
 const parser = new Parser();
 
@@ -83,7 +84,9 @@ export async function ingestSourceItems(
         aiSummary,
         narrativeHook,
         sourceUrl: item.sourceUrl,
-        type: source.type === "REDDIT" ? "SOCIAL_TREND" : "NEWS",
+        type: source.type === "REDDIT"
+          ? "SOCIAL_TREND"
+          : classifyFeedContentType({ title: item.title, content: item.content, source: { name: source.name } }),
         publishTime: item.publishTime,
         heatScore,
         rankScore: heatScore + (source.contentLocale === "ZH" ? 8 : 0),
