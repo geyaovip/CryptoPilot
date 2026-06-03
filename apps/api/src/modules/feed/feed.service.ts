@@ -114,11 +114,17 @@ export class FeedService {
         where: { deletedAt: null, isActive: true },
         orderBy: [{ displayOrder: "asc" }, { symbol: "asc" }]
       }),
-      this.prisma.narrative.findMany({
-        where: { deletedAt: null, isActive: true, mergedIntoId: null },
-        orderBy: [{ heatScore: "desc" }, { updatedAt: "desc" }],
-        take: 8
-      }),
+      this.prisma.$queryRawUnsafe<Array<{ id: string; name: string; slug: string; heatScore: number; trendScore24h: number }>>(
+        `SELECT n.id, n.name, n.slug, n.heat_score as "heatScore", n.trend_score_24h as "trendScore24h"
+         FROM narratives n
+         INNER JOIN feed_item_narratives fin ON fin.narrative_id = n.id
+         INNER JOIN feed_items fi ON fi.id = fin.feed_item_id
+           AND fi.deleted_at IS NULL AND fi.status = 'published' AND fi.type != 'news'
+         WHERE n.deleted_at IS NULL AND n.is_active = true AND n.merged_into_id IS NULL
+         GROUP BY n.id, n.name, n.slug, n.heat_score, n.trend_score_24h
+         ORDER BY COUNT(fi.id) DESC
+         LIMIT 8`
+      ),
       this.prisma.marketInsight.aggregate({
         where: { deletedAt: null, status: "PUBLISHED" },
         _avg: { heatScore: true, heatVelocity: true },

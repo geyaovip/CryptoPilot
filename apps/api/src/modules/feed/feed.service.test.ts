@@ -68,6 +68,10 @@ describe("FeedService", () => {
 
   it("returns explainable market intelligence metrics for trending", async () => {
     const prisma = {
+      $queryRawUnsafe: vi.fn().mockResolvedValue([
+        { id: "n1", name: "AI", slug: "ai", heatScore: 80, trendScore24h: 12 },
+        { id: "n2", name: "Meme", slug: "meme", heatScore: 50, trendScore24h: -6 }
+      ]),
       token: {
         findMany: vi.fn().mockResolvedValue([
           { id: "btc", symbol: "BTC", name: "Bitcoin", priceUsd: 100, priceChange24h: -3.5 },
@@ -75,12 +79,7 @@ describe("FeedService", () => {
           { id: "sol", symbol: "SOL", name: "Solana", priceUsd: 10, priceChange24h: 5.1 }
         ])
       },
-      narrative: {
-        findMany: vi.fn().mockResolvedValue([
-          { id: "n1", name: "AI", slug: "ai", heatScore: 80, trendScore24h: 12 },
-          { id: "n2", name: "Meme", slug: "meme", heatScore: 50, trendScore24h: -6 }
-        ])
-      },
+      narrative: {},
       marketInsight: {
         aggregate: vi.fn().mockResolvedValue({ _avg: { heatScore: 66, heatVelocity: 21 }, _count: { id: 4 } }),
         findFirst: vi.fn().mockResolvedValue({
