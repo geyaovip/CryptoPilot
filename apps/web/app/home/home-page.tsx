@@ -9,6 +9,8 @@ import { MarketHeatBar } from "../components/market-heat-bar";
 import { getFeed, getTrending } from "../lib/api";
 import { organizationJsonLd, webApplicationJsonLd, websiteJsonLd } from "../lib/seo";
 
+export const dynamic = "force-dynamic";
+
 const MARKET_SNAPSHOT_PRIORITY = ["BTC", "ETH"];
 const MARKET_SNAPSHOT_LIMIT = 10;
 
