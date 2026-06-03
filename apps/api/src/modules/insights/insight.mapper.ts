@@ -17,7 +17,7 @@ type InsightRecord = {
   sourcesJson: unknown;
   keyReasons: unknown;
   marketImpact: string | null;
-  createdAt: Date;
+  createdAt?: Date;
   primaryNarrative: { id: string; name: string; slug: string } | null;
   signals?: SignalFeed[];
 };
@@ -79,7 +79,7 @@ export function toInsightSummary(insight: InsightRecord): MarketInsightSummary {
     narrative_tags: narratives,
     source_count: sources.length,
     sources,
-    created_at: insight.createdAt.toISOString()
+    created_at: insight.createdAt?.toISOString() ?? new Date().toISOString()
   };
 }
 
