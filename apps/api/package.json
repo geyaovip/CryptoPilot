@@ -18,6 +18,7 @@
     "db:cluster-assign": "tsx prisma/scripts/assign-clusters.ts",
     "db:hide-low-value-feeds": "tsx prisma/scripts/hide-low-value-feeds.ts",
     "db:sync-sources": "tsx prisma/scripts/sync-sources.ts",
+    "db:sync": "tsx prisma/scripts/sync-all.ts",
     "db:regenerate-feed-ai": "tsx prisma/scripts/regenerate-feed-ai.ts"
   },
   "dependencies": {

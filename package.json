@@ -19,6 +19,7 @@
     "db:cluster-assign": "pnpm --filter @cryptopilot/api db:cluster-assign",
     "db:hide-low-value-feeds": "pnpm --filter @cryptopilot/api db:hide-low-value-feeds",
     "db:sync-sources": "pnpm --filter @cryptopilot/api db:sync-sources",
+    "db:sync": "pnpm --filter @cryptopilot/api db:sync",
     "db:sync-to-server": "bash scripts/sync-local-db-to-server.sh",
     "release:push": "bash scripts/release-push.sh",
     "docker:up": "docker compose up -d",
