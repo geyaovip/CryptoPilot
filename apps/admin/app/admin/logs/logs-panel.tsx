@@ -1,8 +1,9 @@
 "use client";
 
 import { Card } from "@cryptopilot/ui";
-import { useEffect, useState } from "react";
-import { getAdminLogs, type AdminLogItem } from "../../lib/api";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import type { AdminLogItem } from "../../lib/api";
 
 const types = ["", "api", "ingestion", "llm", "push", "audit"] as const;
 
@@ -15,27 +16,20 @@ const typeLabels: Record<(typeof types)[number], string> = {
   audit: "Admin 审计"
 };
 
-export function LogsPanel() {
+export function LogsPanel({ items }: { items: AdminLogItem[] }) {
+  const router = useRouter();
+  const [selected, setSelected] = useState<AdminLogItem | null>(null);
   const [type, setType] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [items, setItems] = useState<AdminLogItem[]>([]);
-  const [selected, setSelected] = useState<AdminLogItem | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setLoading(true);
-    void getAdminLogs({
-      type: type || undefined,
-      from: from ? new Date(from).toISOString() : undefined,
-      to: to ? new Date(to).toISOString() : undefined,
-      limit: 50
-    })
-      .then((data) => setItems(data.items))
-      .catch((err) => setError(err instanceof Error ? err.message : "加载失败"))
-      .finally(() => setLoading(false));
-  }, [type, from, to]);
+  function doFilter() {
+    const params = new URLSearchParams();
+    if (type) params.set("type", type);
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    router.push(params.size ? `/admin/logs?${params.toString()}` : "/admin/logs");
+  }
 
   return (
     <div className="space-y-4">
@@ -72,8 +66,14 @@ export function LogsPanel() {
             onChange={(event) => setTo(event.target.value)}
           />
         </label>
+        <button
+          className="inline-flex h-9 items-center rounded-lg bg-slate-950 px-4 text-sm font-medium text-white transition hover:bg-slate-800"
+          onClick={doFilter}
+          type="button"
+        >
+          筛选
+        </button>
       </Card>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <Card className="overflow-hidden p-0">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500">
@@ -85,13 +85,7 @@ export function LogsPanel() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr>
-                <td className="px-4 py-8 text-slate-500" colSpan={4}>
-                  加载中…
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
+            {items.length === 0 ? (
               <tr>
                 <td className="px-4 py-8 text-slate-500" colSpan={4}>
                   暂无日志
