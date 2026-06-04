@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AuditService } from "../common/audit.service";
 import { toInsightDetail, toInsightSummary } from "../insights/insight.mapper";
 import { InsightSynthesisService } from "../insights/insight-synthesis.service";
+import { stripTrailingPunctuation } from "../ingestion/chinese-content.util";
 import { normalizeAdminPagination, pageMeta } from "./dto/admin-pagination.dto";
 import { AdminInsightQueryDto } from "./dto/admin-insight.dto";
 
@@ -122,6 +123,7 @@ export class AdminInsightService {
   }
 
   async updateTitle(id: string, aiInsight: string, adminId: string) {
+    const cleaned = stripTrailingPunctuation(aiInsight);
     const before = await this.prisma.marketInsight.findFirst({
       where: { id, deletedAt: null },
       select: { aiInsight: true }
@@ -129,7 +131,7 @@ export class AdminInsightService {
     if (!before) throw new NotFoundException("Insight 不存在");
     await this.prisma.marketInsight.update({
       where: { id },
-      data: { aiInsight }
+      data: { aiInsight: cleaned }
     });
     await this.audit.log({
       adminUserId: adminId,
@@ -137,7 +139,7 @@ export class AdminInsightService {
       entityType: "insight",
       entityId: id,
       before: { aiInsight: before.aiInsight },
-      after: { aiInsight }
+      after: { aiInsight: cleaned }
     });
     return { success: true };
   }

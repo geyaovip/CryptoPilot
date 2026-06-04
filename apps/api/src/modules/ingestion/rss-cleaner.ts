@@ -28,7 +28,7 @@ export function cleanRssItems(items: RawRssItem[], collectedAt = new Date()): Cl
     seen.add(dedupeKey);
 
     cleaned.push({
-      title: cleanText(title),
+      title: cleanTitle(title),
       sourceUrl,
       content: cleanRssContent(item) || cleanText(title),
       publishTime: item.isoDate ? new Date(item.isoDate) : collectedAt
@@ -62,6 +62,10 @@ function cleanText(raw: string): string {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function cleanTitle(raw: string): string {
+  return cleanText(raw).replace(/[。.，,；;！!？?]+$/, "").trim();
 }
 
 function decodeHtmlEntities(raw: string): string {

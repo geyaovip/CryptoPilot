@@ -1,5 +1,5 @@
 import type { FeedType } from "@cryptopilot/types";
-import { pickChineseDisplayText, isChineseContent } from "../ingestion/chinese-content.util";
+import { pickChineseDisplayText, isChineseContent, stripTrailingPunctuation } from "../ingestion/chinese-content.util";
 
 type LinkedNarrative = {
   id: string;
@@ -26,12 +26,12 @@ export function pickPrimaryNarrative(feed: FeedWithNarratives): LinkedNarrative 
 
 export function buildNarrativeHook(feed: FeedWithNarratives): string {
   const stored = feed.narrativeHook?.trim();
-  if (stored && isChineseContent(stored)) return stored;
+  if (stored && isChineseContent(stored)) return stripTrailingPunctuation(stored);
 
   // If stored hook is English (LLM ignored the Chinese instruction),
   // fall through to Chinese fallback logic
   const chinese = pickChineseDisplayText([cleanFeedDisplayText(feed.aiSummary), feed.title]);
-  if (chinese) return chinese.slice(0, 120);
+  if (chinese) return stripTrailingPunctuation(chinese.slice(0, 120));
 
   // If stored hook is non-Chinese but exists, still prefer it over generic fallbacks
   // only when there's no Chinese alternative available

@@ -7,7 +7,7 @@ import { LlmService } from "../llm/llm.service";
 import { PromptService } from "../prompt/prompt.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { classifyFeedContentType } from "../feed/feed-content-type.util";
-import { pickChineseDisplayText, chineseTextRatio } from "../ingestion/chinese-content.util";
+import { pickChineseDisplayText, chineseTextRatio, stripTrailingPunctuation } from "../ingestion/chinese-content.util";
 import { EmbeddingService } from "./embedding.service";
 import { parseFeedSummaryOutput } from "./schemas";
 
@@ -93,6 +93,8 @@ export class FeedAiService {
             if (!summaryIsChinese) summary = fallbackFromSource.slice(0, 500);
           }
         }
+
+        headline = stripTrailingPunctuation(headline);
 
         const reclassifiedType = classifyFeedContentType({
           title: feed.title,

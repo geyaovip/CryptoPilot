@@ -2,7 +2,7 @@ import type { InsightSourceRef, MarketInsightDetail, MarketInsightSummary } from
 import type { FeedType } from "@cryptopilot/types";
 import { toFeedSummary } from "../feed/feed.mapper";
 import { toApiFeedType } from "../feed/feed-narrative.util";
-import { pickChineseDisplayText, isChineseContent } from "../ingestion/chinese-content.util";
+import { pickChineseDisplayText, isChineseContent, stripTrailingPunctuation } from "../ingestion/chinese-content.util";
 
 type InsightRecord = {
   id: string;
@@ -127,11 +127,11 @@ function parseStringArray(value: unknown): string[] {
 function displayInsightTitle(insight: InsightRecord): string {
   const title = insight.aiInsight?.replace(/\s+/g, " ").trim();
   if (!title) return "市场雷达更新中…";
-  if (isChineseContent(title, 0.3)) return title;
+  if (isChineseContent(title, 0.3)) return stripTrailingPunctuation(title);
   // English insight — extract Chinese from signals or use narrative name
   const signals = insight.signals ?? [];
   const fallback = pickChineseDisplayText(signals.map((s) => s.title));
-  if (fallback) return `洞察: ${fallback.slice(0, 80)}`;
+  if (fallback) return `洞察: ${stripTrailingPunctuation(fallback.slice(0, 80))}`;
   // Last resort: use narrative name to synthesize a Chinese headline
   const name = insight.primaryNarrative?.name ?? "市场";
   const sourceNames = [...new Set(

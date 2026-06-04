@@ -17,3 +17,8 @@ export function pickChineseDisplayText(parts: Array<string | null | undefined>):
   }
   return null;
 }
+
+/** Strip trailing punctuation that doesn't belong in titles (。.，,；;！!？?) */
+export function stripTrailingPunctuation(text: string): string {
+  return text.replace(/[。.，,；;！!？?]+$/, "").trim();
+}

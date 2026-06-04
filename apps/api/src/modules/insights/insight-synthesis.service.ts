@@ -4,7 +4,7 @@ import { LlmService } from "../llm/llm.service";
 import { PromptService } from "../prompt/prompt.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { EmbeddingService } from "../ai/embedding.service";
-import { chineseTextRatio, pickChineseDisplayText } from "../ingestion/chinese-content.util";
+import { chineseTextRatio, pickChineseDisplayText, stripTrailingPunctuation } from "../ingestion/chinese-content.util";
 import { buildSourcesFromSignals, parseSourcesJson } from "./insight.mapper";
 import { parseInsightSynthesisOutput } from "./insight-synthesis.schema";
 import type { InsightSynthesisOutput } from "./insight-synthesis.schema";
@@ -72,6 +72,8 @@ export class InsightSynthesisService {
           if (!summaryIsChinese) output.ai_summary = fallback.slice(0, 160);
         }
       }
+
+      output.ai_insight = stripTrailingPunctuation(output.ai_insight);
 
       await this.publishInsight(insightId, insight, sources, output);
 
