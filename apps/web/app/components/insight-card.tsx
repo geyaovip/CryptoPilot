@@ -10,6 +10,18 @@ const HEAT_LABELS: Record<MarketInsightSummary["heat_label"], string> = {
   stable: "平稳"
 };
 
+const SENTIMENT_LABELS: Record<MarketInsightSummary["sentiment"], string> = {
+  bullish: "偏积极",
+  neutral: "中性",
+  bearish: "偏谨慎"
+};
+
+const SENTIMENT_STYLES: Record<MarketInsightSummary["sentiment"], string> = {
+  bullish: "bg-[#E8F4F6] text-[#20808D]",
+  neutral: "bg-[#F3F4F6] text-[#6B7280]",
+  bearish: "bg-red-50 text-red-700"
+};
+
 export function InsightCard({ insight }: { insight: MarketInsightSummary }) {
   const headline = insight.ai_insight?.trim() || "市场雷达更新中…";
   const summary = insight.ai_summary?.trim() || "";
@@ -20,6 +32,9 @@ export function InsightCard({ insight }: { insight: MarketInsightSummary }) {
         <FeedTypeBadge feedType={insight.feed_type} />
         <span className="rounded-full bg-[#FFF4E5] px-2.5 py-0.5 text-xs font-medium text-[#B45309]">
           {HEAT_LABELS[insight.heat_label]}
+        </span>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${SENTIMENT_STYLES[insight.sentiment]}`}>
+          {SENTIMENT_LABELS[insight.sentiment]}
         </span>
         {insight.primary_narrative ? (
           <Link
