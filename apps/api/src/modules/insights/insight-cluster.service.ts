@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 import { BackgroundJobsService } from "../common/background-jobs.service";
 import { PrismaService } from "../prisma/prisma.service";
@@ -19,13 +20,15 @@ export class InsightClusterService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(InsightSynthesisService) private readonly synthesis: InsightSynthesisService,
-    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService
+    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService,
+    @Inject(ConfigService) private readonly config: ConfigService
   ) {}
 
   @Cron("*/20 * * * *")
   async clusterScheduled(): Promise<void> {
     if (!this.jobs.enabled) return;
-    await this.clusterPending(8).catch((error) => {
+    const limit = Number(this.config.get<string>("LLM_INSIGHT_BATCH_SIZE") ?? "3");
+    await this.clusterPending(limit).catch((error) => {
       this.logger.warn(error instanceof Error ? error.message : "cluster failed");
     });
   }

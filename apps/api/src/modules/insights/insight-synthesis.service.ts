@@ -42,12 +42,13 @@ export class InsightSynthesisService {
     const prompt = this.promptService.renderTemplate(template, {
       primary_narrative: insight.primaryNarrative?.name ?? "综合市场",
       signals: insight.signals
+        .slice(0, 4)
         .map(
           (signal, index) =>
-            `${index + 1}. ${signal.title} (${signal.source.name}, ${signal.publishTime.toISOString().slice(0, 10)})`
+            `${index + 1}. ${compactText(signal.title, 140)} (${signal.source.name}, ${signal.publishTime.toISOString().slice(0, 10)})`
         )
         .join("\n"),
-      source_list: sources.map((s) => `${s.source_name} ${s.source_url}`).join("\n")
+      source_list: sources.slice(0, 4).map((s) => `${s.source_name} ${s.source_url}`).join("\n")
     });
 
     try {
@@ -134,4 +135,8 @@ export class InsightSynthesisService {
       }
     });
   }
+}
+
+function compactText(text: string, limit: number): string {
+  return text.replace(/\s+/g, " ").trim().slice(0, limit);
 }

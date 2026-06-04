@@ -14,6 +14,7 @@ export class LlmService {
   private readonly prisma: PrismaService;
   private readonly providers = new Map<string, LlmProvider>();
   private readonly mockProvider = createMockLlmProvider();
+  private budgetCache: { checkedAt: number; tokens: number; costUsd: number } | null = null;
 
   constructor(
     @Inject(PrismaService) prisma: PrismaService,
@@ -93,6 +94,7 @@ export class LlmService {
     feature: LlmFeature,
     fn: () => Promise<T>
   ): Promise<T> {
+    await this.assertBudget(input);
     try {
       const result = await fn();
       await this.logCall({
@@ -148,5 +150,39 @@ export class LlmService {
         errorMessage: input.errorMessage
       }
     });
+  }
+
+  private async assertBudget(input: LlmJsonInput | LlmTextInput) {
+    const tokenBudget = Number(this.config.get<string>("LLM_DAILY_TOKEN_BUDGET") ?? "250000");
+    const costBudget = Number(this.config.get<string>("LLM_DAILY_COST_BUDGET_USD") ?? "3");
+    if (tokenBudget <= 0 && costBudget <= 0) return;
+
+    const usage = await this.getRecentUsage();
+    const estimatedTokens = Math.ceil(input.user.length / 4) + Number(this.config.get<string>("LLM_MAX_OUTPUT_TOKENS") ?? "1200");
+    if (tokenBudget > 0 && usage.tokens + estimatedTokens > tokenBudget) {
+      throw new AppHttpException("LLM_PROVIDER_ERROR", "LLM 今日 Token 预算已用完，请稍后再试", HttpStatus.TOO_MANY_REQUESTS);
+    }
+    if (costBudget > 0 && usage.costUsd >= costBudget) {
+      throw new AppHttpException("LLM_PROVIDER_ERROR", "LLM 今日成本预算已用完，请稍后再试", HttpStatus.TOO_MANY_REQUESTS);
+    }
+  }
+
+  private async getRecentUsage() {
+    const now = Date.now();
+    if (this.budgetCache && now - this.budgetCache.checkedAt < 60_000) return this.budgetCache;
+    const since = new Date(now - 24 * 60 * 60 * 1000);
+    const rows = await this.prisma.llmCallLog.findMany({
+      where: { createdAt: { gte: since }, status: "SUCCESS" },
+      select: { inputTokens: true, outputTokens: true, costUsd: true }
+    });
+    const usage = rows.reduce(
+      (sum, row) => ({
+        tokens: sum.tokens + row.inputTokens + row.outputTokens,
+        costUsd: sum.costUsd + Number(row.costUsd)
+      }),
+      { tokens: 0, costUsd: 0 }
+    );
+    this.budgetCache = { ...usage, checkedAt: now };
+    return this.budgetCache;
   }
 }

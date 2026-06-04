@@ -8,7 +8,7 @@ describe("AiSearchService quota", () => {
       findUnique: vi.fn(),
       update: vi.fn()
     },
-    aiSearchHistory: { create: vi.fn() }
+    aiSearchHistory: { create: vi.fn(), findFirst: vi.fn() }
   };
   const promptService = { getActiveContent: vi.fn(), renderTemplate: vi.fn() };
   const llm = { generateJson: vi.fn(), getProviderName: vi.fn(() => "mock") };
@@ -27,6 +27,7 @@ describe("AiSearchService quota", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    prisma.aiSearchHistory.findFirst.mockResolvedValue(null);
   });
 
   it("throws DAILY_LIMIT_EXCEEDED when quota reached", async () => {

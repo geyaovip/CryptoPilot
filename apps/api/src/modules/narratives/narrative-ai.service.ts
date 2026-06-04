@@ -20,7 +20,7 @@ export class NarrativeAiService {
   @Cron("*/15 * * * *")
   async processStaleSummaries(): Promise<void> {
     if (!this.jobs.enabled) return;
-    const staleBefore = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const staleBefore = new Date(Date.now() - 48 * 60 * 60 * 1000);
     const narratives = await this.prisma.narrative.findMany({
       where: {
         deletedAt: null,
@@ -29,7 +29,7 @@ export class NarrativeAiService {
         OR: [{ aiSummary: null }, { updatedAt: { lt: staleBefore } }]
       },
       orderBy: { updatedAt: "asc" },
-      take: 3,
+      take: 1,
       select: { id: true }
     });
     for (const narrative of narratives) {
@@ -55,7 +55,7 @@ export class NarrativeAiService {
       },
       include: { source: true },
       orderBy: { publishTime: "desc" },
-      take: 8
+      take: 5
     });
 
     const relatedFeed =
@@ -63,7 +63,7 @@ export class NarrativeAiService {
         ? feeds
             .map(
               (feed) =>
-                `- ${feed.title} (${feed.source.name}, ${feed.publishTime.toISOString().slice(0, 10)})`
+                `- ${compactText(feed.title, 120)} (${feed.source.name}, ${feed.publishTime.toISOString().slice(0, 10)})`
             )
             .join("\n")
         : "暂无相关 Feed";
@@ -91,4 +91,8 @@ export class NarrativeAiService {
       }
     });
   }
+}
+
+function compactText(text: string, limit: number): string {
+  return text.replace(/\s+/g, " ").trim().slice(0, limit);
 }

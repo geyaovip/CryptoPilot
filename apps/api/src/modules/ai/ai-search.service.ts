@@ -28,6 +28,8 @@ export class AiSearchService {
     if (trimmed.length > 500) throw new AppHttpException("QUERY_TOO_LONG", "问题长度不能超过 500 字符");
 
     await this.ensureDailyQuota(id);
+    const cached = insightId ? null : await this.findRecentAnswer(id, trimmed);
+    if (cached) return cached;
     const providerName = this.llm.getProviderName("ai_search");
 
     const contextItems = insightId
@@ -42,12 +44,13 @@ export class AiSearchService {
     const prompt = this.promptService.renderTemplate(template, {
       query: trimmed,
       context: contextItems
+        .slice(0, 6)
         .map(
           (item, index) =>
-            `[${index + 1}] ${item.title}\n来源: ${item.source_name}\n链接: ${item.source_url}\n摘要: ${item.ai_summary}`
+            `[${index + 1}] ${compactText(item.title, 120)}\n来源: ${item.source_name}\n链接: ${item.source_url}\n摘要: ${compactText(item.ai_summary, 220)}`
         )
         .join("\n\n"),
-      sources: sources.map((s) => `${s.source_name} ${s.url}`).join("\n")
+      sources: sources.slice(0, 6).map((s) => `${s.source_name} ${s.url}`).join("\n")
     });
 
     let output = null;
@@ -124,6 +127,25 @@ export class AiSearchService {
     return userId;
   }
 
+  private async findRecentAnswer(userId: string, query: string): Promise<AiSearchResult | null> {
+    const since = new Date(Date.now() - 60 * 60 * 1000);
+    const cached = await this.prisma.aiSearchHistory.findFirst({
+      where: { userId, query, createdAt: { gte: since } },
+      orderBy: { createdAt: "desc" }
+    });
+    if (!cached) return null;
+    return {
+      answer: cached.answer,
+      key_reasons: [],
+      market_impact: "",
+      related_tokens: [],
+      related_narratives: [],
+      sentiment: "neutral",
+      sources: Array.isArray(cached.sourcesJson) ? (cached.sourcesJson as AiSearchResult["sources"]) : [],
+      updated_at: cached.createdAt.toISOString()
+    };
+  }
+
   private async ensureDailyQuota(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException("需要登录");
@@ -143,4 +165,8 @@ export class AiSearchService {
       throw new AppHttpException("DAILY_LIMIT_EXCEEDED", `今日 AI 搜索次数已用完（${dailyLimit} 次/天）`);
     }
   }
+}
+
+function compactText(text: string, limit: number): string {
+  return text.replace(/\s+/g, " ").trim().slice(0, limit);
 }

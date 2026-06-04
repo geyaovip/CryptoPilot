@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 import { BackgroundJobsService } from "../common/background-jobs.service";
 import { AppHttpException } from "../common/app-http.exception";
@@ -19,7 +20,8 @@ export class FeedAiService {
     @Inject(PromptService) private readonly promptService: PromptService,
     @Inject(LlmService) private readonly llm: LlmService,
     @Inject(EmbeddingService) private readonly embeddingService: EmbeddingService,
-    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService
+    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService,
+    @Inject(ConfigService) private readonly config: ConfigService
   ) {}
 
   queueGeneration(feedItemId: string): void {
@@ -35,7 +37,7 @@ export class FeedAiService {
     const pending = await this.prisma.feedItem.findMany({
       where: { aiGeneratedAt: null, deletedAt: null, status: "PUBLISHED" },
       orderBy: { createdAt: "asc" },
-      take: 5,
+      take: Number(this.config.get<string>("LLM_FEED_AI_BATCH_SIZE") ?? "2"),
       select: { id: true }
     });
     for (const item of pending) {
@@ -61,7 +63,7 @@ export class FeedAiService {
     const template = await this.promptService.getActiveContent("feed_summary_prompt");
     const variables = {
       title: feed.title,
-      content: feed.content.slice(0, 2000),
+      content: compactText(feed.content, Number(this.config.get<string>("LLM_FEED_CONTENT_CHARS") ?? "1200")),
       source_name: feed.source.name,
       source_url: feed.sourceUrl,
       related_tokens: feed.feedItemTokens.map(({ token }) => token.symbol).join(", "),
@@ -77,10 +79,7 @@ export class FeedAiService {
           requireReal: true
         });
         const parsed = parseFeedSummaryOutput(llm.data);
-        if (!parsed.success) {
-          if (attempt === 1) throw new AppHttpException("LLM_OUTPUT_INVALID", "Feed AI 输出不符合 Schema");
-          continue;
-        }
+        if (!parsed.success) throw new AppHttpException("LLM_OUTPUT_INVALID", "Feed AI 输出不符合 Schema");
         const output = parsed.data;
         let headline = output.headline?.trim() || output.summary.trim().slice(0, 50);
         let summary = output.summary.trim();
@@ -126,7 +125,7 @@ export class FeedAiService {
           });
         return;
       } catch (error) {
-        if (attempt === 2) {
+        if (attempt === 1) {
           await this.markError(feedItemId, error instanceof Error ? error.message : "AI 生成失败");
         }
       }
@@ -162,4 +161,8 @@ export class FeedAiService {
       data: { aiGenerationError: message }
     });
   }
+}
+
+function compactText(text: string, limit: number): string {
+  return text.replace(/\s+/g, " ").trim().slice(0, Math.max(200, limit));
 }

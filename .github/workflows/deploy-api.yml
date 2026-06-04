@@ -183,16 +183,6 @@ jobs:
           ssh $SSH_OPTS "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
             "cd '$API_DEPLOY_PATH' && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @cryptopilot/api db:generate && pnpm --filter @cryptopilot/api build && sudo systemctl restart '${API_DEPLOY_SERVICE:-cryptopilot-api}'"
 
-      - name: Fix English content in DB
-        env:
-          API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
-          API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
-          API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
-        run: |
-          ssh $SSH_OPTS "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
-            "cd '$API_DEPLOY_PATH' && pnpm --filter @cryptopilot/api db:fix-english-data"
-        timeout-minutes: 10
-
       - name: Verify API health
         env:
           API_HEALTH_URL: ${{ secrets.API_HEALTH_URL }}
