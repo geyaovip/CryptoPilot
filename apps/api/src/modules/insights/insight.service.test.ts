@@ -27,21 +27,23 @@ function insight(id: string, slug: string, rankScore: number) {
 
 describe("InsightService", () => {
   it("diversifies the default insight list across narratives", async () => {
+    const findMany = vi.fn().mockResolvedValue([
+      insight("rwa-1", "rwa", 100),
+      insight("rwa-2", "rwa", 98),
+      insight("rwa-3", "rwa", 96),
+      insight("ai-1", "ai", 80)
+    ]);
     const service = new InsightService(
       {
         marketInsight: {
-          findMany: vi.fn().mockResolvedValue([
-            insight("rwa-1", "rwa", 100),
-            insight("rwa-2", "rwa", 98),
-            insight("rwa-3", "rwa", 96),
-            insight("ai-1", "ai", 80)
-          ])
+          findMany
         }
       } as never,
       { loadContext: vi.fn().mockResolvedValue(null) } as never
     );
 
     const result = await service.list({ limit: 4 });
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 16 }));
     expect(result.items.map((item) => item.id)).toEqual(["rwa-1", "ai-1", "rwa-2", "rwa-3"]);
   });
 });

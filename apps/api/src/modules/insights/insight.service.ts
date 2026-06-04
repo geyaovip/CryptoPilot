@@ -57,7 +57,7 @@ export class InsightService {
 
     const interestContext = await this.userInterest.loadContext(userId);
     const usePersonalizedRank = query.tab === "for_you" || Boolean(query.narrative);
-    const fetchLimit = usePersonalizedRank ? Math.min(limit * 4, 80) : limit + 1;
+    const fetchLimit = query.tab === "latest" ? limit + 1 : Math.min(limit * 4, 80);
 
     const rows = await this.prisma.marketInsight.findMany({
       where,
@@ -145,9 +145,11 @@ function diversifyInsights(rows: InsightListRow[]): InsightListRow[] {
 function pickDiverseIndex(rows: InsightListRow[], lastTopic: string | null, seenTopics: Map<string, number>): number {
   let bestIndex = 0;
   let bestScore = Number.NEGATIVE_INFINITY;
+  const hasFreshTopic = rows.some((row) => (seenTopics.get(insightTopicKey(row)) ?? 0) < 2);
   rows.forEach((row, index) => {
     const topic = insightTopicKey(row);
-    const penalty = topic === lastTopic ? 120 : (seenTopics.get(topic) ?? 0) * 35;
+    if (hasFreshTopic && (seenTopics.get(topic) ?? 0) >= 2) return;
+    const penalty = topic === lastTopic ? 500 : (seenTopics.get(topic) ?? 0) * 120;
     const score = row.rankScore + row.heatVelocity - penalty;
     if (score > bestScore) {
       bestScore = score;
