@@ -20,7 +20,7 @@ export class NarrativeAiService {
   @Cron("*/15 * * * *")
   async processStaleSummaries(): Promise<void> {
     if (!this.jobs.enabled) return;
-    const staleBefore = new Date(Date.now() - 6 * 60 * 60 * 1000);
+    const staleBefore = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const narratives = await this.prisma.narrative.findMany({
       where: {
         deletedAt: null,

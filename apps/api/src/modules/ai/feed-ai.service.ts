@@ -61,7 +61,7 @@ export class FeedAiService {
     const template = await this.promptService.getActiveContent("feed_summary_prompt");
     const variables = {
       title: feed.title,
-      content: feed.content.slice(0, 4000),
+      content: feed.content.slice(0, 2000),
       source_name: feed.source.name,
       source_url: feed.sourceUrl,
       related_tokens: feed.feedItemTokens.map(({ token }) => token.symbol).join(", "),
@@ -69,7 +69,7 @@ export class FeedAiService {
     };
     const prompt = this.promptService.renderTemplate(template, variables);
 
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         const llm = await this.llm.generateJson({
           promptKey: "feed_summary_prompt",
@@ -78,29 +78,22 @@ export class FeedAiService {
         });
         const parsed = parseFeedSummaryOutput(llm.data);
         if (!parsed.success) {
-          if (attempt === 2) throw new AppHttpException("LLM_OUTPUT_INVALID", "Feed AI 输出不符合 Schema");
+          if (attempt === 1) throw new AppHttpException("LLM_OUTPUT_INVALID", "Feed AI 输出不符合 Schema");
           continue;
         }
         const output = parsed.data;
         let headline = output.headline?.trim() || output.summary.trim().slice(0, 50);
         let summary = output.summary.trim();
 
-        // If the LLM didn't produce Chinese headline / summary, retry or fallback
+        // Fallback: if LLM didn't produce Chinese, use source Chinese text
         const headlineIsChinese = chineseTextRatio(headline) >= 0.08;
         const summaryIsChinese = chineseTextRatio(summary) >= 0.08;
 
         if (!headlineIsChinese || !summaryIsChinese) {
-          // Use Chinese text from the source as a fallback headline
           const fallbackFromSource = pickChineseDisplayText([feed.title, feed.content]);
           if (fallbackFromSource) {
-            headline = fallbackFromSource.slice(0, 50);
-          }
-          // If summary isn't Chinese either, try once more before accepting
-          if (!summaryIsChinese && attempt < 2) {
-            this.logger.warn(
-              `AI output not Chinese for ${feedItemId} (attempt ${attempt + 1}), retrying`
-            );
-            continue;
+            if (!headlineIsChinese) headline = fallbackFromSource.slice(0, 50);
+            if (!summaryIsChinese) summary = fallbackFromSource.slice(0, 500);
           }
         }
 

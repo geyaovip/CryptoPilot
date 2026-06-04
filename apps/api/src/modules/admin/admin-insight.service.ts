@@ -1,5 +1,4 @@
 import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
-import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuditService } from "../common/audit.service";
 import { toInsightDetail, toInsightSummary } from "../insights/insight.mapper";
@@ -31,9 +30,15 @@ export class AdminInsightService {
 
   async list(query: AdminInsightQueryDto = {}) {
     const { page, limit, skip } = normalizeAdminPagination(query);
-    this.logger.log(`search="${query.search}" page=${page} limit=${limit}`);
+    const search = query.search?.trim();
+    this.logger.log(`search="${search}" page=${page} limit=${limit}`);
 
-    const where = this.buildWhere(query.search);
+    // Use raw SQL for search to guarantee ILIKE works regardless of Prisma type inference
+    if (search) {
+      return this.searchWithRawSql(search, page, limit, skip);
+    }
+
+    const where = { deletedAt: null };
     const [total, rows] = await this.prisma.$transaction([
       this.prisma.marketInsight.count({ where }),
       this.prisma.marketInsight.findMany({
@@ -50,14 +55,38 @@ export class AdminInsightService {
     };
   }
 
-  private buildWhere(search?: string): Prisma.MarketInsightWhereInput {
-    if (!search) return { deletedAt: null };
+  private async searchWithRawSql(searchTerm: string, page: number, limit: number, skip: number) {
+    const pattern = `%${searchTerm}%`;
+    const [countRow, idRows] = await Promise.all([
+      this.prisma.$queryRawUnsafe<Array<{ cnt: bigint }>>(
+        `SELECT COUNT(*) as cnt FROM market_insights WHERE deleted_at IS NULL AND (ai_insight ILIKE $1 OR ai_summary ILIKE $1)`,
+        pattern
+      ),
+      this.prisma.$queryRawUnsafe<Array<{ id: string; updated_at: Date }>>(
+        `SELECT id, updated_at FROM market_insights WHERE deleted_at IS NULL AND (ai_insight ILIKE $1 OR ai_summary ILIKE $1) ORDER BY updated_at DESC LIMIT $2 OFFSET $3`,
+        pattern, limit, skip
+      )
+    ]);
+    const total = Number(countRow[0]?.cnt ?? 0);
+    const ids = idRows.map((r) => r.id);
+    this.logger.log(`Raw SQL search matched ${total} results, fetching ${ids.length} with relations`);
+
+    if (ids.length === 0) {
+      return { ...pageMeta(total, page, limit), items: [] };
+    }
+
+    const rows = await this.prisma.marketInsight.findMany({
+      where: { id: { in: ids } },
+      include,
+      orderBy: [{ updatedAt: "desc" }]
+    });
+    const ordered = ids
+      .map((id) => rows.find((r) => r.id === id))
+      .filter((r): r is NonNullable<typeof r> => r !== undefined);
+
     return {
-      deletedAt: null,
-      OR: [
-        { aiInsight: { contains: search, mode: "insensitive" } },
-        { aiSummary: { contains: search, mode: "insensitive" } }
-      ]
+      ...pageMeta(total, page, limit),
+      items: ordered.map((row) => toInsightSummary(row))
     };
   }
 

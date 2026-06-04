@@ -517,6 +517,7 @@ model IngestionLog {
   source       Source?         @relation(fields: [sourceId], references: [id])
 
   @@index([sourceId, createdAt])
+  @@index([status, createdAt])
   @@map("ingestion_logs")
 }
 
@@ -557,6 +558,7 @@ model AuditLog {
   userAgent   String?  @map("user_agent")
   createdAt   DateTime @default(now()) @map("created_at")
 
+  @@index([createdAt])
   @@index([adminUserId, createdAt])
   @@map("audit_logs")
 }
@@ -609,6 +611,7 @@ model LlmCallLog {
   user         User?         @relation(fields: [userId], references: [id])
 
   @@index([promptKey, createdAt])
+  @@index([status, createdAt])
   @@map("llm_call_logs")
 }
 

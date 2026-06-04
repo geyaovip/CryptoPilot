@@ -2,6 +2,8 @@ import { AdminPageHeader } from "../_components/admin-page-header";
 import { AdminShell } from "../_components/admin-shell";
 import { LogsPanel } from "./logs-panel";
 
+export const dynamic = "force-dynamic";
+
 export default function AdminLogsPage() {
   return (
     <AdminShell>
