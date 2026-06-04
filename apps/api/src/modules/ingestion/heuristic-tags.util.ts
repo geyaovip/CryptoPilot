@@ -48,14 +48,39 @@ export function inferHeuristicTags(
   input: Pick<CleanRssItem, "title" | "content">,
   catalog: HeuristicTagCatalog
 ): { tokenIds: string[]; narrativeIds: string[] } {
-  const text = `${input.title}\n${input.content}`;
+  const title = input.title;
+  const content = input.content;
   const tokenIds = catalog.tokens
-    .filter((token) => matchesToken(text, token.symbol, token.name))
-    .map((token) => token.id);
+    .map((token) => ({ id: token.id, score: scorePatterns(title, content, tokenPatterns(token.symbol, token.name)) }))
+    .filter((tag) => tag.score >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4)
+    .map((tag) => tag.id);
   const narrativeIds = catalog.narratives
-    .filter((narrative) => matchesNarrative(text, narrative.slug, narrative.name))
-    .map((narrative) => narrative.id);
+    .map((narrative) => ({ id: narrative.id, score: scorePatterns(title, content, narrativePatterns(narrative.slug, narrative.name)) }))
+    .filter((tag) => tag.score >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4)
+    .map((tag) => tag.id);
   return { tokenIds, narrativeIds };
+}
+
+function tokenPatterns(symbol: string, name: string): RegExp[] {
+  return TOKEN_ALIASES[symbol.toUpperCase()] ?? [wordPattern(symbol), wordPattern(name)];
+}
+
+function narrativePatterns(slug: string, name: string): RegExp[] {
+  return NARRATIVE_ALIASES[slug] ?? [wordPattern(slug), wordPattern(name)];
+}
+
+function scorePatterns(title: string, content: string, patterns: RegExp[]): number {
+  return patterns.reduce((score, pattern) => {
+    const titleHit = pattern.test(title);
+    pattern.lastIndex = 0;
+    const contentHit = pattern.test(content);
+    pattern.lastIndex = 0;
+    return score + (titleHit ? 3 : 0) + (contentHit ? 1 : 0);
+  }, 0);
 }
 
 export async function attachHeuristicTags(
@@ -81,16 +106,6 @@ export async function attachHeuristicTags(
   }
 
   return { tokenCount: tokenIds.length, narrativeCount: narrativeIds.length };
-}
-
-function matchesToken(text: string, symbol: string, name: string): boolean {
-  const patterns = TOKEN_ALIASES[symbol.toUpperCase()] ?? [wordPattern(symbol), wordPattern(name)];
-  return patterns.some((pattern) => pattern.test(text));
-}
-
-function matchesNarrative(text: string, slug: string, name: string): boolean {
-  const patterns = NARRATIVE_ALIASES[slug] ?? [wordPattern(slug), wordPattern(name)];
-  return patterns.some((pattern) => pattern.test(text));
 }
 
 function wordPattern(value: string): RegExp {

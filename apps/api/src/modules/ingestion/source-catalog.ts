@@ -73,14 +73,6 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     ingest: "rss"
   },
   {
-    name: "a16z crypto Substack",
-    url: "https://a16zcrypto.substack.com/feed",
-    locale: "EN",
-    sourceWeight: 58,
-    ingest: "rss",
-    defaultActive: false
-  },
-  {
     name: "Flashbots Medium",
     url: "https://medium.com/feed/flashbots",
     locale: "EN",
@@ -102,6 +94,69 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     ingest: "rss"
   },
   {
+    name: "a16z crypto Substack",
+    url: "https://a16zcrypto.substack.com/feed",
+    locale: "EN",
+    sourceWeight: 58,
+    ingest: "rss"
+  },
+  {
+    name: "Messari Substack",
+    url: "https://messari.substack.com/feed",
+    locale: "EN",
+    sourceWeight: 56,
+    ingest: "rss"
+  },
+  {
+    name: "Milk Road Substack",
+    url: "https://milkroad.substack.com/feed",
+    locale: "EN",
+    sourceWeight: 48,
+    ingest: "rss"
+  },
+  {
+    name: "Compound Finance Medium",
+    url: "https://medium.com/feed/compound-finance",
+    locale: "EN",
+    sourceWeight: 52,
+    ingest: "rss"
+  },
+  {
+    name: "Arbitrum Foundation Medium",
+    url: "https://arbitrumfoundation.medium.com/feed",
+    locale: "EN",
+    sourceWeight: 54,
+    ingest: "rss"
+  },
+  {
+    name: "IOSG Ventures Medium",
+    url: "https://medium.com/feed/iosg-ventures",
+    locale: "EN",
+    sourceWeight: 52,
+    ingest: "rss"
+  },
+  {
+    name: "1kx Medium",
+    url: "https://medium.com/feed/1kxnetwork",
+    locale: "EN",
+    sourceWeight: 50,
+    ingest: "rss"
+  },
+  {
+    name: "Gnosis Medium",
+    url: "https://medium.com/feed/gnosis-pm",
+    locale: "EN",
+    sourceWeight: 50,
+    ingest: "rss"
+  },
+  {
+    name: "NEAR Protocol Medium",
+    url: "https://medium.com/feed/nearprotocol",
+    locale: "EN",
+    sourceWeight: 48,
+    ingest: "rss"
+  },
+  {
     name: "Vitalik Blog",
     url: "https://vitalik.eth.limo/feed.xml",
     locale: "EN",
@@ -113,22 +168,6 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     url: "https://www.bankless.com/feed",
     locale: "EN",
     sourceWeight: 55,
-    ingest: "rss",
-    defaultActive: false
-  },
-  {
-    name: "Messari Substack",
-    url: "https://messari.substack.com/feed",
-    locale: "EN",
-    sourceWeight: 56,
-    ingest: "rss",
-    defaultActive: false
-  },
-  {
-    name: "Milk Road Substack",
-    url: "https://milkroad.substack.com/feed",
-    locale: "EN",
-    sourceWeight: 48,
     ingest: "rss",
     defaultActive: false
   },
@@ -154,14 +193,6 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
     ingest: "rss"
   },
   {
-    name: "ChainFeeds Mirror",
-    url: "https://mirror.xyz/chainfeeds.eth/feed/atom",
-    locale: "ZH",
-    sourceWeight: 64,
-    ingest: "rss",
-    defaultActive: false
-  },
-  {
     name: "EthDaily Paragraph",
     url: "https://api.paragraph.com/blogs/rss/%40ethdaily",
     locale: "EN",
@@ -178,6 +209,27 @@ export const SOURCE_CATALOG: SourceCatalogEntry[] = [
   {
     name: "ZKsync Paragraph",
     url: "https://api.paragraph.com/blogs/rss/%40zksync",
+    locale: "EN",
+    sourceWeight: 56,
+    ingest: "rss"
+  },
+  {
+    name: "Optimism Collective Paragraph",
+    url: "https://api.paragraph.com/blogs/rss/%40the-optimism-collective",
+    locale: "EN",
+    sourceWeight: 58,
+    ingest: "rss"
+  },
+  {
+    name: "Base Paragraph",
+    url: "https://api.paragraph.com/blogs/rss/%40base",
+    locale: "EN",
+    sourceWeight: 58,
+    ingest: "rss"
+  },
+  {
+    name: "EigenLayer Paragraph",
+    url: "https://api.paragraph.com/blogs/rss/%40eigenlayer",
     locale: "EN",
     sourceWeight: 56,
     ingest: "rss"

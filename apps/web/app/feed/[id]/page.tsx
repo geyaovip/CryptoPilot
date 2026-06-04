@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@cryptopilot/ui";
+import { ContextBackLink } from "../../components/context-back-link";
 import { FeedCardActions } from "../../components/feed-card-actions";
 import { FeedTypeBadge } from "../../components/feed-type-badge";
 import { JsonLd } from "../../components/json-ld";
@@ -60,9 +61,7 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
         ]}
       />
       <article className="mx-auto max-w-4xl space-y-5">
-        <a className="text-sm font-medium text-[#20808D]" href="/">
-          返回首页
-        </a>
+        <ContextBackLink fallbackHref="/" />
         <Card className="border-[#D9D5C9] bg-white/95 p-6 shadow-[0_18px_70px_rgba(16,42,44,0.08)]">
           <div className="flex flex-wrap items-center gap-2">
             <FeedTypeBadge feedType={feedType} />

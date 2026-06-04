@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Card } from "@cryptopilot/ui";
+import { ContextBackLink } from "../../components/context-back-link";
 import { FeedCard } from "../../components/feed-card";
 import { FeedTypeBadge } from "../../components/feed-type-badge";
 import { InsightCardActions } from "../../components/insight-card-actions";
@@ -80,9 +80,7 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
         ]}
       />
       <article className="mx-auto max-w-4xl space-y-5">
-        <a className="text-sm font-medium text-[#20808D]" href="/">
-          返回市场雷达
-        </a>
+        <ContextBackLink fallbackHref="/" />
         <Card className="border-[#D9D5C9] bg-white/95 p-6">
           <div className="flex flex-wrap items-center gap-2">
             <FeedTypeBadge feedType={insight.feed_type} />
