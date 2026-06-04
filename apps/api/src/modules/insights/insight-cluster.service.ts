@@ -13,6 +13,16 @@ const signalInclude = {
   feedItemNarratives: { include: { narrative: true } }
 } as const;
 
+type InsightClusterSignal = {
+  type: string;
+  title: string;
+  content: string;
+  feedItemTokens: Array<{ token: { symbol: string } }>;
+  feedItemNarratives: Array<{
+    narrative: { id: string; name: string; slug: string; heatScore: number; weight: number };
+  }>;
+};
+
 @Injectable()
 export class InsightClusterService {
   private readonly logger = new Logger(InsightClusterService.name);
@@ -50,8 +60,9 @@ export class InsightClusterService {
 
     const groups = new Map<string, typeof feeds>();
     for (const feed of feeds) {
-      const primary = pickPrimaryNarrative(feed);
-      const key = `${primary?.slug ?? fallbackGroupKey(feed.title)}:${timeWindowKey(feed.publishTime)}`;
+      const topic = insightGroupTopic(feed);
+      if (!topic) continue;
+      const key = `${topic}:${timeWindowKey(feed.publishTime)}`;
       const bucket = groups.get(key) ?? [];
       bucket.push(feed);
       groups.set(key, bucket);
@@ -152,22 +163,30 @@ function timeWindowKey(publishTime: Date): number {
   return Math.floor(publishTime.getTime() / (6 * 60 * 60 * 1000));
 }
 
-function fallbackGroupKey(title: string): string {
-  const normalized = title.toLowerCase();
+function insightGroupTopic(feed: InsightClusterSignal): string | null {
+  const primary = pickPrimaryNarrative(feed);
+  if (primary) return `narrative:${primary.slug}`;
+  const token = feed.feedItemTokens[0]?.token.symbol;
+  if (token) return `token:${token.toLowerCase()}`;
+  return fallbackGroupKey(`${feed.title}\n${feed.content}`);
+}
+
+function fallbackGroupKey(text: string): string | null {
+  const normalized = text.toLowerCase();
   const rules: Array<[RegExp, string]> = [
-    [/bitcoin|btc|比特币/, "btc"],
-    [/ethereum|eth|以太坊/, "eth"],
-    [/solana|sol\b/, "solana"],
-    [/\bxrp\b|ripple/, "xrp"],
-    [/\bbnb\b|币安|binance/, "bnb"],
-    [/etf|现货|资金流/, "etf"],
-    [/ai|人工智能|agent|模型/, "ai"],
-    [/sec|监管|合规|法院|牌照|批准/, "regulation"],
-    [/黑客|攻击|漏洞|安全|私钥/, "security"],
-    [/defi|借贷|dex|流动性/, "defi"],
-    [/stablecoin|稳定币|usdt|usdc/, "stablecoin"],
-    [/交易所|上线|下架|合约|永续/, "exchange"]
+    [/bitcoin|btc|比特币/, "topic:btc"],
+    [/ethereum|eth|以太坊/, "topic:eth"],
+    [/solana|sol\b/, "topic:solana"],
+    [/\bxrp\b|ripple/, "topic:xrp"],
+    [/\bbnb\b|币安|binance/, "topic:bnb"],
+    [/etf|现货|资金流/, "topic:etf"],
+    [/\bai\b|人工智能|agent|模型/, "topic:ai"],
+    [/sec|监管|合规|法院|牌照|批准/, "topic:regulation"],
+    [/黑客|攻击|漏洞|安全|私钥|exploit|hack/, "topic:security"],
+    [/defi|借贷|dex|流动性/, "topic:defi"],
+    [/stablecoin|稳定币|usdt|usdc/, "topic:stablecoin"],
+    [/layer\s*2|\bl2\b|rollup|二层|扩容/, "topic:layer2"],
+    [/\brwa\b|real.?world asset|tokeni[sz]|代币化/, "topic:rwa"]
   ];
-  const match = rules.find(([pattern]) => pattern.test(normalized));
-  return match?.[1] ?? "market";
+  return rules.find(([pattern]) => pattern.test(normalized))?.[1] ?? null;
 }

@@ -32,11 +32,20 @@ export type ClusterFeedRow = {
   }[];
 };
 
-export function clusterBucketKey(feed: ClusterFeedRow): string {
-  const primary = pickPrimaryNarrative(feed);
+export function clusterBucketKey(feed: ClusterFeedRow): string | null {
+  const topic = clusterTopicKey(feed);
+  if (!topic) return null;
   const windowMs = 6 * 60 * 60 * 1000;
   const window = Math.floor(feed.publishTime.getTime() / windowMs);
-  return `${primary?.slug ?? "general"}:${window}`;
+  return `${topic}:${window}`;
+}
+
+export function clusterTopicKey(feed: ClusterFeedRow): string | null {
+  const primary = pickPrimaryNarrative(feed);
+  if (primary) return `narrative:${primary.slug}`;
+  const token = feed.feedItemTokens[0]?.token.symbol;
+  if (token) return `token:${token.toLowerCase()}`;
+  return strongFallbackTopic(`${feed.title}\n${feed.content}`);
 }
 
 export function pickClusterRepresentative(members: ClusterFeedRow[]): ClusterFeedRow {
@@ -124,6 +133,7 @@ export function planClusterAssignments(feeds: ClusterFeedRow[]): Array<{ ids: st
   const buckets = new Map<string, ClusterFeedRow[]>();
   for (const feed of feeds) {
     const key = clusterBucketKey(feed);
+    if (!key) continue;
     const list = buckets.get(key) ?? [];
     list.push(feed);
     buckets.set(key, list);
@@ -141,6 +151,22 @@ export function planClusterAssignments(feeds: ClusterFeedRow[]): Array<{ ids: st
 
 function uniqueSourceCount(feeds: ClusterFeedRow[]): number {
   return new Set(feeds.map((feed) => feed.source.name)).size;
+}
+
+function strongFallbackTopic(text: string): string | null {
+  const rules: Array<[RegExp, string]> = [
+    [/bitcoin|btc|比特币/i, "topic:btc"],
+    [/ethereum|eth|以太坊/i, "topic:eth"],
+    [/solana|sol\b/i, "topic:solana"],
+    [/stablecoin|稳定币|usdt|usdc/i, "topic:stablecoin"],
+    [/\brwa\b|real.?world asset|tokeni[sz]|代币化/i, "topic:rwa"],
+    [/\bai\b|artificial intelligence|人工智能|agent|模型/i, "topic:ai"],
+    [/sec|监管|合规|法院|牌照|批准/i, "topic:regulation"],
+    [/黑客|攻击|漏洞|安全|私钥|exploit|hack/i, "topic:security"],
+    [/defi|借贷|dex|流动性/i, "topic:defi"],
+    [/layer\s*2|\bl2\b|rollup|二层|扩容/i, "topic:layer2"]
+  ];
+  return rules.find(([pattern]) => pattern.test(text))?.[1] ?? null;
 }
 
 /** Apply cluster_id and default representative (highest rank in plan.ids[0]). */

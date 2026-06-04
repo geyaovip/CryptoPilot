@@ -46,4 +46,20 @@ describe("InsightService", () => {
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 16 }));
     expect(result.items.map((item) => item.id)).toEqual(["rwa-1", "ai-1", "rwa-2", "rwa-3"]);
   });
+
+  it("orders the latest tab by published time instead of update time", async () => {
+    const findMany = vi.fn().mockResolvedValue([insight("latest-1", "rwa", 100)]);
+    const service = new InsightService(
+      {
+        marketInsight: {
+          findMany
+        }
+      } as never,
+      { loadContext: vi.fn().mockResolvedValue(null) } as never
+    );
+
+    await service.list({ limit: 1, tab: "latest" });
+
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ orderBy: [{ publishedAt: "desc" }] }));
+  });
 });

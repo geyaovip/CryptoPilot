@@ -104,7 +104,7 @@ export class InsightService {
   }
 
   private orderBy(tab?: string): Prisma.MarketInsightOrderByWithRelationInput[] {
-    if (tab === "latest") return [{ updatedAt: "desc" }];
+    if (tab === "latest") return [{ publishedAt: "desc" }];
     return [{ rankScore: "desc" }, { publishedAt: "desc" }];
   }
 

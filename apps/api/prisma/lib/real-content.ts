@@ -8,29 +8,9 @@ import {
   type ClusterFeedRow
 } from "../../src/modules/feed/feed-cluster.util";
 import { pickPrimaryNarrative } from "../../src/modules/feed/feed-narrative.util";
+import { attachHeuristicTags } from "../../src/modules/ingestion/heuristic-tags.util";
 
 const EXAMPLE_PREFIX = "https://example.com/";
-
-const narrativeKeywords: Array<{ slug: string; patterns: RegExp[] }> = [
-  { slug: "ai", patterns: [/\bai\b/i, /artificial intelligence/i, /infrastructure/i] },
-  { slug: "meme", patterns: [/\bmeme\b/i, /dogecoin/i, /pepe/i] },
-  { slug: "rwa", patterns: [/\brwa\b/i, /tokeniz/i, /real.?world asset/i] },
-  { slug: "depin", patterns: [/\bdepin\b/i, /decentralized physical/i] },
-  { slug: "stablecoin", patterns: [/\bstablecoin\b/i, /usdt/i, /usdc/i] },
-  { slug: "layer2", patterns: [/\blayer\s*2\b/i, /\bl2\b/i, /rollup/i] },
-  { slug: "solana", patterns: [/\bsolana\b/i, /\bsol\b/i] },
-  { slug: "ethereum", patterns: [/\bethereum\b/i, /\beth\b/i] }
-];
-
-const tokenKeywords: Array<{ symbol: string; patterns: RegExp[] }> = [
-  { symbol: "BTC", patterns: [/\bbitcoin\b/i, /\bbtc\b/i] },
-  { symbol: "ETH", patterns: [/\bethereum\b/i, /\beth\b/i] },
-  { symbol: "SOL", patterns: [/\bsolana\b/i, /\bsol\b/i] },
-  { symbol: "BNB", patterns: [/\bbnb\b/i, /binance/i] },
-  { symbol: "XRP", patterns: [/\bxrp\b/i, /ripple/i] },
-  { symbol: "DOGE", patterns: [/\bdoge\b/i, /dogecoin/i] },
-  { symbol: "LINK", patterns: [/\bchainlink\b/i, /\blink\b/i] }
-];
 
 export async function assignFeedClusters(prisma: PrismaClient) {
   await prisma.feedItem.updateMany({ data: { clusterId: null, isClusterLead: false } });
@@ -89,9 +69,7 @@ export async function ingestAllRssSources(prisma: PrismaClient, maxPerSource = 2
   for (const source of sources) {
     if (!source.url) continue;
     try {
-      const result = await ingestSourceItems(prisma, source, maxPerSource, async (feedItemId, item) => {
-        await attachHeuristicTags(prisma, feedItemId, item.title, item.content);
-      });
+      const result = await ingestSourceItems(prisma, source, maxPerSource);
       found += result.items_found;
       created += result.items_created;
 
@@ -113,30 +91,6 @@ export async function ingestAllRssSources(prisma: PrismaClient, maxPerSource = 2
   return { sources: sources.length, items_found: found, items_created: created };
 }
 
-async function attachHeuristicTags(prisma: PrismaClient, feedItemId: string, title: string, content: string) {
-  const text = `${title} ${content}`;
-  for (const token of tokenKeywords) {
-    if (!token.patterns.some((pattern) => pattern.test(text))) continue;
-    const row = await prisma.token.findUnique({ where: { symbol: token.symbol } });
-    if (!row) continue;
-    await prisma.feedItemToken.upsert({
-      where: { feedItemId_tokenId: { feedItemId, tokenId: row.id } },
-      update: {},
-      create: { feedItemId, tokenId: row.id }
-    });
-  }
-  for (const narrative of narrativeKeywords) {
-    if (!narrative.patterns.some((pattern) => pattern.test(text))) continue;
-    const row = await prisma.narrative.findUnique({ where: { slug: narrative.slug } });
-    if (!row) continue;
-    await prisma.feedItemNarrative.upsert({
-      where: { feedItemId_narrativeId: { feedItemId, narrativeId: row.id } },
-      update: {},
-      create: { feedItemId, narrativeId: row.id }
-    });
-  }
-}
-
 export async function backfillHeuristicTags(prisma: PrismaClient) {
   const feeds = await prisma.feedItem.findMany({
     where: {
@@ -154,7 +108,7 @@ export async function backfillHeuristicTags(prisma: PrismaClient) {
   });
 
   for (const feed of feeds) {
-    await attachHeuristicTags(prisma, feed.id, feed.title, feed.content);
+    await attachHeuristicTags(prisma, feed.id, feed);
     if (
       !feed.narrativeHook?.trim() &&
       feed.source.contentLocale === "ZH" &&

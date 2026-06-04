@@ -7,6 +7,7 @@ import { evaluateFeedQuality } from "./feed-quality.util";
 import { fetchRedditSignals, type RedditCredentials } from "./reddit-provider";
 import { cleanRssItems, type CleanRssItem } from "./rss-cleaner";
 import { classifyFeedContentType } from "../feed/feed-content-type.util";
+import { attachHeuristicTags, inferHeuristicTags, loadHeuristicTagCatalog } from "./heuristic-tags.util";
 
 const parser = new Parser({
   headers: {
@@ -118,6 +119,7 @@ export async function ingestSourceItems(
   itemsOverride?: CleanRssItem[]
 ): Promise<IngestSourceResult> {
   const items = itemsOverride ?? (await fetchItemsForSource(source, maxPerSource));
+  const tagCatalog = await loadHeuristicTagCatalog(prisma);
   let created = 0;
 
   for (const item of items) {
@@ -133,6 +135,7 @@ export async function ingestSourceItems(
       tokenMoves: []
     });
     const { aiSummary, narrativeHook } = initialAiFields(item, source);
+    const inferredTags = inferHeuristicTags(item, tagCatalog);
 
     const row = await prisma.feedItem.create({
       data: {
@@ -144,7 +147,13 @@ export async function ingestSourceItems(
         sourceUrl: item.sourceUrl,
         type: source.type === "REDDIT"
           ? "SOCIAL_TREND"
-          : classifyFeedContentType({ title: item.title, content: item.content, source: { name: source.name } }),
+          : classifyFeedContentType({
+              title: item.title,
+              content: item.content,
+              source: { name: source.name },
+              feedItemTokens: inferredTags.tokenIds.map((tokenId) => ({ tokenId })),
+              feedItemNarratives: inferredTags.narrativeIds.map((narrativeId) => ({ narrativeId }))
+            }),
         publishTime: item.publishTime,
         heatScore,
         rankScore: heatScore + (source.contentLocale === "ZH" ? 8 : 0),
@@ -152,6 +161,7 @@ export async function ingestSourceItems(
       }
     });
 
+    await attachHeuristicTags(prisma, row.id, item, tagCatalog);
     await onCreated?.(row.id, item);
     created += 1;
   }

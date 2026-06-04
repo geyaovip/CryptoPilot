@@ -72,6 +72,18 @@ export function InsightCard({ insight }: { insight: MarketInsightSummary }) {
             {token.symbol}
           </span>
         ))}
+        {insight.narrative_tags
+          .filter((tag) => tag.id !== insight.primary_narrative?.id)
+          .slice(0, 3)
+          .map((narrative) => (
+            <Link
+              className="rounded-full bg-[#F7F5EE] px-2.5 py-1 text-xs text-[#5F6868] hover:bg-[#EDE8DA]"
+              href={`/narratives/${narrative.slug}`}
+              key={narrative.id}
+            >
+              {narrative.name}
+            </Link>
+          ))}
       </div>
       <div className="mt-4 border-t border-[#EDE8DA] pt-4">
         <InsightCardActions askQuery={headline} insightId={insight.id} />

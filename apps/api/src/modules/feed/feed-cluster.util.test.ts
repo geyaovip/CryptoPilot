@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildClusterCards,
+  clusterBucketKey,
   pickClusterRepresentative,
   planClusterAssignments,
   toClusteredSummaries
@@ -67,5 +68,30 @@ describe("feed-cluster.util", () => {
   it("does not plan a cluster from one source only", () => {
     const plans = planClusterAssignments([row("a", null, "ai", 10), row("b", null, "ai", 8)]);
     expect(plans).toHaveLength(0);
+  });
+
+  it("does not cluster untagged generic market items", () => {
+    const first = row("a", null, "ai", 10);
+    first.feedItemNarratives = [];
+    first.title = "Crypto market update";
+    first.content = "Traders wait for the next macro data release.";
+    const second = row("b", null, "ai", 8, false, "PANews");
+    second.feedItemNarratives = [];
+    second.title = "Market digest";
+    second.content = "Several assets moved during the Asian session.";
+
+    expect(clusterBucketKey(first)).toBeNull();
+    expect(planClusterAssignments([first, second])).toHaveLength(0);
+  });
+
+  it("can cluster untagged items only when a strong fallback topic matches", () => {
+    const first = row("a", null, "ai", 10);
+    first.feedItemNarratives = [];
+    first.title = "Bitcoin ETF inflows rise";
+    const second = row("b", null, "ai", 8, false, "PANews");
+    second.feedItemNarratives = [];
+    second.title = "BTC funds extend inflow streak";
+
+    expect(planClusterAssignments([first, second])).toHaveLength(1);
   });
 });
