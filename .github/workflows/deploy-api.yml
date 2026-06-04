@@ -108,7 +108,12 @@ jobs:
             exit 1
           fi
 
-          ssh-keyscan -p "${API_DEPLOY_PORT:-22}" "$API_DEPLOY_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${API_DEPLOY_PORT:-22}" "$API_DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          # Retry once if first keyscan failed
+          if ! ssh-keygen -F "$API_DEPLOY_HOST" >/dev/null 2>&1; then
+            sleep 5
+            ssh-keyscan -p "${API_DEPLOY_PORT:-22}" "$API_DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          fi
 
       - name: Verify SSH connection
         env:
@@ -121,6 +126,7 @@ jobs:
             -p "${API_DEPLOY_PORT:-22}" \
             -o BatchMode=yes \
             -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=accept-new \
             "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
             "echo API deploy SSH connection verified"
 
@@ -139,7 +145,7 @@ jobs:
             --exclude ".env*" \
             --exclude "*.test.ts" \
             --exclude "*.spec.ts" \
-            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22} -o BatchMode=yes -o IdentitiesOnly=yes" \
+            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22} -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
             apps/api/ "$API_DEPLOY_USER@$API_DEPLOY_HOST:$API_DEPLOY_PATH/apps/api/"
 
       - name: Sync shared packages
@@ -155,7 +161,7 @@ jobs:
             --exclude .turbo \
             --exclude "*.test.ts" \
             --exclude "*.spec.ts" \
-            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22} -o BatchMode=yes -o IdentitiesOnly=yes" \
+            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22} -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
             packages/ "$API_DEPLOY_USER@$API_DEPLOY_HOST:$API_DEPLOY_PATH/packages/"
 
       - name: Sync workspace manifests
@@ -166,7 +172,7 @@ jobs:
           API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
         run: |
           rsync -az \
-            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22} -o BatchMode=yes -o IdentitiesOnly=yes" \
+            -e "ssh -i ~/.ssh/api_deploy_key -p ${API_DEPLOY_PORT:-22} -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
             package.json pnpm-lock.yaml pnpm-workspace.yaml \
             "$API_DEPLOY_USER@$API_DEPLOY_HOST:$API_DEPLOY_PATH/"
 
@@ -178,7 +184,7 @@ jobs:
           API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
           API_DEPLOY_SERVICE: ${{ secrets.API_DEPLOY_SERVICE }}
         run: |
-          ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
+          ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
             "cd '$API_DEPLOY_PATH' && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @cryptopilot/api db:generate && pnpm --filter @cryptopilot/api build && sudo systemctl restart '${API_DEPLOY_SERVICE:-cryptopilot-api}'"
 
       - name: Fix English content in DB
@@ -188,7 +194,7 @@ jobs:
           API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
           API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
         run: |
-          ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
+          ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
             "cd '$API_DEPLOY_PATH' && pnpm --filter @cryptopilot/api db:fix-english-data"
         timeout-minutes: 10
 
@@ -229,5 +235,5 @@ jobs:
           API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
           API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
         run: |
-          ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
+          ssh -i ~/.ssh/api_deploy_key -p "${API_DEPLOY_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
             "cd '$API_DEPLOY_PATH' && pnpm --filter @cryptopilot/api db:sync"
