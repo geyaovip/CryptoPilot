@@ -12,7 +12,8 @@ function row(
   clusterId: string | null,
   slug: string,
   rank: number,
-  isClusterLead = false
+  isClusterLead = false,
+  sourceName = "CoinDesk"
 ): ClusterFeedRow {
   const publishTime = new Date("2026-05-25T10:00:00Z");
   return {
@@ -30,7 +31,7 @@ function row(
     type: "NEWS",
     status: "PUBLISHED",
     isPinned: false,
-    source: { name: "CoinDesk" },
+    source: { name: sourceName },
     feedItemTokens: [],
     feedItemNarratives: [
       {
@@ -58,8 +59,13 @@ describe("feed-cluster.util", () => {
   });
 
   it("plans clusters for same narrative window", () => {
-    const plans = planClusterAssignments([row("a", null, "ai", 10), row("b", null, "ai", 8)]);
+    const plans = planClusterAssignments([row("a", null, "ai", 10), row("b", null, "ai", 8, false, "PANews")]);
     expect(plans).toHaveLength(1);
     expect(plans[0].ids).toHaveLength(2);
+  });
+
+  it("does not plan a cluster from one source only", () => {
+    const plans = planClusterAssignments([row("a", null, "ai", 10), row("b", null, "ai", 8)]);
+    expect(plans).toHaveLength(0);
   });
 });

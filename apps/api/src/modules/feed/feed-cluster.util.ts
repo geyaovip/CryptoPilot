@@ -133,10 +133,14 @@ export function planClusterAssignments(feeds: ClusterFeedRow[]): Array<{ ids: st
   for (const list of buckets.values()) {
     const sorted = [...list].sort((a, b) => b.rankScore - a.rankScore || b.publishTime.getTime() - a.publishTime.getTime());
     const slice = sorted.slice(0, 5);
-    if (slice.length < 2) continue;
+    if (slice.length < 2 || uniqueSourceCount(slice) < 2) continue;
     plans.push({ ids: slice.map((row) => row.id), clusterId: randomUUID() });
   }
   return plans;
+}
+
+function uniqueSourceCount(feeds: ClusterFeedRow[]): number {
+  return new Set(feeds.map((feed) => feed.source.name)).size;
 }
 
 /** Apply cluster_id and default representative (highest rank in plan.ids[0]). */

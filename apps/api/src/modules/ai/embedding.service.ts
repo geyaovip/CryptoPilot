@@ -1,4 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Prisma } from "@prisma/client";
 import { LlmService } from "../llm/llm.service";
 import { PrismaService } from "../prisma/prisma.service";
@@ -7,7 +8,8 @@ import { PrismaService } from "../prisma/prisma.service";
 export class EmbeddingService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(LlmService) private readonly llm: LlmService
+    @Inject(LlmService) private readonly llm: LlmService,
+    @Inject(ConfigService) private readonly config: ConfigService
   ) {}
 
   async upsertFeedEmbedding(feedItemId: string, text: string): Promise<void> {
@@ -20,6 +22,7 @@ export class EmbeddingService {
     text: string,
     purpose: "feed_embedding" | "search_embedding" = "feed_embedding"
   ): Promise<void> {
+    if (!this.enabled()) return;
     const result = await this.llm.embed([text], purpose);
     const vector = result.vectors[0];
     if (!vector) return;
@@ -32,6 +35,7 @@ export class EmbeddingService {
   }
 
   async vectorSearch(query: string, limit = 10): Promise<string[]> {
+    if (!this.enabled()) return [];
     const result = await this.llm.embed([query], "search_embedding");
     const vector = result.vectors[0];
     if (!vector) return [];
@@ -45,5 +49,9 @@ export class EmbeddingService {
         LIMIT ${limit}`
     );
     return rows.map((row) => row.entity_id);
+  }
+
+  private enabled(): boolean {
+    return this.config.get<string>("LLM_ENABLE_EMBEDDINGS") === "true";
   }
 }

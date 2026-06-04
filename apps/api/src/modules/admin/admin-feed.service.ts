@@ -96,7 +96,7 @@ export class AdminFeedService {
       where: { id },
       data: { aiGeneratedAt: null, aiGenerationError: null }
     });
-    this.feedAiService.queueGeneration(id);
+    this.feedAiService.queueGeneration(id, { force: true });
     await this.writeAudit(adminUserId, "regenerate_feed_ai", id);
     return { success: true };
   }
@@ -170,4 +170,3 @@ export class AdminFeedService {
     });
   }
 }
-

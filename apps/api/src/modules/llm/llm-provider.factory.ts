@@ -48,7 +48,7 @@ function buildOpenAiCompatibleProvider(
   apiKey: string
 ): OpenAiProvider {
   const globalTemperature = config.get<string>("LLM_TEMPERATURE")?.trim();
-  const maxOutputTokens = Number(config.get<string>("LLM_MAX_OUTPUT_TOKENS") ?? "1200");
+  const maxOutputTokens = Number(config.get<string>("LLM_MAX_OUTPUT_TOKENS") ?? "800");
 
   return new OpenAiProvider({
     apiKey,

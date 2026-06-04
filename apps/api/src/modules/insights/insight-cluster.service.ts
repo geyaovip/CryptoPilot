@@ -34,8 +34,15 @@ export class InsightClusterService {
   }
 
   async clusterPending(limit = 10): Promise<number> {
+    const minRank = Number(this.config.get<string>("LLM_INSIGHT_MIN_RANK_SCORE") ?? "60");
     const feeds = await this.prisma.feedItem.findMany({
-      where: { insightId: null, deletedAt: null, status: "PUBLISHED" },
+      where: {
+        insightId: null,
+        deletedAt: null,
+        status: "PUBLISHED",
+        rankScore: { gte: minRank },
+        aiGenerationError: null
+      },
       include: signalInclude,
       orderBy: { publishTime: "desc" },
       take: 120
@@ -44,7 +51,7 @@ export class InsightClusterService {
     const groups = new Map<string, typeof feeds>();
     for (const feed of feeds) {
       const primary = pickPrimaryNarrative(feed);
-      const key = primary?.slug ?? fallbackGroupKey(feed.title);
+      const key = `${primary?.slug ?? fallbackGroupKey(feed.title)}:${timeWindowKey(feed.publishTime)}`;
       const bucket = groups.get(key) ?? [];
       bucket.push(feed);
       groups.set(key, bucket);
@@ -53,10 +60,19 @@ export class InsightClusterService {
     let created = 0;
     for (const group of groups.values()) {
       if (created >= limit) break;
-      if (group.length < 2) continue;
+      const qualified = qualifySignals(group, {
+        minSignals: Number(this.config.get<string>("LLM_INSIGHT_MIN_SIGNALS") ?? "3"),
+        minSources: Number(this.config.get<string>("LLM_INSIGHT_MIN_UNIQUE_SOURCES") ?? "2")
+      });
+      if (!qualified) continue;
 
-      const batch = group.slice(0, 5);
+      const batch = qualified.slice(0, 5);
       const primary = pickPrimaryNarrative(batch[0]);
+      const existingInsightId = await this.findRecentInsightId(primary?.id ?? null, batch[0].publishTime);
+      if (existingInsightId) {
+        await this.attachToInsight(existingInsightId, batch);
+        continue;
+      }
       const heatScore = Math.max(...batch.map((item) => item.heatScore));
       const narrativeRow = primary
         ? batch[0].feedItemNarratives.find((row) => row.narrative.id === primary.id)?.narrative
@@ -97,6 +113,43 @@ export class InsightClusterService {
 
     return created;
   }
+
+  private async findRecentInsightId(primaryNarrativeId: string | null, publishTime: Date): Promise<string | null> {
+    if (!primaryNarrativeId) return null;
+    const since = new Date(publishTime.getTime() - 6 * 60 * 60 * 1000);
+    const insight = await this.prisma.marketInsight.findFirst({
+      where: {
+        primaryNarrativeId,
+        deletedAt: null,
+        status: "PUBLISHED",
+        publishedAt: { gte: since }
+      },
+      orderBy: { publishedAt: "desc" },
+      select: { id: true }
+    });
+    return insight?.id ?? null;
+  }
+
+  private async attachToInsight(insightId: string, batch: Array<{ id: string }>) {
+    await this.prisma.feedItem.updateMany({
+      where: { id: { in: batch.map((item) => item.id) } },
+      data: { insightId }
+    });
+  }
+}
+
+function qualifySignals<T extends { sourceId: string; publishTime: Date }>(
+  group: T[],
+  options: { minSignals: number; minSources: number }
+): T[] | null {
+  const sorted = [...group].sort((a, b) => b.publishTime.getTime() - a.publishTime.getTime());
+  const uniqueSourceIds = new Set(sorted.map((item) => item.sourceId));
+  if (sorted.length < options.minSignals || uniqueSourceIds.size < options.minSources) return null;
+  return sorted;
+}
+
+function timeWindowKey(publishTime: Date): number {
+  return Math.floor(publishTime.getTime() / (6 * 60 * 60 * 1000));
 }
 
 function fallbackGroupKey(title: string): string {

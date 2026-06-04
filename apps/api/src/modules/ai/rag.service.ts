@@ -1,4 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import type { AiSourceRef } from "@cryptopilot/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { EmbeddingService } from "./embedding.service";
@@ -17,12 +18,16 @@ export type RagContextItem = {
 export class RagService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(EmbeddingService) private readonly embeddingService: EmbeddingService
+    @Inject(EmbeddingService) private readonly embeddingService: EmbeddingService,
+    @Inject(ConfigService) private readonly config: ConfigService
   ) {}
 
   async retrieve(query: string): Promise<RagContextItem[]> {
     const keywordIds = await this.keywordSearch(query, 10);
-    const vectorIds = await this.embeddingService.vectorSearch(query, 10);
+    const vectorIds =
+      keywordIds.length >= 4 || this.config.get<string>("RAG_ENABLE_VECTOR_SEARCH") !== "true"
+        ? []
+        : await this.embeddingService.vectorSearch(query, 10);
     const mergedIds = [...new Set([...keywordIds, ...vectorIds])].slice(0, 12);
     if (mergedIds.length === 0) return [];
 
