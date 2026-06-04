@@ -4,7 +4,6 @@ import type { MarketInsightDetail, MarketInsightSummary } from "@cryptopilot/typ
 import { Card } from "@cryptopilot/ui";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { getAdminInsightDetail, resynthesizeAdminInsight, updateAdminInsightTitle } from "../../lib/api";
 import { AdminPagination } from "./admin-pagination";
 
@@ -87,7 +86,6 @@ const sentimentLabels: Record<MarketInsightSummary["sentiment"], string> = {
 };
 
 export function AdminInsightsPanel({ data, search }: AdminInsightsPanelProps) {
-  const router = useRouter();
   const [selected, setSelected] = useState<MarketInsightDetail | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -96,15 +94,6 @@ export function AdminInsightsPanel({ data, search }: AdminInsightsPanelProps) {
 
   function handleTitleSaved(id: string, text: string) {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ai_insight: text } : item)));
-  }
-
-  function doSearch(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    const q = String(form.get("search") ?? "").trim();
-    const params = new URLSearchParams();
-    if (q) params.set("search", q);
-    router.push(q ? `/admin/insights?${params.toString()}` : "/admin/insights");
   }
 
   async function loadDetail(id: string) {
@@ -139,7 +128,7 @@ export function AdminInsightsPanel({ data, search }: AdminInsightsPanelProps) {
         <p className="mt-1 text-sm text-slate-500">
           用于核验市场情报的来源、关联信号和 AI 合成质量；发布前至少需要 2 个可点击来源。列表按更新时间倒序排列，重新合成后会自动排到顶部。
         </p>
-        <form className="mt-3 flex items-center gap-2" onSubmit={doSearch}>
+        <form className="mt-3 flex items-center gap-2" action="/admin/insights" method="GET">
           <input
             className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#20808D] focus:outline-none focus:ring-1 focus:ring-[#20808D]/30"
             defaultValue={search}
@@ -154,13 +143,12 @@ export function AdminInsightsPanel({ data, search }: AdminInsightsPanelProps) {
             搜索
           </button>
           {search ? (
-            <button
-              className="text-sm text-slate-500 hover:text-slate-700"
-              onClick={() => router.push("/admin/insights")}
-              type="button"
+            <a
+              className="inline-flex h-9 items-center text-sm text-slate-500 hover:text-slate-700"
+              href="/admin/insights"
             >
               清除
-            </button>
+            </a>
           ) : null}
         </form>
         {message ? <p className="mt-2 text-sm text-[#20808D]">{message}</p> : null}
