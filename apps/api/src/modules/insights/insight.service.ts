@@ -69,7 +69,7 @@ export class InsightService {
 
     const published = rows.filter((row) => parseSourcesJson(row.sourcesJson).length >= 2);
 
-    const ranked =
+    const rankedRows =
       usePersonalizedRank && interestContext
         ? [...published].sort((a, b) => {
             const scoreA = this.scoreInsight(a, interestContext, query.narrative);
@@ -78,6 +78,7 @@ export class InsightService {
             return b.publishedAt.getTime() - a.publishedAt.getTime();
           })
         : published;
+    const ranked = query.tab === "latest" || query.narrative ? rankedRows : diversifyInsights(rankedRows);
 
     const page = ranked.slice(0, limit);
     const next = ranked.length > limit ? ranked[limit] : null;
@@ -119,4 +120,46 @@ export class InsightService {
     }
     return insight.rankScore + insight.heatVelocity + bonus;
   }
+}
+
+type InsightListRow = Prisma.MarketInsightGetPayload<{ include: typeof insightInclude }>;
+
+function diversifyInsights(rows: InsightListRow[]): InsightListRow[] {
+  const output: InsightListRow[] = [];
+  const pending = [...rows];
+  const seenTopics = new Map<string, number>();
+  let lastTopic: string | null = null;
+
+  while (pending.length > 0) {
+    const nextIndex = pickDiverseIndex(pending, lastTopic, seenTopics);
+    const [next] = pending.splice(nextIndex, 1);
+    output.push(next);
+    const topic = insightTopicKey(next);
+    lastTopic = topic;
+    seenTopics.set(topic, (seenTopics.get(topic) ?? 0) + 1);
+  }
+
+  return output;
+}
+
+function pickDiverseIndex(rows: InsightListRow[], lastTopic: string | null, seenTopics: Map<string, number>): number {
+  let bestIndex = 0;
+  let bestScore = Number.NEGATIVE_INFINITY;
+  rows.forEach((row, index) => {
+    const topic = insightTopicKey(row);
+    const penalty = topic === lastTopic ? 120 : (seenTopics.get(topic) ?? 0) * 35;
+    const score = row.rankScore + row.heatVelocity - penalty;
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  });
+  return bestIndex;
+}
+
+function insightTopicKey(insight: InsightListRow): string {
+  if (insight.primaryNarrative?.slug) return `narrative:${insight.primaryNarrative.slug}`;
+  const token = insight.signals.flatMap((signal) => signal.feedItemTokens).at(0)?.token.symbol;
+  if (token) return `token:${token.toLowerCase()}`;
+  return `type:${insight.type.toLowerCase()}`;
 }

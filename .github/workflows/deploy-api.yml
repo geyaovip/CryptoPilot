@@ -181,7 +181,7 @@ jobs:
           API_DEPLOY_SERVICE: ${{ secrets.API_DEPLOY_SERVICE }}
         run: |
           ssh $SSH_OPTS "$API_DEPLOY_USER@$API_DEPLOY_HOST" \
-            "cd '$API_DEPLOY_PATH' && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @cryptopilot/api db:generate && pnpm --filter @cryptopilot/api build && sudo systemctl restart '${API_DEPLOY_SERVICE:-cryptopilot-api}'"
+            "cd '$API_DEPLOY_PATH' && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @cryptopilot/api db:generate && pnpm --filter @cryptopilot/api db:deploy && pnpm --filter @cryptopilot/api build && sudo systemctl restart '${API_DEPLOY_SERVICE:-cryptopilot-api}'"
 
       - name: Verify API health
         env:

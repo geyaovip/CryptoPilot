@@ -21,11 +21,14 @@ type SourceListData = {
 export function AdminSourcesPanel({ data }: { data: SourceListData }) {
   const router = useRouter();
   const [platformFilter, setPlatformFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const platforms = Array.from(new Set(data.items.map((source) => source.platform))).sort(platformSort);
   const items =
-    platformFilter === "all"
-      ? data.items
-      : data.items.filter((source) => source.platform === platformFilter);
+    data.items.filter((source) => {
+      const platformMatched = platformFilter === "all" || source.platform === platformFilter;
+      const statusMatched = statusFilter === "all" || source.status === statusFilter;
+      return platformMatched && statusMatched;
+    });
   const [logs, setLogs] = useState<IngestionLogSummary[]>([]);
   const [activeSource, setActiveSource] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -70,6 +73,19 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
 
       <Card className="p-4">
         <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-slate-700">状态</span>
+          {["all", "active", "paused", "error"].map((status) => (
+            <button
+              className={`rounded-full px-3 py-1.5 text-sm ${statusFilter === status ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-600"}`}
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              type="button"
+            >
+              {sourceStatusLabel(status)} {status === "all" ? data.items.length : data.items.filter((source) => source.status === status).length}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-slate-700">平台分类</span>
           <button
             className={`rounded-full px-3 py-1.5 text-sm ${platformFilter === "all" ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-600"}`}
@@ -121,9 +137,9 @@ export function AdminSourcesPanel({ data }: { data: SourceListData }) {
                     <span className="ml-1.5 text-xs text-slate-400">{source.content_locale === "zh" ? "中" : "EN"}</span>
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${source.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                      <span className={`block h-1.5 w-1.5 rounded-full ${source.status === "active" ? "bg-emerald-500" : "bg-amber-500"}`} />
-                      {source.status === "active" ? "启用" : "暂停"}
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${sourceStatusClass(source.status)}`}>
+                      <span className={`block h-1.5 w-1.5 rounded-full ${sourceStatusDotClass(source.status)}`} />
+                      {sourceStatusLabel(source.status)}
                     </span>
                     {source.consecutive_failures > 0 ? (
                       <span className="ml-1.5 text-xs text-red-500">{source.consecutive_failures}次失败</span>
@@ -232,4 +248,26 @@ function platformLabel(platform: string) {
     other: "其他"
   };
   return map[platform] ?? platform;
+}
+
+function sourceStatusLabel(status: string) {
+  const map: Record<string, string> = {
+    all: "全部",
+    active: "启用",
+    paused: "暂停",
+    error: "异常"
+  };
+  return map[status] ?? status;
+}
+
+function sourceStatusClass(status: string) {
+  if (status === "active") return "bg-emerald-50 text-emerald-700";
+  if (status === "error") return "bg-red-50 text-red-700";
+  return "bg-amber-50 text-amber-700";
+}
+
+function sourceStatusDotClass(status: string) {
+  if (status === "active") return "bg-emerald-500";
+  if (status === "error") return "bg-red-500";
+  return "bg-amber-500";
 }

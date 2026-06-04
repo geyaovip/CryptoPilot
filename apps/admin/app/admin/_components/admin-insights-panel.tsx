@@ -237,7 +237,7 @@ function InsightDetailModal({ insight, onClose }: { insight: MarketInsightDetail
             onClick={onClose}
             type="button"
           >
-            <CloseIcon />
+            ×
           </button>
         </div>
         <div className="space-y-5 px-5 py-4">
@@ -269,14 +269,6 @@ function InsightDetailModal({ insight, onClose }: { insight: MarketInsightDetail
         </div>
       </div>
     </div>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
-      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
-    </svg>
   );
 }
 

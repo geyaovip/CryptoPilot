@@ -9,7 +9,6 @@ import { AdminAiMonitorService } from "./admin-ai-monitor.service";
 import { AdminFeedClusterService } from "./admin-feed-cluster.service";
 import { AdminFeedService } from "./admin-feed.service";
 import { AdminFeedClusterQueryDto, SetClusterRepresentativeDto } from "./dto/admin-feed-cluster.dto";
-import { AdminInsightService } from "./admin-insight.service";
 import { AdminKolService } from "./admin-kol.service";
 import { AdminNarrativeService } from "./admin-narrative.service";
 import { AdminPromptService } from "./admin-prompt.service";
@@ -20,15 +19,12 @@ import { CreateAdminKolDto, UpdateAdminKolDto } from "./dto/admin-kol.dto";
 import { CreateAdminNarrativeDto, MergeAdminNarrativeDto, UpdateAdminNarrativeDto } from "./dto/admin-narrative.dto";
 import { UpdateAdminTokenDto } from "./dto/admin-token.dto";
 import { AdminFeedQueryDto, CreateAdminFeedDto, UpdateAdminFeedDto } from "./dto/admin-feed.dto";
-import { AdminInsightQueryDto } from "./dto/admin-insight.dto";
 import { CreatePromptDto, PromptQueryDto, TestPromptDto, UpdatePromptDto } from "./dto/admin-prompt.dto";
 import { UpdateSourceDto } from "./dto/admin-source.dto";
 import { PatchAdminConfigDto } from "./dto/admin-config.dto";
 import { AdminLogsQueryDto } from "./dto/admin-logs-query.dto";
 import { AdminPaginationDto } from "./dto/admin-pagination.dto";
 import { UpdateAdminUserDto } from "./dto/admin-user.dto";
-import { AdminSendPushDto } from "../push/dto/admin-send-push.dto";
-import { PushService } from "../push/push.service";
 
 @Controller("admin")
 @UseGuards(AdminGuard)
@@ -46,9 +42,7 @@ export class AdminController {
     @Inject(AdminNarrativeService) private readonly adminNarrativeService: AdminNarrativeService,
     @Inject(AdminTokenService) private readonly adminTokenService: AdminTokenService,
     @Inject(AdminKolService) private readonly adminKolService: AdminKolService,
-    @Inject(AdminInsightService) private readonly adminInsightService: AdminInsightService,
-    @Inject(AdminUserService) private readonly adminUserService: AdminUserService,
-    @Inject(PushService) private readonly pushService: PushService
+    @Inject(AdminUserService) private readonly adminUserService: AdminUserService
   ) {}
 
   @Get("dashboard")
@@ -282,58 +276,9 @@ export class AdminController {
     return ok(await this.adminLogsService.list(query));
   }
 
-  @Get("push")
-  async pushMessages() {
-    return ok(await this.pushService.adminList());
-  }
-
-  @Post("push/send")
-  async sendPush(@Req() req: { user: { id: string } }, @Body() dto: AdminSendPushDto) {
-    const result = await this.pushService.createAndSend({
-      userId: dto.user_id,
-      type: dto.type,
-      title: dto.title,
-      body: dto.body,
-      detailUrl: dto.detail_url,
-      relatedFeedItemId: dto.related_feed_item_id
-    });
-    await this.audit.log({
-      adminUserId: req.user.id,
-      action: "push.send",
-      entityType: "push_message",
-      entityId: result.id,
-      after: result
-    });
-    return ok(result);
-  }
-
   @Get("config")
   async config() {
     return ok({ items: await this.systemConfig.listForAdmin() });
-  }
-
-  @Get("insights")
-  async insights(@Query() query: AdminInsightQueryDto) {
-    return ok(await this.adminInsightService.list(query));
-  }
-
-  @Get("insights/:id")
-  async insightDetail(@Param("id") id: string) {
-    return ok(await this.adminInsightService.getById(id));
-  }
-
-  @Post("insights/:id/resynthesize")
-  async resynthesizeInsight(@Req() req: { user: { id: string } }, @Param("id") id: string) {
-    return ok(await this.adminInsightService.resynthesize(id, req.user.id));
-  }
-
-  @Patch("insights/:id")
-  async updateInsightTitle(
-    @Req() req: { user: { id: string } },
-    @Param("id") id: string,
-    @Body("aiInsight") aiInsight: string
-  ) {
-    return ok(await this.adminInsightService.updateTitle(id, aiInsight, req.user.id));
   }
 
   @Patch("config")

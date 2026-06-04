@@ -12,6 +12,8 @@ import { SystemModule } from "../system/system.module";
 import { AdminAiMonitorService } from "./admin-ai-monitor.service";
 import { AdminDashboardService } from "./admin-dashboard.service";
 import { AdminLogsService } from "./admin-logs.service";
+import { AdminInsightsController } from "./admin-insights.controller";
+import { AdminPushController } from "./admin-push.controller";
 import { AdminController } from "./admin.controller";
 import { AdminFeedClusterService } from "./admin-feed-cluster.service";
 import { AdminFeedService } from "./admin-feed.service";
@@ -36,7 +38,7 @@ import { AdminUserService } from "./admin-user.service";
     InsightsModule,
     PushModule
   ],
-  controllers: [AdminController],
+  controllers: [AdminController, AdminInsightsController, AdminPushController],
   providers: [
     AdminDashboardService,
     AdminLogsService,
