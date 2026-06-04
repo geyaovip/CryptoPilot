@@ -59,11 +59,25 @@ export class AdminInsightService {
     const pattern = `%${searchTerm}%`;
     const [countRow, idRows] = await Promise.all([
       this.prisma.$queryRawUnsafe<Array<{ cnt: bigint }>>(
-        `SELECT COUNT(*) as cnt FROM market_insights WHERE deleted_at IS NULL AND (ai_insight ILIKE $1 OR ai_summary ILIKE $1)`,
+        `SELECT COUNT(DISTINCT mi.id) as cnt
+         FROM market_insights mi
+         LEFT JOIN narratives n ON n.id = mi.primary_narrative_id
+         WHERE mi.deleted_at IS NULL
+           AND (mi.ai_insight ILIKE $1 OR mi.ai_summary ILIKE $1
+                OR n.name ILIKE $1 OR n.slug ILIKE $1
+                OR mi.sources_json::text ILIKE $1)`,
         pattern
       ),
       this.prisma.$queryRawUnsafe<Array<{ id: string; updated_at: Date }>>(
-        `SELECT id, updated_at FROM market_insights WHERE deleted_at IS NULL AND (ai_insight ILIKE $1 OR ai_summary ILIKE $1) ORDER BY updated_at DESC LIMIT $2 OFFSET $3`,
+        `SELECT DISTINCT mi.id, mi.updated_at
+         FROM market_insights mi
+         LEFT JOIN narratives n ON n.id = mi.primary_narrative_id
+         WHERE mi.deleted_at IS NULL
+           AND (mi.ai_insight ILIKE $1 OR mi.ai_summary ILIKE $1
+                OR n.name ILIKE $1 OR n.slug ILIKE $1
+                OR mi.sources_json::text ILIKE $1)
+         ORDER BY mi.updated_at DESC
+         LIMIT $2 OFFSET $3`,
         pattern, limit, skip
       )
     ]);
