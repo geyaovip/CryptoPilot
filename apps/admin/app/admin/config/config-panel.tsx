@@ -1,20 +1,20 @@
 "use client";
 
 import { Button, Card } from "@cryptopilot/ui";
-import { useEffect, useState } from "react";
-import { getAdminConfig, patchAdminConfig } from "../../lib/api";
+import { useState } from "react";
+import { patchAdminConfig } from "../../lib/api";
 import { AdminPageHeader } from "../_components/admin-page-header";
 
-export function ConfigPanel() {
-  const [items, setItems] = useState<{ key: string; value: unknown }[]>([]);
-  const [error, setError] = useState<string | null>(null);
+export function ConfigPanel({
+  items,
+  loadError
+}: {
+  items: Array<{ key: string; value: unknown }>;
+  loadError: string | null;
+}) {
+  const [configItems, setConfigItems] = useState(items);
+  const [error, setError] = useState<string | null>(loadError);
   const [saving, setSaving] = useState<string | null>(null);
-
-  useEffect(() => {
-    void getAdminConfig()
-      .then((data) => setItems(data.items))
-      .catch((err) => setError(err instanceof Error ? err.message : "加载失败"));
-  }, []);
 
   async function save(key: string, raw: string) {
     setSaving(key);
@@ -29,7 +29,7 @@ export function ConfigPanel() {
         value = Number(raw);
       }
       const data = await patchAdminConfig(key, value);
-      setItems(data.items);
+      setConfigItems(data.items);
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失败");
     } finally {
@@ -41,7 +41,7 @@ export function ConfigPanel() {
     <div className="space-y-4">
       <AdminPageHeader title="系统设置" description="修改会写入审计日志并即时生效（API 内存缓存）。" />
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      {items.map((item) => (
+      {configItems.map((item) => (
         <Card className="p-4" key={item.key}>
           <label className="text-sm font-medium text-slate-700">{item.key}</label>
           <textarea
