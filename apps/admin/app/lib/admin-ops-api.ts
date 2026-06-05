@@ -236,7 +236,10 @@ export async function getAdminLogs(filters: { type?: string; from?: string; to?:
   if (filters.limit) params.set("limit", String(filters.limit));
   const query = params.toString();
   const response = await adminApiFetch(`/api/admin/logs${query ? `?${query}` : ""}`, { cache: "no-store" });
-  if (!response.ok) throw new Error("日志加载失败");
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ? `日志加载失败：${body.message}` : "日志加载失败");
+  }
   const body = (await response.json()) as { data: { items: AdminLogItem[] } };
   return body.data;
 }

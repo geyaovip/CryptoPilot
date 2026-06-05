@@ -86,7 +86,7 @@ export class AdminLogsService {
       },
       include: {
         pushMessage: { select: { title: true, type: true } },
-        user: { select: { email: true, uid: true } }
+        user: { select: { email: true, shortUid: true } }
       },
       orderBy: { createdAt: "desc" },
       take
@@ -102,7 +102,7 @@ export class AdminLogsService {
         channel: row.channel,
         push_message_id: row.pushMessageId,
         push_type: row.pushMessage?.type ?? null,
-        user: row.user.email ?? row.user.uid
+        user: row.user.email ?? row.user.shortUid
       }
     }));
   }
