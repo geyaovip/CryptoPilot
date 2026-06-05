@@ -6,11 +6,13 @@ CryptoPilot is an AI-assisted crypto market intelligence product. It aggregates 
 
 ## What It Does
 
-- Curated market feed with AI summaries and source links.
+- Insight-first market radar with multi-source AI summaries and drill-down signals.
+- Curated market feed with source links, deterministic tags, and narrative-aware clustering.
 - AI Search for natural-language crypto market questions.
 - Narrative and token tracking for market themes.
-- Admin console for feeds, sources, prompts, AI monitoring, narratives, tokens, and logs.
-- RSS ingestion, feed quality filtering, clustering, and optional background AI jobs.
+- Telegram Push for digests, market alerts, watchlist alerts, and send logs.
+- Admin console for feeds, insights, sources, prompts, AI monitoring, narratives, tokens, users, push, config, and logs.
+- RSS ingestion, source catalog sync, feed quality filtering, clustering, and optional background AI jobs.
 
 ## Monorepo Structure
 
@@ -70,9 +72,14 @@ ADMIN_URL="http://localhost:3001"
 API_URL="http://localhost:3002"
 NEXT_PUBLIC_API_URL="http://localhost:3002"
 ENABLE_BACKGROUND_JOBS="false"
+LLM_DEFAULT="mock"
+LLM_ENABLE_EMBEDDINGS="false"
+RAG_ENABLE_VECTOR_SEARCH="false"
 ```
 
 `ENABLE_BACKGROUND_JOBS` is intentionally off by default for local development. Set it to `true` only for the API instance that should run RSS ingestion, price sync, AI generation, clustering, and other scheduled jobs.
+
+Local development should not spend real LLM tokens by default. Use the mock provider locally unless you are explicitly testing provider integration.
 
 ### Start Local Services
 
@@ -99,6 +106,8 @@ pnpm db:deploy            # Apply Prisma migrations
 pnpm db:seed              # Seed initial data
 pnpm db:refresh-content   # Refresh real content from configured sources
 pnpm db:sync-sources      # Sync source catalog into the database
+pnpm db:sync              # Sync prompts, system config, sources, and other operational config
+pnpm db:cluster-assign    # Rebuild feed cluster assignments
 pnpm db:hide-low-value-feeds
 ```
 
@@ -122,6 +131,35 @@ Supported OpenAI-compatible provider IDs currently include:
 
 If no real API key is configured, the system falls back to mock behavior. Mock output is intended for development only.
 
+Production deployments should set LLM cost controls:
+
+```env
+LLM_MAX_OUTPUT_TOKENS="800"
+LLM_DAILY_TOKEN_BUDGET="250000"
+LLM_DAILY_COST_BUDGET_USD="3"
+LLM_FEED_AI_BATCH_SIZE="2"
+LLM_INSIGHT_BATCH_SIZE="3"
+```
+
+The API also contains deterministic fallback rules for tags, clustering, and low-value feed summaries so that local development and cost-controlled production runs do not need to call an LLM for every item.
+
+## Data Sources
+
+Source definitions live in `apps/api/src/modules/ingestion/source-catalog.ts` and are synced with:
+
+```bash
+pnpm db:sync-sources
+```
+
+The default catalog currently includes:
+
+- Chinese media and flash sources such as BlockBeats, PANews, Cointelegraph CN, and BTC Study.
+- Web3 media and project blogs such as CoinDesk, Cointelegraph, Decrypt, The Block, Ethereum Foundation, Vitalik, Lido, and Aave Governance.
+- Curated Medium, Substack, and Paragraph RSS feeds.
+- Reddit source definitions are present but paused by default until API credentials are configured.
+
+Mirror feeds are intentionally excluded from the default catalog because they have hit rate limits in the API ingestion runtime.
+
 ## Deployment Notes
 
 Current frontend deployment is designed for Cloudflare Workers via OpenNext:
@@ -143,6 +181,8 @@ ADMIN_URL="https://admin.cryptopilot.chat"
 API_URL="https://api.cryptopilot.chat"
 ```
 
+The API deploy workflow runs Prisma migrations, builds the API, restarts the service, verifies health, and then syncs operational config to the database with `pnpm --filter @cryptopilot/api db:sync`.
+
 See [docs/DEPLOY.md](docs/DEPLOY.md) for more deployment details.
 
 ## Safety Boundaries
@@ -151,6 +191,7 @@ See [docs/DEPLOY.md](docs/DEPLOY.md) for more deployment details.
 - AI-generated market output must include sources where applicable.
 - The product must not output trading instructions, return promises, leverage advice, or direct buy/sell recommendations.
 - Keep background jobs enabled on only one production API instance unless distributed locking is introduced.
+- Admin write operations must create audit logs, and `/admin/logs` should remain usable for API, ingestion, LLM, push, and audit troubleshooting.
 
 ## Development Docs
 
