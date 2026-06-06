@@ -49,6 +49,9 @@ jobs:
       - name: Typecheck API
         run: pnpm --filter @cryptopilot/api typecheck
 
+      - name: Build API
+        run: pnpm --filter @cryptopilot/api build
+
       - name: Validate deploy secrets
         env:
           API_DEPLOY_SSH_KEY: ${{ secrets.API_DEPLOY_SSH_KEY }}
@@ -133,8 +136,9 @@ jobs:
             echo '  -o StrictHostKeyChecking=accept-new \'
             echo '  -o ConnectTimeout=45 \'
             echo '  -o ConnectionAttempts=3 \'
-            echo '  -o ServerAliveInterval=15 \'
-            echo '  -o ServerAliveCountMax=4 \'
+            echo '  -o TCPKeepAlive=yes \'
+            echo '  -o ServerAliveInterval=30 \'
+            echo '  -o ServerAliveCountMax=120 \'
             echo '  "$@"'
           } > ~/.ssh/deploy-ssh
           chmod +x ~/.ssh/deploy-ssh
@@ -168,7 +172,6 @@ jobs:
             echo "rsync apps/api attempt $attempt..."
             if rsync -az --delete \
               --exclude node_modules \
-              --exclude dist \
               --exclude .turbo \
               --exclude .env \
               --exclude ".env*" \
@@ -224,7 +227,24 @@ jobs:
           done
           exit 255
 
-      - name: Install production dependencies and restart API
+      - name: Install production dependencies
+        env:
+          API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
+          API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
+          API_DEPLOY_PATH: ${{ secrets.API_DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          remote_cmd="cd '$API_DEPLOY_PATH' && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @cryptopilot/api db:generate && pnpm --filter @cryptopilot/api db:deploy"
+          for attempt in $(seq 1 3); do
+            echo "remote install attempt $attempt..."
+            if "$DEPLOY_SSH" "$API_DEPLOY_USER@$API_DEPLOY_HOST" "$remote_cmd"; then
+              exit 0
+            fi
+            sleep 15
+          done
+          exit 255
+
+      - name: Restart API service
         env:
           API_DEPLOY_HOST: ${{ secrets.API_DEPLOY_HOST }}
           API_DEPLOY_USER: ${{ secrets.API_DEPLOY_USER }}
@@ -232,9 +252,9 @@ jobs:
           API_DEPLOY_SERVICE: ${{ secrets.API_DEPLOY_SERVICE }}
         run: |
           set -euo pipefail
-          remote_cmd="cd '$API_DEPLOY_PATH' && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @cryptopilot/api db:generate && pnpm --filter @cryptopilot/api db:deploy && pnpm --filter @cryptopilot/api build && sudo systemctl restart '${API_DEPLOY_SERVICE:-cryptopilot-api}'"
+          remote_cmd="sudo systemctl restart '${API_DEPLOY_SERVICE:-cryptopilot-api}'"
           for attempt in $(seq 1 3); do
-            echo "remote install/restart attempt $attempt..."
+            echo "remote restart attempt $attempt..."
             if "$DEPLOY_SSH" "$API_DEPLOY_USER@$API_DEPLOY_HOST" "$remote_cmd"; then
               exit 0
             fi
