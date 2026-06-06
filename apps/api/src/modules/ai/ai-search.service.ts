@@ -32,9 +32,7 @@ export class AiSearchService {
     if (cached) return cached;
     const providerName = this.llm.getProviderName("ai_search");
 
-    const contextItems = insightId
-      ? await this.loadInsightContext(insightId)
-      : await this.rag.retrieve(trimmed);
+    const contextItems = await this.buildContext(trimmed, insightId);
     if (contextItems.length < 2) {
       throw new AppHttpException("INSUFFICIENT_SOURCES", "来源不足，无法生成可靠回答，请换个问题或稍后再试");
     }
@@ -98,6 +96,16 @@ export class AiSearchService {
       sources: resolvedSources,
       updated_at: updatedAt
     };
+  }
+
+  private async buildContext(query: string, insightId?: string) {
+    const ragItems = await this.rag.retrieve(query);
+    const insightItems = insightId ? await this.loadInsightContext(insightId) : [];
+    const merged = new Map<string, (typeof ragItems)[number]>();
+    for (const item of [...insightItems, ...ragItems]) {
+      merged.set(item.id, item);
+    }
+    return [...merged.values()].slice(0, 12);
   }
 
   private async loadInsightContext(insightId: string) {

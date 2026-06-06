@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import type { AiSourceRef } from "@cryptopilot/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { EmbeddingService } from "./embedding.service";
+import { dedupeContextIds, extractSearchTerms } from "./rag-search.util";
 
 export type RagContextItem = {
   id: string;
@@ -23,12 +24,22 @@ export class RagService {
   ) {}
 
   async retrieve(query: string): Promise<RagContextItem[]> {
-    const keywordIds = await this.keywordSearch(query, 10);
+    const terms = extractSearchTerms(query);
+    const keywordIds = await this.keywordSearch(terms, 12);
     const vectorIds =
       keywordIds.length >= 4 || this.config.get<string>("RAG_ENABLE_VECTOR_SEARCH") !== "true"
         ? []
         : await this.embeddingService.vectorSearch(query, 10);
-    const mergedIds = [...new Set([...keywordIds, ...vectorIds])].slice(0, 12);
+    let mergedIds = dedupeContextIds([...keywordIds, ...vectorIds]);
+
+    if (mergedIds.length < 2) {
+      mergedIds = dedupeContextIds([...mergedIds, ...(await this.relatedFeedSearch(terms, 8))]);
+    }
+    if (mergedIds.length < 2) {
+      mergedIds = dedupeContextIds([...mergedIds, ...(await this.recentRankedFeedSearch(6))]);
+    }
+
+    mergedIds = mergedIds.slice(0, 12);
     if (mergedIds.length === 0) return [];
 
     const feeds = await this.prisma.feedItem.findMany({
@@ -58,12 +69,7 @@ export class RagService {
     }));
   }
 
-  private async keywordSearch(query: string, limit: number): Promise<string[]> {
-    const terms = query
-      .split(/\s+/)
-      .map((term) => term.trim())
-      .filter((term) => term.length >= 2)
-      .slice(0, 5);
+  private async keywordSearch(terms: string[], limit: number): Promise<string[]> {
     if (terms.length === 0) return [];
 
     const feeds = await this.prisma.feedItem.findMany({
@@ -76,7 +82,58 @@ export class RagService {
           { aiSummary: { contains: term, mode: "insensitive" as const } }
         ])
       },
-      orderBy: { publishTime: "desc" },
+      orderBy: [{ rankScore: "desc" }, { publishTime: "desc" }],
+      take: limit,
+      select: { id: true }
+    });
+    return feeds.map((feed) => feed.id);
+  }
+
+  private async relatedFeedSearch(terms: string[], limit: number): Promise<string[]> {
+    if (terms.length === 0) return [];
+
+    const feeds = await this.prisma.feedItem.findMany({
+      where: {
+        deletedAt: null,
+        status: "PUBLISHED",
+        OR: [
+          {
+            feedItemTokens: {
+              some: {
+                token: {
+                  OR: terms.flatMap((term) => [
+                    { symbol: { equals: term, mode: "insensitive" as const } },
+                    { name: { contains: term, mode: "insensitive" as const } }
+                  ])
+                }
+              }
+            }
+          },
+          {
+            feedItemNarratives: {
+              some: {
+                narrative: {
+                  OR: terms.flatMap((term) => [
+                    { slug: { contains: term, mode: "insensitive" as const } },
+                    { name: { contains: term, mode: "insensitive" as const } }
+                  ])
+                }
+              }
+            }
+          }
+        ]
+      },
+      orderBy: [{ rankScore: "desc" }, { publishTime: "desc" }],
+      take: limit,
+      select: { id: true }
+    });
+    return feeds.map((feed) => feed.id);
+  }
+
+  private async recentRankedFeedSearch(limit: number): Promise<string[]> {
+    const feeds = await this.prisma.feedItem.findMany({
+      where: { deletedAt: null, status: "PUBLISHED", type: { not: "NEWS" } },
+      orderBy: [{ rankScore: "desc" }, { publishTime: "desc" }],
       take: limit,
       select: { id: true }
     });
