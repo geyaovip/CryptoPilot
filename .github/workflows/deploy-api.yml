@@ -21,7 +21,7 @@ jobs:
   deploy:
     name: Sync and restart API server
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/cryptopilot_ci
 
@@ -131,6 +131,9 @@ jobs:
           {
             echo '#!/usr/bin/env bash'
             echo "exec ssh -i \"$key_file\" -p \"$port\" \\"
+            echo '  -o ControlMaster=auto \'
+            echo '  -o ControlPath="${HOME}/.ssh/api-deploy-%r@%h:%p" \'
+            echo '  -o ControlPersist=15m \'
             echo '  -o BatchMode=yes \'
             echo '  -o IdentitiesOnly=yes \'
             echo '  -o StrictHostKeyChecking=accept-new \'
