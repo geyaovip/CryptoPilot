@@ -21,6 +21,7 @@ export class AdminDashboardService {
       feedsToday,
       insightsToday,
       aiSearchesToday,
+      pushesToday,
       sourceRows,
       topNarratives,
       ingestionFailedToday
@@ -33,6 +34,9 @@ export class AdminDashboardService {
       }),
       this.prisma.aiSearchHistory.count({
         where: { createdAt: { gte: since } }
+      }),
+      this.prisma.pushMessage.count({
+        where: { status: "SENT", sentAt: { gte: since } }
       }),
       this.prisma.source.findMany({
         where: { deletedAt: null },
@@ -66,8 +70,7 @@ export class AdminDashboardService {
       feeds_today: feedsToday,
       insights_today: insightsToday,
       ai_searches_today: aiSearchesToday,
-      pushes_today: 0,
-      pushes_note: "Telegram 推送将在 V0.5 接入",
+      pushes_today: pushesToday,
       llm_calls_today: ai.calls_today,
       llm_error_rate: ai.provider_error_rate,
       tokens_today: ai.tokens_today,

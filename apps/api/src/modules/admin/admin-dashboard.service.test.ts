@@ -7,6 +7,7 @@ describe("AdminDashboardService", () => {
       feedItem: { count: vi.fn().mockResolvedValue(12) },
       marketInsight: { count: vi.fn().mockResolvedValue(3) },
       aiSearchHistory: { count: vi.fn().mockResolvedValue(5) },
+      pushMessage: { count: vi.fn().mockResolvedValue(7) },
       source: {
         findMany: vi.fn().mockResolvedValue([
           { id: "1", name: "CoinDesk", status: "ACTIVE", lastSuccessAt: new Date(), lastErrorAt: null }
@@ -33,6 +34,7 @@ describe("AdminDashboardService", () => {
     expect(result.feeds_today).toBe(12);
     expect(result.insights_today).toBe(3);
     expect(result.ai_searches_today).toBe(5);
+    expect(result.pushes_today).toBe(7);
     expect(result.llm_error_rate).toBe(0.125);
     expect(result.sources.active).toBe(1);
   });

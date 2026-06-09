@@ -28,7 +28,7 @@ export function AdminDashboardPanel({ data }: AdminDashboardPanelProps) {
         <MetricCard label="近 24h Feed（信号）" value={data.feeds_today} />
         <MetricCard label="近 24h Insight" value={data.insights_today} />
         <MetricCard label="近 24h AI 搜索" value={data.ai_searches_today} />
-        <MetricCard label="近 24h Push" value={data.pushes_today} hint={data.pushes_note} />
+        <MetricCard label="近 24h Push" value={data.pushes_today} />
         <MetricCard label="近 24h LLM 调用" value={data.llm_calls_today} />
         <MetricCard label="LLM 错误率" value={llmErrorPct} />
         <MetricCard label="近 24h Token" value={data.tokens_today.toLocaleString()} />

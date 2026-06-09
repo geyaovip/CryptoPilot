@@ -49,7 +49,6 @@ export type AdminDashboardData = {
   insights_today: number;
   ai_searches_today: number;
   pushes_today: number;
-  pushes_note: string;
   llm_calls_today: number;
   llm_error_rate: number;
   tokens_today: number;
