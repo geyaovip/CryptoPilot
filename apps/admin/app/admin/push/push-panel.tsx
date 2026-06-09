@@ -2,6 +2,7 @@
 
 import { Button, Card } from "@cryptopilot/ui";
 import type { PushMessageSummary } from "@cryptopilot/types";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { sendAdminPush, type AdminUserItem } from "../../lib/api";
 
@@ -22,26 +23,38 @@ const pushStatusLabels: Record<(typeof pushStatuses)[number], string> = {
   cancelled: "已取消"
 };
 
-export function PushPanel({
-  items,
-  users
-}: {
+type PushPanelProps = {
   items: PushMessageSummary[];
+  total: number;
   users: AdminUserItem[];
-}) {
+  filters: {
+    type?: string;
+    status?: string;
+  };
+};
+
+export function PushPanel({ items, total, users, filters }: PushPanelProps) {
+  const router = useRouter();
   const defaultUser = users.find((user) => user.telegram_bound) ?? users[0];
   const [userId, setUserId] = useState(defaultUser?.id ?? "");
   const [title, setTitle] = useState("CryptoPilot 市场提醒");
   const [body, setBody] = useState("这里填写推送正文。");
-  const [typeFilter, setTypeFilter] = useState<(typeof pushTypes)[number]>("all");
-  const [statusFilter, setStatusFilter] = useState<(typeof pushStatuses)[number]>("all");
+  const [typeFilter, setTypeFilter] = useState<(typeof pushTypes)[number]>(
+    (filters.type as (typeof pushTypes)[number] | undefined) ?? "all"
+  );
+  const [statusFilter, setStatusFilter] = useState<(typeof pushStatuses)[number]>(
+    (filters.status as (typeof pushStatuses)[number] | undefined) ?? "all"
+  );
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const filteredItems = items.filter((item) => {
-    const matchType = typeFilter === "all" || item.type === typeFilter;
-    const matchStatus = statusFilter === "all" || item.status === statusFilter;
-    return matchType && matchStatus;
-  });
+
+  function applyFilters(nextType: (typeof pushTypes)[number], nextStatus: (typeof pushStatuses)[number]) {
+    const params = new URLSearchParams();
+    if (nextType !== "all") params.set("type", nextType);
+    if (nextStatus !== "all") params.set("status", nextStatus);
+    params.set("page", "1");
+    router.push(params.size ? `/admin/push?${params.toString()}` : "/admin/push");
+  }
 
   async function submit() {
     setBusy(true);
@@ -98,17 +111,33 @@ export function PushPanel({
         <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
           <div>
             <h2 className="text-lg font-semibold text-[#102A2C]">Push 列表</h2>
-            <p className="mt-1 text-sm text-[#5F6868]">共 {filteredItems.length} 条，可按类型和发送状态排查。</p>
+            <p className="mt-1 text-sm text-[#5F6868]">共 {total} 条，可按类型和发送状态排查。</p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            <select className="rounded-xl border border-[#D9D5C9] px-3 py-2 text-sm" onChange={(event) => setTypeFilter(event.target.value as typeof typeFilter)} value={typeFilter}>
+            <select
+              className="rounded-xl border border-[#D9D5C9] px-3 py-2 text-sm"
+              onChange={(event) => {
+                const nextType = event.target.value as typeof typeFilter;
+                setTypeFilter(nextType);
+                applyFilters(nextType, statusFilter);
+              }}
+              value={typeFilter}
+            >
               {pushTypes.map((type) => (
                 <option key={type} value={type}>
                   {pushTypeLabels[type]}
                 </option>
               ))}
             </select>
-            <select className="rounded-xl border border-[#D9D5C9] px-3 py-2 text-sm" onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} value={statusFilter}>
+            <select
+              className="rounded-xl border border-[#D9D5C9] px-3 py-2 text-sm"
+              onChange={(event) => {
+                const nextStatus = event.target.value as typeof statusFilter;
+                setStatusFilter(nextStatus);
+                applyFilters(typeFilter, nextStatus);
+              }}
+              value={statusFilter}
+            >
               {pushStatuses.map((status) => (
                 <option key={status} value={status}>
                   {pushStatusLabels[status]}
@@ -130,7 +159,7 @@ export function PushPanel({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EDE8DA]">
-              {filteredItems.map((item) => (
+              {items.map((item) => (
                 <tr key={item.id}>
                   <td className="py-3">{pushTypeLabels[item.type]}</td>
                   <td className="py-3">{pushStatusLabels[item.status]}</td>
@@ -140,7 +169,7 @@ export function PushPanel({
                   <td className="max-w-sm py-3 text-[#B54708]">{item.error_message ?? "-"}</td>
                 </tr>
               ))}
-              {filteredItems.length === 0 ? (
+              {items.length === 0 ? (
                 <tr>
                   <td className="py-6 text-center text-[#8A918C]" colSpan={6}>
                     暂无符合筛选条件的 Push 记录

@@ -1,7 +1,8 @@
 import { Type } from "class-transformer";
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsIn, IsOptional, IsString } from "class-validator";
+import { AdminPaginationDto } from "./admin-pagination.dto";
 
-export class AdminLogsQueryDto {
+export class AdminLogsQueryDto extends AdminPaginationDto {
   @IsOptional()
   @IsIn(["api", "ingestion", "llm", "audit", "push"])
   type?: "api" | "ingestion" | "llm" | "audit" | "push";
@@ -13,11 +14,4 @@ export class AdminLogsQueryDto {
   @IsOptional()
   @IsString()
   to?: string;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number;
 }

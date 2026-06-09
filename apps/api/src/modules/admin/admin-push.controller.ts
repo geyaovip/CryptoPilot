@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Inject, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { AdminGuard } from "../auth/admin.guard";
 import { ok } from "../common/api-response";
 import { AuditService } from "../common/audit.service";
+import { AdminPushListQueryDto } from "../push/dto/admin-push-list-query.dto";
 import { AdminSendPushDto } from "../push/dto/admin-send-push.dto";
 import { PushService } from "../push/push.service";
 
@@ -14,8 +15,8 @@ export class AdminPushController {
   ) {}
 
   @Get()
-  async pushMessages() {
-    return ok(await this.pushService.adminList());
+  async pushMessages(@Query() query: AdminPushListQueryDto) {
+    return ok(await this.pushService.adminList(query));
   }
 
   @Post("send")

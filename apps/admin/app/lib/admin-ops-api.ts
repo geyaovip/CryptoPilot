@@ -145,8 +145,13 @@ export async function updateAdminUser(id: string, input: { role?: "user" | "admi
   if (!response.ok) throw new Error("更新用户失败");
 }
 
-export async function getAdminPush() {
-  const response = await adminApiFetch("/api/admin/push", { cache: "no-store" });
+export type AdminPushFilters = AdminPaginationFilters & {
+  type?: string;
+  status?: string;
+};
+
+export async function getAdminPush(filters: AdminPushFilters = {}): Promise<AdminListData<PushMessageSummary>> {
+  const response = await adminApiFetch(`/api/admin/push${toQuery(filters)}`, { cache: "no-store" });
   if (!response.ok) throw new Error("Push 列表加载失败");
   const body = (await response.json()) as AdminPushListResponse;
   return body.data;
@@ -227,19 +232,24 @@ export type AdminLogItem = {
   detail?: Record<string, unknown>;
 };
 
-export async function getAdminLogs(filters: { type?: string; from?: string; to?: string; limit?: number } = {}) {
-  const params = new URLSearchParams();
-  if (filters.type) params.set("type", filters.type);
-  if (filters.from) params.set("from", filters.from);
-  if (filters.to) params.set("to", filters.to);
-  if (filters.limit) params.set("limit", String(filters.limit));
-  const query = params.toString();
-  const response = await adminApiFetch(`/api/admin/logs${query ? `?${query}` : ""}`, { cache: "no-store" });
+export type AdminLogFilters = AdminPaginationFilters & {
+  type?: string;
+  from?: string;
+  to?: string;
+};
+
+export type AdminLogsData = AdminListData<AdminLogItem> & {
+  from: string;
+  to: string;
+};
+
+export async function getAdminLogs(filters: AdminLogFilters = {}): Promise<AdminLogsData> {
+  const response = await adminApiFetch(`/api/admin/logs${toQuery(filters)}`, { cache: "no-store" });
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new Error(body?.message ? `日志加载失败：${body.message}` : "日志加载失败");
   }
-  const body = (await response.json()) as { data: { items: AdminLogItem[] } };
+  const body = (await response.json()) as { data: AdminLogsData };
   return body.data;
 }
 

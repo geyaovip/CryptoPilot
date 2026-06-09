@@ -5,6 +5,8 @@ import { AppHttpException } from "../common/app-http.exception";
 import { BackgroundJobsService } from "../common/background-jobs.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { TelegramProviderService } from "../telegram/telegram-provider.service";
+import { normalizeAdminPagination, pageMeta } from "../admin/dto/admin-pagination.dto";
+import { AdminPushListQueryDto } from "./dto/admin-push-list-query.dto";
 import { mapPushMessage } from "./push.mapper";
 
 const DAILY_LIMIT = 20;
@@ -98,12 +100,25 @@ export class PushService {
     }
   }
 
-  async adminList() {
-    const rows = await this.prisma.pushMessage.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 50
-    });
-    return { items: rows.map(mapPushMessage) };
+  async adminList(query: AdminPushListQueryDto = {}) {
+    const { page, limit, skip } = normalizeAdminPagination(query, 25);
+    const where = {
+      ...(query.type ? { type: query.type.toUpperCase() as PushType } : {}),
+      ...(query.status ? { status: query.status.toUpperCase() as PushStatus } : {})
+    };
+    const [total, rows] = await Promise.all([
+      this.prisma.pushMessage.count({ where }),
+      this.prisma.pushMessage.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit
+      })
+    ]);
+    return {
+      items: rows.map(mapPushMessage),
+      ...pageMeta(total, page, limit)
+    };
   }
 
   async createAndSend(input: {

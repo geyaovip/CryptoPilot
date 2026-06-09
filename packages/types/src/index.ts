@@ -148,6 +148,12 @@ export type PushMessageSummary = {
 
 export type AdminPushListResponse = ApiSuccess<{
   items: PushMessageSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  has_prev: boolean;
+  has_next: boolean;
 }>;
 
 export type HealthResponse = ApiSuccess<{

@@ -1,7 +1,8 @@
 import { AdminPageHeader } from "../_components/admin-page-header";
+import { AdminPagination } from "../_components/admin-pagination";
 import { AdminShell } from "../_components/admin-shell";
 import { LogsPanel } from "./logs-panel";
-import { getAdminLogs, type AdminLogItem } from "../../lib/api";
+import { getAdminLogs } from "../../lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -16,21 +17,28 @@ export default async function AdminLogsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const filters = {
+    type: pickParam(params.type),
+    from: pickParam(params.from),
+    to: pickParam(params.to),
+    page: pickParam(params.page),
+    limit: pickParam(params.limit) ?? "25"
+  };
 
-  let items: AdminLogItem[] = [];
+  let data = null;
   let loadError: string | null = null;
 
   try {
-    const data = await getAdminLogs({
-      type: pickParam(params.type),
-      from: pickParam(params.from),
-      to: pickParam(params.to),
-      limit: 50
-    });
-    items = data.items;
+    data = await getAdminLogs(filters);
   } catch (error) {
     loadError = error instanceof Error ? error.message : "日志加载失败";
   }
+
+  const extraParams = {
+    type: filters.type ?? "",
+    from: filters.from ?? "",
+    to: filters.to ?? ""
+  };
 
   return (
     <AdminShell>
@@ -39,7 +47,24 @@ export default async function AdminLogsPage({
         {loadError ? (
           <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</p>
         ) : null}
-        <LogsPanel items={items} />
+        {data ? (
+          <>
+            <LogsPanel
+              filters={{ type: filters.type, from: filters.from, to: filters.to }}
+              items={data.items}
+            />
+            <AdminPagination
+              basePath="/admin/logs"
+              extraParams={extraParams}
+              hasNext={data.has_next}
+              hasPrev={data.has_prev}
+              limit={data.limit}
+              page={data.page}
+              total={data.total}
+              totalPages={data.total_pages}
+            />
+          </>
+        ) : null}
       </div>
     </AdminShell>
   );

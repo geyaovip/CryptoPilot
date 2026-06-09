@@ -16,18 +16,37 @@ const typeLabels: Record<(typeof types)[number], string> = {
   audit: "Admin 审计"
 };
 
-export function LogsPanel({ items }: { items: AdminLogItem[] }) {
+type LogsPanelProps = {
+  items: AdminLogItem[];
+  filters: {
+    type?: string;
+    from?: string;
+    to?: string;
+  };
+};
+
+function toDatetimeLocalValue(value?: string): string {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function LogsPanel({ items, filters }: LogsPanelProps) {
   const router = useRouter();
   const [selected, setSelected] = useState<AdminLogItem | null>(null);
-  const [type, setType] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [type, setType] = useState(filters.type ?? "");
+  const [from, setFrom] = useState(toDatetimeLocalValue(filters.from));
+  const [to, setTo] = useState(toDatetimeLocalValue(filters.to));
 
   function doFilter() {
     const params = new URLSearchParams();
     if (type) params.set("type", type);
     if (from) params.set("from", from);
     if (to) params.set("to", to);
+    params.set("page", "1");
     router.push(params.size ? `/admin/logs?${params.toString()}` : "/admin/logs");
   }
 

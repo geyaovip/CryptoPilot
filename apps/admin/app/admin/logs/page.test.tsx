@@ -8,8 +8,22 @@ vi.mock("../_components/admin-shell", () => ({
 vi.mock("./logs-panel", () => ({
   LogsPanel: ({ items }: { items: Array<unknown> }) => <div>日志中心 ({items.length})</div>
 }));
+vi.mock("../_components/admin-pagination", () => ({
+  AdminPagination: () => <div>分页</div>
+}));
 vi.mock("../../lib/api", () => ({
-  getAdminLogs: () => Promise.resolve({ items: [], from: "", to: "" })
+  getAdminLogs: () =>
+    Promise.resolve({
+      items: [],
+      from: "",
+      to: "",
+      total: 0,
+      page: 1,
+      limit: 25,
+      total_pages: 1,
+      has_prev: false,
+      has_next: false
+    })
 }));
 
 describe("Admin logs page", () => {

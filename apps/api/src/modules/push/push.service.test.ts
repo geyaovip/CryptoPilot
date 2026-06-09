@@ -145,6 +145,36 @@ describe("PushService", () => {
     ).rejects.toBeInstanceOf(AppHttpException);
   });
 
+  it("paginates admin push list with optional filters", async () => {
+    const count = vi.fn().mockResolvedValue(42);
+    const findMany = vi.fn().mockResolvedValue([]);
+    const service = new PushService(
+      {
+        pushMessage: { count, findMany }
+      } as never,
+      { sendMessage: vi.fn() } as never,
+      { enabled: false } as never
+    );
+
+    const result = await service.adminList({ page: 2, limit: 10, type: "manual", status: "failed" });
+
+    expect(count).toHaveBeenCalledWith({
+      where: { type: "MANUAL", status: "FAILED" }
+    });
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 10, take: 10 })
+    );
+    expect(result).toMatchObject({
+      items: [],
+      total: 42,
+      page: 2,
+      limit: 10,
+      total_pages: 5,
+      has_prev: true,
+      has_next: true
+    });
+  });
+
   it("enforces daily push limit", async () => {
     const service = new PushService(
       {
