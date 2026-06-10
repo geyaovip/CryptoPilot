@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { SystemConfigService } from "../system/system-config.service";
 import { AdminAiMonitorService } from "./admin-ai-monitor.service";
 
 function rolling24hStart(): Date {
@@ -10,7 +11,8 @@ function rolling24hStart(): Date {
 export class AdminDashboardService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(AdminAiMonitorService) private readonly aiMonitor: AdminAiMonitorService
+    @Inject(AdminAiMonitorService) private readonly aiMonitor: AdminAiMonitorService,
+    @Inject(SystemConfigService) private readonly systemConfig: SystemConfigService
   ) {}
 
   async getOverview() {
@@ -22,6 +24,7 @@ export class AdminDashboardService {
       insightsToday,
       aiSearchesToday,
       pushesToday,
+      pushesFailedToday,
       sourceRows,
       topNarratives,
       ingestionFailedToday
@@ -37,6 +40,9 @@ export class AdminDashboardService {
       }),
       this.prisma.pushMessage.count({
         where: { status: "SENT", sentAt: { gte: since } }
+      }),
+      this.prisma.pushMessage.count({
+        where: { status: "FAILED", failedAt: { gte: since } }
       }),
       this.prisma.source.findMany({
         where: { deletedAt: null },
@@ -71,6 +77,8 @@ export class AdminDashboardService {
       insights_today: insightsToday,
       ai_searches_today: aiSearchesToday,
       pushes_today: pushesToday,
+      pushes_failed_24h: pushesFailedToday,
+      push_daily_limit_per_user: this.systemConfig.snapshot.telegram_push_daily_limit,
       llm_calls_today: ai.calls_today,
       llm_error_rate: ai.provider_error_rate,
       tokens_today: ai.tokens_today,

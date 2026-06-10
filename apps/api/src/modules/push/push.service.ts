@@ -4,12 +4,12 @@ import { PushStatus, PushType } from "@prisma/client";
 import { AppHttpException } from "../common/app-http.exception";
 import { BackgroundJobsService } from "../common/background-jobs.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { SystemConfigService } from "../system/system-config.service";
 import { TelegramProviderService } from "../telegram/telegram-provider.service";
 import { normalizeAdminPagination, pageMeta } from "../admin/dto/admin-pagination.dto";
 import { AdminPushListQueryDto } from "./dto/admin-push-list-query.dto";
 import { mapPushMessage } from "./push.mapper";
 
-const DAILY_LIMIT = 20;
 const PUSH_RISK_NOTE = "仅供研究参考，不构成投资建议。";
 const RISK_NOTE_PATTERN = /(Not financial advice\.?|仅供研究参考|不构成投资建议)/i;
 const HOURLY_LIMITS: Partial<Record<PushType, number>> = {
@@ -22,7 +22,8 @@ export class PushService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(TelegramProviderService) private readonly telegram: TelegramProviderService,
-    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService
+    @Inject(BackgroundJobsService) private readonly jobs: BackgroundJobsService,
+    @Inject(SystemConfigService) private readonly systemConfig: SystemConfigService
   ) {}
 
   @Cron("0 9 * * *")
@@ -228,7 +229,8 @@ export class PushService {
     const dailyCount = await this.prisma.pushMessage.count({
       where: { userId, status: "SENT", sentAt: { gte: dayStart } }
     });
-    if (dailyCount >= DAILY_LIMIT) throw new AppHttpException("RATE_LIMITED", "今日 Push 已达上限", 429);
+    const dailyLimit = this.systemConfig.snapshot.telegram_push_daily_limit;
+    if (dailyCount >= dailyLimit) throw new AppHttpException("RATE_LIMITED", "今日 Push 已达上限", 429);
     const hourlyLimit = HOURLY_LIMITS[type];
     if (hourlyLimit) {
       const hourStart = new Date(Date.now() - 60 * 60 * 1000);

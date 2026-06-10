@@ -16,6 +16,8 @@ vi.mock("../../lib/api", () => ({
     insights_today: 3,
     ai_searches_today: 2,
     pushes_today: 4,
+    pushes_failed_24h: 1,
+    push_daily_limit_per_user: 10,
     llm_calls_today: 5,
     llm_error_rate: 0.1,
     tokens_today: 800,

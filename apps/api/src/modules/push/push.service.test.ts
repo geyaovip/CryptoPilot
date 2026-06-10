@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { AppHttpException } from "../common/app-http.exception";
 import { PushService } from "./push.service";
 
+function configMock(dailyLimit = 10) {
+  return { snapshot: { telegram_push_daily_limit: dailyLimit } } as never;
+}
+
 describe("PushService", () => {
   it("fails delivery when user has not bound Telegram", async () => {
     const createLog = vi.fn();
@@ -36,7 +40,8 @@ describe("PushService", () => {
         pushDeliveryLog: { create: createLog }
       } as never,
       { sendMessage: vi.fn() } as never,
-      { enabled: false } as never
+      { enabled: false } as never,
+      configMock()
     );
 
     await expect(service.send("push-1")).resolves.toMatchObject({ status: "failed" });
@@ -81,7 +86,8 @@ describe("PushService", () => {
         pushDeliveryLog: { create: createLog }
       } as never,
       { sendMessage } as never,
-      { enabled: false } as never
+      { enabled: false } as never,
+      configMock()
     );
 
     await expect(service.send("push-1")).resolves.toMatchObject({ status: "sent" });
@@ -106,7 +112,8 @@ describe("PushService", () => {
         }
       } as never,
       { sendMessage: vi.fn() } as never,
-      { enabled: false } as never
+      { enabled: false } as never,
+      configMock()
     );
 
     await expect(
@@ -132,7 +139,8 @@ describe("PushService", () => {
         }
       } as never,
       { sendMessage: vi.fn() } as never,
-      { enabled: false } as never
+      { enabled: false } as never,
+      configMock()
     );
 
     await expect(
@@ -153,7 +161,8 @@ describe("PushService", () => {
         pushMessage: { count, findMany }
       } as never,
       { sendMessage: vi.fn() } as never,
-      { enabled: false } as never
+      { enabled: false } as never,
+      configMock()
     );
 
     const result = await service.adminList({ page: 2, limit: 10, type: "manual", status: "failed" });
@@ -175,7 +184,7 @@ describe("PushService", () => {
     });
   });
 
-  it("enforces daily push limit", async () => {
+  it("enforces daily push limit from system config", async () => {
     const service = new PushService(
       {
         user: {
@@ -185,10 +194,11 @@ describe("PushService", () => {
             notificationPreference: { telegramPushEnabled: true }
           })
         },
-        pushMessage: { count: vi.fn().mockResolvedValue(20) }
+        pushMessage: { count: vi.fn().mockResolvedValue(10) }
       } as never,
       { sendMessage: vi.fn() } as never,
-      { enabled: false } as never
+      { enabled: false } as never,
+      configMock(10)
     );
 
     await expect(
