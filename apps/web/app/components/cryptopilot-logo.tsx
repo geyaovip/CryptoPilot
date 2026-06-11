@@ -1,4 +1,4 @@
-const APP_ICON = "/brand/app-icon.svg";
+import { BrandMarkIcon } from "@cryptopilot/ui";
 
 type CryptoPilotLogoProps = {
   showText?: boolean;
@@ -9,7 +9,7 @@ type CryptoPilotLogoProps = {
 export function CryptoPilotLogo({
   showText = true,
   className = "",
-  markClassName = "h-9 w-9 text-[#111111]"
+  markClassName = "h-10 w-10 text-[#111111]"
 }: CryptoPilotLogoProps) {
   return (
     <div className={`flex items-center gap-3 ${className}`.trim()}>
@@ -24,14 +24,6 @@ export function CryptoPilotLogo({
   );
 }
 
-export function LogoMark({ className = "h-9 w-9 text-[#111111]" }: { className?: string }) {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      alt=""
-      aria-hidden
-      className={`block shrink-0 object-contain object-center ${className}`.trim()}
-      src={APP_ICON}
-    />
-  );
+export function LogoMark({ className = "h-10 w-10 text-[#111111]" }: { className?: string }) {
+  return <BrandMarkIcon className={className} />;
 }

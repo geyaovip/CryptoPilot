@@ -73,7 +73,7 @@ export function WebShell({ children }: { children: ReactNode }) {
   return (
     <AppShell
       title="CryptoPilot"
-      brandMark={<CryptoPilotLogo markClassName="h-9 w-9 text-[#111111]" />}
+      brandMark={<CryptoPilotLogo markClassName="h-10 w-10 text-[#111111]" />}
       navItems={webNavItems}
       variant="perplexity"
       renderSidebarFooter={() => <WebUserMenu />}

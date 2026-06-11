@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate PNG / ICO brand assets from app-icon.svg."""
+"""Regenerate PNG / ICO brand assets from the tight app-icon.svg."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 BRAND_WEB = ROOT / "apps/web/public/brand"
 SVG_ICON = BRAND_WEB / "app-icon.svg"
+VIEW_BOX = "85 80 264 268"
 PUBLIC_TARGETS = [ROOT / "apps/web/public", ROOT / "apps/admin/public"]
 BRAND_TARGETS = [BRAND_WEB, ROOT / "apps/admin/public/brand"]
 APP_TARGETS = [
@@ -66,13 +67,16 @@ def rasterize_svg(svg_path: Path, size: int) -> Image.Image:
         rendered = output_dir / f"{svg_path.name}.png"
         if not rendered.exists():
             rendered = next(output_dir.glob("*.png"))
-        return Image.open(rendered).convert("RGBA")
+        image = Image.open(rendered).convert("RGBA")
+        if image.size != (size, size):
+            image = image.resize((size, size), Image.Resampling.LANCZOS)
+        return image
 
 
 def write_temp_svg(fill: str) -> Path:
     paths = "\n".join(f'  <path fill="{fill}" d="{d}"/>' for d in ICON_PATHS)
     svg = (
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{VIEW_BOX}">'
         f"{paths}</svg>"
     )
     temp = Path(tempfile.mkstemp(suffix=".svg")[1])
@@ -85,7 +89,7 @@ def center_on_canvas(
     canvas_size: tuple[int, int],
     *,
     background: tuple[int, int, int, int] = (0, 0, 0, 0),
-    max_scale: float = 0.82,
+    max_scale: float = 0.96,
 ) -> Image.Image:
     canvas = Image.new("RGBA", canvas_size, background)
     max_w = int(canvas_size[0] * max_scale)
@@ -98,13 +102,8 @@ def center_on_canvas(
     return canvas
 
 
-def center_on_square(src: Image.Image, size: int) -> Image.Image:
-    return center_on_canvas(src, (size, size))
-
-
-def write_favicon(target_dir: Path, src: Image.Image) -> None:
-    sizes = [16, 32, 48, 64]
-    images = [center_on_square(src, size) for size in sizes]
+def write_favicon(target_dir: Path, sizes: list[int]) -> None:
+    images = [rasterize_svg(SVG_ICON, size) for size in sizes]
     images[-1].save(
         target_dir / "favicon.ico",
         format="ICO",
@@ -114,28 +113,28 @@ def write_favicon(target_dir: Path, src: Image.Image) -> None:
 
 
 def write_og_image(target_dir: Path, src: Image.Image) -> None:
-    canvas = center_on_canvas(src, (1200, 630), background=(252, 252, 249, 255), max_scale=0.42)
+    canvas = center_on_canvas(src, (1200, 630), background=(252, 252, 249, 255), max_scale=0.62)
     canvas.convert("RGB").save(target_dir / "og-image.png", optimize=True)
 
 
 def write_brand_pack(brand_dir: Path, icon: Image.Image, reversed_icon: Image.Image) -> None:
     brand_dir.mkdir(parents=True, exist_ok=True)
-    center_on_square(icon, 400).save(brand_dir / "app-icon.png", optimize=True)
+    rasterize_svg(SVG_ICON, 400).save(brand_dir / "app-icon.png", optimize=True)
     center_on_canvas(icon, (450, 450)).save(brand_dir / "social-avatar.png", optimize=True)
-    center_on_canvas(icon, (770, 290), max_scale=0.78).save(brand_dir / "in-app-logo.png", optimize=True)
-    center_on_canvas(icon, (810, 290), max_scale=0.78).save(brand_dir / "website-logo.png", optimize=True)
-    center_on_canvas(icon, (950, 330), max_scale=0.72).save(brand_dir / "mono-logo.png", optimize=True)
-    center_on_canvas(reversed_icon, (1070, 410), max_scale=0.72).save(brand_dir / "reversed-logo.png", optimize=True)
+    center_on_canvas(icon, (770, 290), max_scale=0.9).save(brand_dir / "in-app-logo.png", optimize=True)
+    center_on_canvas(icon, (810, 290), max_scale=0.9).save(brand_dir / "website-logo.png", optimize=True)
+    center_on_canvas(icon, (950, 330), max_scale=0.88).save(brand_dir / "mono-logo.png", optimize=True)
+    center_on_canvas(reversed_icon, (1070, 410), max_scale=0.88).save(brand_dir / "reversed-logo.png", optimize=True)
 
 
 def main() -> None:
     if not SVG_ICON.exists():
         raise FileNotFoundError(f"Missing source SVG: {SVG_ICON}")
 
-    icon = rasterize_svg(SVG_ICON, 400)
+    icon = rasterize_svg(SVG_ICON, 512)
     reversed_svg = write_temp_svg("#FFFFFF")
     try:
-        reversed_icon = rasterize_svg(reversed_svg, 400)
+        reversed_icon = rasterize_svg(reversed_svg, 512)
     finally:
         reversed_svg.unlink(missing_ok=True)
 
@@ -144,17 +143,18 @@ def main() -> None:
 
     for target_dir in PUBLIC_TARGETS:
         target_dir.mkdir(parents=True, exist_ok=True)
-        center_on_square(icon, 64).save(target_dir / "icon.png", optimize=True)
-        center_on_square(icon, 192).save(target_dir / "icon-192.png", optimize=True)
-        center_on_square(icon, 512).save(target_dir / "icon-512.png", optimize=True)
-        write_favicon(target_dir, icon)
+        rasterize_svg(SVG_ICON, 64).save(target_dir / "icon.png", optimize=True)
+        rasterize_svg(SVG_ICON, 192).save(target_dir / "icon-192.png", optimize=True)
+        rasterize_svg(SVG_ICON, 512).save(target_dir / "icon-512.png", optimize=True)
+        write_favicon(target_dir, [16, 32, 48, 64])
         write_og_image(target_dir, icon)
 
     for app_dir, public_dir in APP_TARGETS:
         app_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(public_dir / "icon.png", app_dir / "icon.png")
+        shutil.copy2(SVG_ICON, app_dir / "icon.svg")
 
-    print("Regenerated PNG / ICO assets from app-icon.svg.")
+    print("Regenerated PNG / ICO assets from tight app-icon.svg.")
 
 
 if __name__ == "__main__":

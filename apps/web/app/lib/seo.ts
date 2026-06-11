@@ -134,8 +134,8 @@ export function organizationJsonLd() {
     logo: {
       "@type": "ImageObject",
       url: absoluteUrl("/brand/app-icon.svg"),
-      width: 400,
-      height: 400
+      width: 264,
+      height: 268
     },
     sameAs: [absoluteUrl("/")]
   };
@@ -238,8 +238,8 @@ export function articleJsonLd(input: {
       logo: {
         "@type": "ImageObject",
         url: absoluteUrl("/brand/app-icon.svg"),
-        width: 400,
-        height: 400
+        width: 264,
+        height: 268
       }
     },
     inLanguage: "zh-CN",
