@@ -1,0 +1,13 @@
+{
+  "project": "CryptoPilot",
+  "tagline": "AI 加密市场情报终端",
+  "note": "每张图片只包含一个可直接使用的 Logo，不包含场景标签，不包含多个 Logo。",
+  "assets": {
+    "01_website_logo.png": "网站横版 Logo",
+    "02_app_icon.png": "App 图标",
+    "03_in_app_logo.png": "客户端 / 应用内横版 Logo",
+    "04_social_avatar.png": "社交媒体头像",
+    "05_mono_logo.png": "单色版本",
+    "06_reversed_logo.png": "反白版本"
+  }
+}

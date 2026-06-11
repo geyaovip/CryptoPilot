@@ -5,6 +5,14 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "CryptoPilot 管理后台",
   description: "CryptoPilot 管理后台",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
+      { url: "/icon.png", sizes: "64x64", type: "image/png" }
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/icon-192.png"
+  },
   robots: {
     index: false,
     follow: false,

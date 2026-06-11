@@ -1,3 +1,8 @@
+import Image from "next/image";
+
+const IN_APP_LOGO = "/brand/in-app-logo.png";
+const APP_ICON = "/brand/app-icon.png";
+
 type CryptoPilotLogoProps = {
   showText?: boolean;
   className?: string;
@@ -9,29 +14,31 @@ export function CryptoPilotLogo({
   className = "",
   markClassName = "h-9 w-9"
 }: CryptoPilotLogoProps) {
-  return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      <LogoMark className={markClassName} />
-      {showText ? (
-        <div className="leading-tight">
-          <p className="text-base font-semibold text-[#111111]">CryptoPilot</p>
-          <p className="text-xs text-[#6B7280]">AI 加密市场情报终端</p>
-        </div>
-      ) : null}
-    </div>
-  );
+  if (showText) {
+    return (
+      <Image
+        alt="CryptoPilot"
+        className={`h-9 w-auto ${className}`.trim()}
+        height={290}
+        priority
+        src={IN_APP_LOGO}
+        width={770}
+      />
+    );
+  }
+
+  return <LogoMark className={markClassName} />;
 }
 
 export function LogoMark({ className = "h-9 w-9" }: { className?: string }) {
   return (
-    <svg aria-hidden className={className} viewBox="0 0 64 64" fill="none">
-      <path
-        d="M30 10C18 10 10 18 10 30C10 42 18 50 30 50"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="5"
-      />
-      <path d="M30 30L48 23L41 41Z" fill="currentColor" />
-    </svg>
+    <Image
+      alt=""
+      aria-hidden
+      className={`aspect-square w-auto ${className}`.trim()}
+      height={410}
+      src={APP_ICON}
+      width={410}
+    />
   );
 }

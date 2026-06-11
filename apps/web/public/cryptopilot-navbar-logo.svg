@@ -1,7 +1,0 @@
-<svg width="240" height="48" viewBox="0 0 240 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CryptoPilot">
-  <g transform="translate(4,4)">
-    <path d="M18 2C10 2 2 10 2 18C2 26 10 34 18 34" stroke="#111111" stroke-width="5" stroke-linecap="round" fill="none"/>
-    <path d="M18 18L31 13L26 26Z" fill="#111111"/>
-  </g>
-  <text x="46" y="31" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" fill="#111111" letter-spacing="-0.5">CryptoPilot</text>
-</svg>

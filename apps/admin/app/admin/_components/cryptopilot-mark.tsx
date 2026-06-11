@@ -1,25 +1,36 @@
+import Image from "next/image";
+
+const IN_APP_LOGO = "/brand/in-app-logo.png";
+const APP_ICON = "/brand/app-icon.png";
+
 type CryptoPilotMarkProps = {
   className?: string;
   showText?: boolean;
 };
 
 export function CryptoPilotMark({ className = "h-9 w-9", showText = false }: CryptoPilotMarkProps) {
-  const mark = (
-    <svg aria-hidden className={className} viewBox="0 0 64 64" fill="none">
-      <path d="M30 10C18 10 10 18 10 30C10 42 18 50 30 50" stroke="currentColor" strokeLinecap="round" strokeWidth="5" />
-      <path d="M30 30L48 23L41 41Z" fill="currentColor" />
-    </svg>
-  );
-
-  if (!showText) return mark;
+  if (showText) {
+    const sizeClass = className === "h-9 w-9" ? "h-9" : className;
+    return (
+      <Image
+        alt="CryptoPilot 管理后台"
+        className={`w-auto ${sizeClass}`.trim()}
+        height={290}
+        priority
+        src={IN_APP_LOGO}
+        width={770}
+      />
+    );
+  }
 
   return (
-    <div className="flex items-center gap-3 text-slate-950">
-      {mark}
-      <div className="leading-tight">
-        <p className="text-sm font-semibold">CryptoPilot</p>
-        <p className="text-xs text-slate-500">管理后台</p>
-      </div>
-    </div>
+    <Image
+      alt=""
+      aria-hidden
+      className={`aspect-square w-auto ${className}`.trim()}
+      height={410}
+      src={APP_ICON}
+      width={410}
+    />
   );
 }
