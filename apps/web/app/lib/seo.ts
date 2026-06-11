@@ -132,8 +132,8 @@ export function organizationJsonLd() {
     logo: {
       "@type": "ImageObject",
       url: absoluteUrl("/brand/social-avatar.png"),
-      width: 512,
-      height: 512
+      width: 450,
+      height: 450
     },
     sameAs: [absoluteUrl("/")]
   };
@@ -235,7 +235,9 @@ export function articleJsonLd(input: {
       name: siteName,
       logo: {
         "@type": "ImageObject",
-        url: absoluteUrl("/brand/website-logo.png")
+        url: absoluteUrl("/brand/in-app-logo.png"),
+        width: 770,
+        height: 290
       }
     },
     inLanguage: "zh-CN",

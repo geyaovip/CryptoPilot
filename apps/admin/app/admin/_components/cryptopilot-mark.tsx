@@ -14,7 +14,7 @@ export function CryptoPilotMark({ className = "h-9 w-9", showText = false }: Cry
     return (
       <Image
         alt="CryptoPilot 管理后台"
-        className={`w-auto ${sizeClass}`.trim()}
+        className={`w-auto max-w-full shrink-0 object-contain object-left ${sizeClass}`.trim()}
         height={290}
         priority
         src={IN_APP_LOGO}
@@ -27,7 +27,7 @@ export function CryptoPilotMark({ className = "h-9 w-9", showText = false }: Cry
     <Image
       alt=""
       aria-hidden
-      className={`aspect-square w-auto ${className}`.trim()}
+      className={`h-9 w-9 shrink-0 object-contain ${className}`.trim()}
       height={410}
       src={APP_ICON}
       width={410}

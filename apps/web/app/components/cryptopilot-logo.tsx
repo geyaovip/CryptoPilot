@@ -18,7 +18,7 @@ export function CryptoPilotLogo({
     return (
       <Image
         alt="CryptoPilot"
-        className={`h-9 w-auto ${className}`.trim()}
+        className={`h-9 w-auto max-w-full shrink-0 object-contain object-left ${className}`.trim()}
         height={290}
         priority
         src={IN_APP_LOGO}
@@ -35,7 +35,7 @@ export function LogoMark({ className = "h-9 w-9" }: { className?: string }) {
     <Image
       alt=""
       aria-hidden
-      className={`aspect-square w-auto ${className}`.trim()}
+      className={`h-9 w-9 shrink-0 object-contain ${className}`.trim()}
       height={410}
       src={APP_ICON}
       width={410}
