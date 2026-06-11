@@ -7,10 +7,11 @@ export const metadata: Metadata = {
   description: "CryptoPilot 管理后台",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
-      { url: "/icon.png", sizes: "64x64", type: "image/png" }
+      { url: "/brand/app-icon.svg", sizes: "any", type: "image/svg+xml" },
+      { url: "/icon.png", sizes: "64x64", type: "image/png" },
+      { url: "/favicon.ico", sizes: "64x64", type: "image/x-icon" }
     ],
-    shortcut: "/favicon.ico",
+    shortcut: "/brand/app-icon.svg",
     apple: "/icon-192.png"
   },
   robots: {

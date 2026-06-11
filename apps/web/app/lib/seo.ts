@@ -58,14 +58,15 @@ export function publicPageMetadata(input: {
     alternates: { canonical: input.path },
     icons: {
       icon: [
-        { url: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
+        { url: "/favicon.svg", sizes: "any", type: "image/svg+xml" },
+        { url: "/icon.svg", sizes: "any", type: "image/svg+xml" },
         { url: "/icon.png", sizes: "64x64", type: "image/png" },
-        { url: "/favicon.svg", sizes: "64x64", type: "image/svg+xml" },
-        { url: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
-        { url: "/icon.svg", sizes: "64x64", type: "image/svg+xml" }
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+        { url: "/favicon.ico", sizes: "64x64", type: "image/x-icon" }
       ],
-      shortcut: "/favicon.ico",
-      apple: "/icon-192.svg"
+      shortcut: "/favicon.svg",
+      apple: "/icon-192.png"
     },
     formatDetection: {
       email: false,
@@ -81,7 +82,7 @@ export function publicPageMetadata(input: {
       type: input.type ?? "website",
       images: [
         {
-          url: absoluteUrl("/og-image.svg"),
+          url: absoluteUrl("/og-image.png"),
           width: 1200,
           height: 630,
           alt: "CryptoPilot AI 加密市场情报终端"
@@ -92,7 +93,7 @@ export function publicPageMetadata(input: {
       card: "summary_large_image",
       title: input.title,
       description,
-      images: [absoluteUrl("/og-image.svg")]
+      images: [absoluteUrl("/og-image.png")]
     }
   };
 }
@@ -132,9 +133,9 @@ export function organizationJsonLd() {
     description: defaultDescription,
     logo: {
       "@type": "ImageObject",
-      url: absoluteUrl("/cryptopilot-social-avatar.svg"),
-      width: 512,
-      height: 512
+      url: absoluteUrl("/brand/app-icon.svg"),
+      width: 400,
+      height: 400
     },
     sameAs: [absoluteUrl("/")]
   };
@@ -236,7 +237,9 @@ export function articleJsonLd(input: {
       name: siteName,
       logo: {
         "@type": "ImageObject",
-        url: absoluteUrl("/logo.svg")
+        url: absoluteUrl("/brand/app-icon.svg"),
+        width: 400,
+        height: 400
       }
     },
     inLanguage: "zh-CN",
