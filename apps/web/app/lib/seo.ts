@@ -60,11 +60,12 @@ export function publicPageMetadata(input: {
       icon: [
         { url: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
         { url: "/icon.png", sizes: "64x64", type: "image/png" },
-        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-        { url: "/icon-512.png", sizes: "512x512", type: "image/png" }
+        { url: "/favicon.svg", sizes: "64x64", type: "image/svg+xml" },
+        { url: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
+        { url: "/icon.svg", sizes: "64x64", type: "image/svg+xml" }
       ],
       shortcut: "/favicon.ico",
-      apple: "/icon-192.png"
+      apple: "/icon-192.svg"
     },
     formatDetection: {
       email: false,
@@ -80,7 +81,7 @@ export function publicPageMetadata(input: {
       type: input.type ?? "website",
       images: [
         {
-          url: absoluteUrl("/og-image.png"),
+          url: absoluteUrl("/og-image.svg"),
           width: 1200,
           height: 630,
           alt: "CryptoPilot AI 加密市场情报终端"
@@ -91,7 +92,7 @@ export function publicPageMetadata(input: {
       card: "summary_large_image",
       title: input.title,
       description,
-      images: [absoluteUrl("/og-image.png")]
+      images: [absoluteUrl("/og-image.svg")]
     }
   };
 }
@@ -131,9 +132,9 @@ export function organizationJsonLd() {
     description: defaultDescription,
     logo: {
       "@type": "ImageObject",
-      url: absoluteUrl("/brand/social-avatar.png"),
-      width: 450,
-      height: 450
+      url: absoluteUrl("/cryptopilot-social-avatar.svg"),
+      width: 512,
+      height: 512
     },
     sameAs: [absoluteUrl("/")]
   };
@@ -235,9 +236,7 @@ export function articleJsonLd(input: {
       name: siteName,
       logo: {
         "@type": "ImageObject",
-        url: absoluteUrl("/brand/in-app-logo.png"),
-        width: 770,
-        height: 290
+        url: absoluteUrl("/logo.svg")
       }
     },
     inLanguage: "zh-CN",

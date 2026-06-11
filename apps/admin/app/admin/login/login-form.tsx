@@ -119,7 +119,7 @@ export function AdminLoginForm() {
 
   return (
     <Card className="w-full max-w-md">
-      <CryptoPilotMark className="h-10" showText />
+      <CryptoPilotMark className="h-10 w-10" showText />
       <h1 className="mt-2 text-2xl font-semibold text-slate-950">管理员登录</h1>
       <p className="mt-2 text-sm text-slate-500">输入管理员邮箱，我们会发送一个一次性登录链接到你的邮箱。</p>
       <input
