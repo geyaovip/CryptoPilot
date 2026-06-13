@@ -5,9 +5,11 @@ import { ContextBackLink } from "../../components/context-back-link";
 import { FeedCardActions } from "../../components/feed-card-actions";
 import { FeedTypeBadge } from "../../components/feed-type-badge";
 import { JsonLd } from "../../components/json-ld";
+import { NarrativeTagLinks } from "../../components/narrative-tag-links";
 import { RelatedSourcesList } from "../../components/related-sources-list";
+import { SiteFooter } from "../../components/site-footer";
 import { getFeedDetail } from "../../lib/api";
-import { articleJsonLd, breadcrumbJsonLd, publicPageMetadata, seoTitle } from "../../lib/seo";
+import { articleJsonLd, articlePageMetadata, breadcrumbJsonLd, seoTitle } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -16,18 +18,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   try {
     const feed = await getFeedDetail(id);
     const title = feed.narrative_hook?.trim() || feed.title;
-    return publicPageMetadata({
+    return articlePageMetadata({
       title: seoTitle(title),
       description: feed.ai_summary || feed.title,
       path: `/feed/${feed.id}`,
-      type: "article"
+      ogTitle: title,
+      ogTag: feed.primary_narrative?.name ?? "市场动态"
     });
   } catch {
-    return publicPageMetadata({
+    return articlePageMetadata({
       title: "市场动态 | CryptoPilot",
       description: "查看加密市场动态、来源、关键原因和 AI 摘要。",
       path: `/feed/${id}`,
-      type: "article"
+      ogTitle: "市场动态",
+      ogTag: "AI 加密市场情报"
     });
   }
 }
@@ -56,6 +60,9 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
           }),
           breadcrumbJsonLd([
             { name: "首页", path: "/" },
+            ...(feed.primary_narrative
+              ? [{ name: feed.primary_narrative.name, path: `/narratives/${feed.primary_narrative.slug}` }]
+              : []),
             { name: "市场动态", path: `/feed/${feed.id}` }
           ])
         ]}
@@ -88,17 +95,13 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
             <p className="text-xs font-semibold text-[#8A918C]">AI 已为你提炼</p>
             <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-[#5F6868]">{summary}</p>
           </div>
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-2">
             {feed.related_tokens.map((token) => (
               <span className="rounded-full border border-[#D9D5C9] bg-[#FCFCF9] px-2.5 py-1 text-xs text-[#5F6868]" key={token.id}>
                 {token.symbol}
               </span>
             ))}
-            {feed.narrative_tags.map((narrative) => (
-              <span className="rounded-full bg-[#F7F5EE] px-2.5 py-1 text-xs text-[#5F6868]" key={narrative.id}>
-                {narrative.name}
-              </span>
-            ))}
+            <NarrativeTagLinks narratives={feed.narrative_tags} />
           </div>
           {shouldShowSourceExcerpt ? (
             <section className="mt-5 rounded-2xl border border-[#E8E2D4] bg-[#FCFCF9] p-4">
@@ -168,6 +171,7 @@ export default async function FeedDetailPage({ params }: { params: Promise<{ id:
             去 AI 研究
           </Link>
         </p>
+        <SiteFooter />
       </article>
     </main>
   );

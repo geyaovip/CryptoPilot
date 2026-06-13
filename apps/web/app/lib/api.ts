@@ -23,11 +23,13 @@ export async function getFeed(
   tab: FeedTab = "for_you",
   cursor?: string,
   narrative?: string,
-  entity: "insight" | "feed_item" = "insight"
+  entity: "insight" | "feed_item" = "insight",
+  limit?: number
 ): Promise<FeedListResponse["data"]> {
   const params = new URLSearchParams({ tab });
   if (cursor) params.set("cursor", cursor);
   if (narrative) params.set("narrative", narrative);
+  if (limit) params.set("limit", String(limit));
   if (entity === "feed_item") {
     params.set("entity", "feed_item");
     params.set("locale", "zh");

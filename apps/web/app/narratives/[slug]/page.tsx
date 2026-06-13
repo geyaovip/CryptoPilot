@@ -7,6 +7,7 @@ import { JsonLd } from "../../components/json-ld";
 import { WebShell } from "../../_components/web-shell";
 import { getNarrativeDetail } from "../../lib/api";
 import { breadcrumbJsonLd, pageJsonLd, publicPageMetadata } from "../../lib/seo";
+import { buildDynamicOgImageUrl } from "../../lib/og-image";
 
 export const dynamic = "force-dynamic";
 
@@ -14,13 +15,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   try {
     const narrative = await getNarrativeDetail(slug);
+    const description =
+      narrative.ai_summary ??
+      narrative.description ??
+      `跟踪 ${narrative.name} 在加密市场中的热度、相关资产、来源和最新动态。`;
     return publicPageMetadata({
       title: `${narrative.name} 叙事 | CryptoPilot`,
-      description:
-        narrative.ai_summary ??
-        narrative.description ??
-        `跟踪 ${narrative.name} 在加密市场中的热度、相关资产、来源和最新动态。`,
-      path: `/narratives/${narrative.slug}`
+      description,
+      path: `/narratives/${narrative.slug}`,
+      image: buildDynamicOgImageUrl({ title: narrative.name, tag: "市场叙事" }),
+      imageAlt: narrative.name
     });
   } catch {
     return publicPageMetadata({
@@ -73,11 +77,19 @@ export default async function NarrativeDetailPage({ params }: { params: Promise<
             <span>情绪 {narrative.sentiment}</span>
           </div>
           <Link
-            className="mt-4 inline-block text-sm font-medium text-[#102A2C] underline"
-            href={`/narratives/${narrative.slug}`}
+            className="mt-4 inline-block text-sm font-medium text-[#20808D] hover:text-[#186A73]"
+            href={`/?narrative=${encodeURIComponent(narrative.slug)}`}
           >
-            查看该叙事的最新动态 →
+            在首页筛选该叙事动态 →
           </Link>
+          <div className="mt-3 flex flex-wrap gap-3 text-sm">
+            <Link className="text-[#5F6868] hover:text-[#20808D]" href={`/search?q=${encodeURIComponent(narrative.name)}`}>
+              AI 研究该叙事
+            </Link>
+            <Link className="text-[#5F6868] hover:text-[#20808D]" href="/narratives">
+              浏览全部叙事
+            </Link>
+          </div>
         </Card>
 
         {narrative.top_tokens.length > 0 ? (

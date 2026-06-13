@@ -1,6 +1,7 @@
 import { AppShell, type NavItem } from "@cryptopilot/ui";
 import type { ReactNode } from "react";
 import { CryptoPilotLogo } from "../components/cryptopilot-logo";
+import { SiteFooter } from "../components/site-footer";
 import { WebUserMenu } from "./web-user-menu";
 
 const navIconClass = "h-[18px] w-[18px] stroke-[1.9]";
@@ -78,7 +79,10 @@ export function WebShell({ children }: { children: ReactNode }) {
       variant="perplexity"
       renderSidebarFooter={() => <WebUserMenu />}
     >
-      {children}
+      <div className="space-y-6">
+        {children}
+        <SiteFooter />
+      </div>
     </AppShell>
   );
 }

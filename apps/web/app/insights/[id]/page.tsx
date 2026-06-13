@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Card } from "@cryptopilot/ui";
 import { ContextBackLink } from "../../components/context-back-link";
 import { FeedCard } from "../../components/feed-card";
 import { FeedTypeBadge } from "../../components/feed-type-badge";
 import { InsightCardActions } from "../../components/insight-card-actions";
 import { JsonLd } from "../../components/json-ld";
+import { NarrativeTagLinks } from "../../components/narrative-tag-links";
+import { SiteFooter } from "../../components/site-footer";
 import { getInsightDetail } from "../../lib/api";
-import { articleJsonLd, breadcrumbJsonLd, publicPageMetadata, seoTitle } from "../../lib/seo";
+import { articleJsonLd, articlePageMetadata, breadcrumbJsonLd, seoTitle } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -14,18 +17,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   try {
     const insight = await getInsightDetail(id);
-    return publicPageMetadata({
+    return articlePageMetadata({
       title: seoTitle(insight.ai_insight),
       description: insight.ai_summary,
       path: `/insights/${insight.id}`,
-      type: "article"
+      ogTitle: insight.ai_insight,
+      ogTag: insight.primary_narrative?.name ?? "AI 市场解读"
     });
   } catch {
-    return publicPageMetadata({
+    return articlePageMetadata({
       title: "AI 市场解读 | CryptoPilot",
       description: "查看带来源的加密市场 AI 解读、关键原因和相关市场信号。",
       path: `/insights/${id}`,
-      type: "article"
+      ogTitle: "AI 市场解读",
+      ogTag: "AI 加密市场情报"
     });
   }
 }
@@ -75,6 +80,9 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
           }),
           breadcrumbJsonLd([
             { name: "首页", path: "/" },
+            ...(insight.primary_narrative
+              ? [{ name: insight.primary_narrative.name, path: `/narratives/${insight.primary_narrative.slug}` }]
+              : []),
             { name: "AI 市场解读", path: `/insights/${insight.id}` }
           ])
         ]}
@@ -84,6 +92,11 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
         <Card className="border-[#D9D5C9] bg-white/95 p-6">
           <div className="flex flex-wrap items-center gap-2">
             <FeedTypeBadge feedType={insight.feed_type} />
+            {insight.primary_narrative ? (
+              <Link className="text-xs font-medium text-[#20808D]" href={`/narratives/${insight.primary_narrative.slug}`}>
+                🔥 {insight.primary_narrative.name}
+              </Link>
+            ) : null}
             <span className="text-xs text-[#8A918C]">动态热度 {insight.heat_velocity}</span>
           </div>
           <h1 className="mt-3 text-2xl font-semibold leading-snug" data-testid="insight-detail-headline">
@@ -94,7 +107,10 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
             <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-[#5F6868]">{summary}</p>
           </div>
           <div className="mt-5 border-t border-[#EDE8DA] pt-4">
-            <InsightCardActions askQuery={insight.ai_insight} insightId={insight.id} showDetailLink={false} />
+            <NarrativeTagLinks narratives={insight.narrative_tags} />
+            <div className="mt-4">
+              <InsightCardActions askQuery={insight.ai_insight} insightId={insight.id} showDetailLink={false} />
+            </div>
           </div>
         </Card>
 
@@ -120,10 +136,16 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
           <ul className="mt-3 space-y-2 text-sm">
             {insight.sources.map((source) => (
               <li key={source.feed_item_id}>
-                <a className="font-medium text-[#20808D]" href={source.source_url} rel="noopener noreferrer" target="_blank">
-                  {source.source_name}
-                </a>
-                <span className="text-[#8A918C]"> · {source.title}</span>
+                <Link className="font-medium text-[#20808D]" href={`/feed/${source.feed_item_id}`}>
+                  {source.title}
+                </Link>
+                <span className="text-[#8A918C]">
+                  {" "}
+                  ·{" "}
+                  <a href={source.source_url} rel="noopener noreferrer" target="_blank">
+                    {source.source_name}
+                  </a>
+                </span>
               </li>
             ))}
           </ul>
@@ -135,6 +157,7 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
             <FeedCard feed={signal} key={signal.id} />
           ))}
         </section>
+        <SiteFooter />
       </article>
     </main>
   );

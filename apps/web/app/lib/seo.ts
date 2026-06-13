@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { buildDynamicOgImageUrl } from "./og-image";
 
 export const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://cryptopilot.chat");
 
@@ -42,9 +43,13 @@ export function publicPageMetadata(input: {
   description: string;
   path: string;
   type?: "website" | "article";
+  image?: string;
+  imageAlt?: string;
 }): Metadata {
   const description = truncateDescription(input.description);
   const url = absoluteUrl(input.path);
+  const ogImage = input.image ? absoluteUrl(input.image) : absoluteUrl("/og-image.png");
+  const ogAlt = input.imageAlt ?? truncateDescription(input.title, 110);
 
   return {
     title: input.title,
@@ -82,10 +87,10 @@ export function publicPageMetadata(input: {
       type: input.type ?? "website",
       images: [
         {
-          url: absoluteUrl("/og-image.png"),
+          url: ogImage,
           width: 1200,
           height: 630,
-          alt: "CryptoPilot AI 加密市场情报终端"
+          alt: ogAlt
         }
       ]
     },
@@ -93,9 +98,26 @@ export function publicPageMetadata(input: {
       card: "summary_large_image",
       title: input.title,
       description,
-      images: [absoluteUrl("/og-image.png")]
+      images: [ogImage]
     }
   };
+}
+
+export function articlePageMetadata(input: {
+  title: string;
+  description: string;
+  path: string;
+  ogTitle: string;
+  ogTag: string;
+}): Metadata {
+  return publicPageMetadata({
+    title: input.title,
+    description: input.description,
+    path: input.path,
+    type: "article",
+    image: buildDynamicOgImageUrl({ title: input.ogTitle, tag: input.ogTag }),
+    imageAlt: input.ogTitle
+  });
 }
 
 export const noIndexMetadata: Metadata = {

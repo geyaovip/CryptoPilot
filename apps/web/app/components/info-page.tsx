@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@cryptopilot/ui";
 import { WebShell } from "../_components/web-shell";
 import { JsonLd } from "./json-ld";
+import { siteFooterLinks } from "./site-footer";
 import { breadcrumbJsonLd, pageJsonLd } from "../lib/seo";
 
 type InfoSection = {
@@ -17,12 +18,7 @@ type InfoPageProps = {
   sections: InfoSection[];
 };
 
-const relatedLinks = [
-  { href: "/about", label: "关于 CryptoPilot" },
-  { href: "/methodology", label: "方法论" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/disclaimer", label: "免责声明" }
-];
+const relatedLinks = siteFooterLinks.filter((item) => item.href !== "/narratives" && item.href !== "/search");
 
 export function InfoPage({ eyebrow, title, description, path, sections }: InfoPageProps) {
   return (

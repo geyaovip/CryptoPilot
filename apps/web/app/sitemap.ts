@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import type { MarketInsightSummary } from "@cryptopilot/types";
-import { getFeed, getNarratives } from "./lib/api";
 import { absoluteUrl } from "./lib/seo";
+import { listSitemapFeedItems, listSitemapInsights } from "./lib/sitemap-sources";
+import { getNarratives } from "./lib/api";
 
 const now = new Date();
 
@@ -33,9 +33,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const [narratives, feed] = await Promise.all([
+    const [narratives, feedItems, insights] = await Promise.all([
       getNarratives("hottest"),
-      getFeed("for_you", undefined, undefined, "insight")
+      listSitemapFeedItems(),
+      listSitemapInsights()
     ]);
 
     return [
@@ -46,15 +47,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           priority: 0.85
         })
       ),
-      ...(feed.entity === "insight"
-        ? (feed.items as MarketInsightSummary[]).map((item) =>
-            entry(`/insights/${item.id}`, {
-              changeFrequency: "daily",
-              priority: 0.75,
-              lastModified: item.sources[0]?.published_at ?? now
-            })
-          )
-        : [])
+      ...feedItems.map((item) =>
+        entry(`/feed/${item.id}`, {
+          changeFrequency: "daily",
+          priority: 0.8,
+          lastModified: item.publish_time
+        })
+      ),
+      ...insights.map((item) =>
+        entry(`/insights/${item.id}`, {
+          changeFrequency: "daily",
+          priority: 0.75,
+          lastModified: item.sources[0]?.published_at ?? now
+        })
+      )
     ];
   } catch {
     return staticPages;
