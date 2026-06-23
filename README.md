@@ -1,54 +1,58 @@
 # CryptoPilot
 
-CryptoPilot is an AI-assisted crypto market intelligence product. It aggregates market news, narratives, token signals, and source-backed AI summaries to help users understand what is moving in the crypto market without turning the product into trading advice.
+CryptoPilot 是一款 **AI 加密市场情报终端**。它聚合多来源新闻、市场叙事、资产信号与带来源的 AI 解读，帮助用户快速理解市场正在发生什么——**仅供研究参考，不提供投资建议**。
 
-> CryptoPilot is for research and information discovery only. It does not provide financial, investment, trading, or legal advice.
+线上地址：[cryptopilot.chat](https://cryptopilot.chat)
 
-## What It Does
+> CryptoPilot 仅用于信息发现与研究，不构成财务、投资、交易或法律建议。
 
-- Insight-first market radar with multi-source AI summaries and drill-down signals.
-- Curated market feed with source links, deterministic tags, and narrative-aware clustering.
-- AI Search for natural-language crypto market questions.
-- Narrative and token tracking for market themes.
-- Telegram Push for digests, market alerts, watchlist alerts, and send logs.
-- Admin console for feeds, insights, sources, prompts, AI monitoring, narratives, tokens, users, push, config, and logs.
-- RSS ingestion, source catalog sync, feed quality filtering, clustering, and optional background AI jobs.
+## 核心能力
 
-## Monorepo Structure
+- **Insight 市场雷达**：以多来源 AI 解读为主入口，可下钻查看相关市场信号
+- **市场动态 Feed**：带来源链接、确定性标签与叙事感知聚类
+- **AI 研究搜索**：自然语言提问，基于 RAG 检索已收录内容并生成带来源的研究简报
+- **叙事与资产跟踪**：按市场主题跟踪热度、相关 Token 与最新动态
+- **Telegram 推送**：日报、市场预警、关注列表提醒与发送日志
+- **管理后台**：Feed、Insight、来源、Prompt、AI 监控、叙事、Token、用户、推送、配置与日志
+- **数据管线**：RSS 采集、来源目录同步、质量过滤、聚类，以及可选的后台 AI 任务
+
+## 仓库结构
 
 ```txt
 apps/
-  web/      User-facing Next.js app
-  admin/    Admin Next.js app
-  api/      NestJS API, jobs, Prisma, ingestion, AI pipeline
+  web/      用户端 Next.js 应用
+  admin/    管理端 Next.js 应用
+  api/      NestJS API、定时任务、Prisma、采集与 AI 管线
 packages/
-  types/    Shared API/domain types
-  ui/       Shared UI primitives
-  config/   Shared config helpers
-  shared/   Shared utilities
-  prompts/  Prompt templates and metadata
-docs/       Product, module, deployment, and agent development docs
-infra/      Database initialization assets
+  types/    共享 API / 领域类型
+  ui/       共享 UI 组件
+  config/   共享配置工具
+  shared/   共享工具函数
+  prompts/  Prompt 模板与元数据
+docs/       产品、模块、部署与开发文档
+infra/      数据库初始化资源
 ```
 
-## Tech Stack
+## 技术栈
 
-- Frontend: Next.js App Router, TypeScript, TailwindCSS
-- Backend: NestJS, TypeScript
-- Database: PostgreSQL, Prisma, pgvector
-- Cache/queue foundation: Redis
-- AI: provider-routed OpenAI-compatible LLM layer with mock fallback
-- Deployment: Cloudflare Workers for frontend apps, Linux server/API deployment support
+| 层级 | 技术 |
+|------|------|
+| 前端 | Next.js App Router、TypeScript、TailwindCSS |
+| 后端 | NestJS、TypeScript |
+| 数据库 | PostgreSQL、Prisma、pgvector |
+| 缓存 / 队列 | Redis |
+| AI | 可路由的 OpenAI 兼容 LLM 层，支持 mock 降级 |
+| 部署 | 前端 Cloudflare Workers（OpenNext）；API 支持 Linux 服务器部署 |
 
-## Getting Started
+## 本地开发
 
-### Prerequisites
+### 环境要求
 
 - Node.js 22+
 - pnpm 11.2.2
-- Docker Desktop or Docker Engine
+- Docker Desktop 或 Docker Engine
 
-### Install
+### 安装依赖
 
 ```bash
 corepack enable
@@ -56,13 +60,13 @@ corepack prepare pnpm@11.2.2 --activate
 pnpm install
 ```
 
-### Configure Environment
+### 配置环境变量
 
 ```bash
 cp .env.example .env
 ```
 
-For local development, the defaults use local PostgreSQL and Redis:
+本地开发默认使用本机 PostgreSQL 与 Redis：
 
 ```env
 DATABASE_URL="postgresql://cryptopilot:cryptopilot_dev_password@localhost:5432/cryptopilot?schema=public"
@@ -77,11 +81,12 @@ LLM_ENABLE_EMBEDDINGS="false"
 RAG_ENABLE_VECTOR_SEARCH="false"
 ```
 
-`ENABLE_BACKGROUND_JOBS` is intentionally off by default for local development. Set it to `true` only for the API instance that should run RSS ingestion, price sync, AI generation, clustering, and other scheduled jobs.
+说明：
 
-Local development should not spend real LLM tokens by default. Use the mock provider locally unless you are explicitly testing provider integration.
+- `ENABLE_BACKGROUND_JOBS` 本地默认关闭。仅在需要测试 RSS 采集、价格同步、AI 生成、聚类等后台任务时，对**单个** API 实例设为 `true`
+- 本地开发默认使用 `mock` LLM，避免消耗真实 token；仅在联调模型提供商时切换为真实配置
 
-### Start Local Services
+### 启动服务
 
 ```bash
 pnpm docker:up
@@ -90,30 +95,32 @@ pnpm db:seed
 pnpm dev
 ```
 
-Local URLs:
+本地访问地址：
 
-- Web: `http://localhost:3000`
-- Admin: `http://localhost:3001`
-- API: `http://localhost:3002/api/health`
+| 服务 | 地址 |
+|------|------|
+| 用户端 | http://localhost:3000 |
+| 管理端 | http://localhost:3001 |
+| API 健康检查 | http://localhost:3002/api/health |
 
-## Useful Commands
+## 常用命令
 
 ```bash
-pnpm dev                  # Run web, admin, and API in parallel
-pnpm typecheck            # Type-check all workspace packages/apps
-pnpm test                 # Run all tests
-pnpm db:deploy            # Apply Prisma migrations
-pnpm db:seed              # Seed initial data
-pnpm db:refresh-content   # Refresh real content from configured sources
-pnpm db:sync-sources      # Sync source catalog into the database
-pnpm db:sync              # Sync prompts, system config, sources, and other operational config
-pnpm db:cluster-assign    # Rebuild feed cluster assignments
+pnpm dev                  # 并行启动 web、admin、api
+pnpm typecheck            # 全仓库类型检查
+pnpm test                 # 运行全部测试
+pnpm db:deploy            # 应用 Prisma 迁移
+pnpm db:seed              # 写入初始数据
+pnpm db:refresh-content   # 从已配置来源刷新真实内容
+pnpm db:sync-sources      # 同步来源目录到数据库
+pnpm db:sync              # 同步 Prompt、系统配置、来源等运营配置
+pnpm db:cluster-assign    # 重建 Feed 聚类分配
 pnpm db:hide-low-value-feeds
 ```
 
-## AI And LLM Providers
+## AI 与 LLM 配置
 
-The API can route different AI features to different providers:
+API 支持为不同 AI 能力路由到不同提供商：
 
 ```env
 LLM_DEFAULT="moonshot"
@@ -122,16 +129,16 @@ LLM_ROUTE_FEED_SUMMARY="deepseek"
 LLM_ROUTE_EMBEDDING="openai"
 ```
 
-Supported OpenAI-compatible provider IDs currently include:
+当前支持的 OpenAI 兼容提供商 ID：
 
 - `openai`
 - `deepseek`
 - `moonshot` / `kimi`
 - `mock`
 
-If no real API key is configured, the system falls back to mock behavior. Mock output is intended for development only.
+未配置真实 API Key 时，系统会降级到 mock 输出，**仅适用于开发环境**。
 
-Production deployments should set LLM cost controls:
+生产环境建议配置成本护栏：
 
 ```env
 LLM_MAX_OUTPUT_TOKENS="800"
@@ -141,28 +148,39 @@ LLM_FEED_AI_BATCH_SIZE="2"
 LLM_INSIGHT_BATCH_SIZE="3"
 ```
 
-The API also contains deterministic fallback rules for tags, clustering, and low-value feed summaries so that local development and cost-controlled production runs do not need to call an LLM for every item.
+此外，标签、聚类与低价值 Feed 摘要等场景内置确定性降级规则，本地开发与成本受控的生产环境不必对每条内容都调用 LLM。
 
-## Data Sources
+### 向量检索（pgvector）
 
-Source definitions live in `apps/api/src/modules/ingestion/source-catalog.ts` and are synced with:
+项目已集成 pgvector，用于 AI 搜索的语义召回，但默认关闭：
+
+```env
+LLM_ENABLE_EMBEDDINGS="true"      # 开启 embedding 写入与查询
+RAG_ENABLE_VECTOR_SEARCH="true"   # 关键词命中不足时启用向量检索
+```
+
+Feed AI 摘要与 Insight 合成完成后会写入 `content_embeddings`；AI 搜索默认以关键词检索为主，向量检索作为补充。
+
+## 数据来源
+
+来源定义位于 `apps/api/src/modules/ingestion/source-catalog.ts`，通过以下命令同步：
 
 ```bash
 pnpm db:sync-sources
 ```
 
-The default catalog currently includes:
+默认目录包括：
 
-- Chinese media and flash sources such as BlockBeats, PANews, Cointelegraph CN, and BTC Study.
-- Web3 media and project blogs such as CoinDesk, Cointelegraph, Decrypt, The Block, Ethereum Foundation, Vitalik, Lido, and Aave Governance.
-- Curated Medium, Substack, and Paragraph RSS feeds.
-- Reddit source definitions are present but paused by default until API credentials are configured.
+- 中文媒体与快讯：BlockBeats、PANews、Cointelegraph CN、BTC Study 等
+- Web3 媒体与项目博客：CoinDesk、Cointelegraph、Decrypt、The Block、Ethereum Foundation、Vitalik、Lido、Aave Governance 等
+- 精选 Medium、Substack、Paragraph RSS
+- Reddit 来源已定义但默认暂停，待配置 API 凭证后启用
 
-Mirror feeds are intentionally excluded from the default catalog because they have hit rate limits in the API ingestion runtime.
+镜像 Feed 未纳入默认目录，因在 API 采集运行时曾触发限流。
 
-## Deployment Notes
+## 部署说明
 
-Current frontend deployment is designed for Cloudflare Workers via OpenNext:
+前端通过 OpenNext 部署到 Cloudflare Workers：
 
 ```bash
 pnpm --filter @cryptopilot/web build:cloudflare
@@ -171,7 +189,7 @@ pnpm --filter @cryptopilot/admin build:cloudflare
 pnpm --filter @cryptopilot/admin deploy:cloudflare
 ```
 
-Production API instances should set:
+推送到 `main` 分支时，GitHub Actions 会自动部署 web 与 admin。生产 API 建议配置：
 
 ```env
 NODE_ENV="production"
@@ -181,18 +199,18 @@ ADMIN_URL="https://admin.cryptopilot.chat"
 API_URL="https://api.cryptopilot.chat"
 ```
 
-The API deploy workflow runs Prisma migrations, builds the API, restarts the service, verifies health, and then syncs operational config to the database with `pnpm --filter @cryptopilot/api db:sync`.
+API 部署流程会执行 Prisma 迁移、构建服务、重启、健康检查，并通过 `pnpm --filter @cryptopilot/api db:sync` 同步运营配置到数据库。
 
-See [docs/DEPLOY.md](docs/DEPLOY.md) for more deployment details.
+更多细节见 [docs/DEPLOY.md](docs/DEPLOY.md)。
 
-## Safety Boundaries
+## 安全与产品边界
 
-- Do not commit secrets or production `.env` files.
-- AI-generated market output must include sources where applicable.
-- The product must not output trading instructions, return promises, leverage advice, or direct buy/sell recommendations.
-- Keep background jobs enabled on only one production API instance unless distributed locking is introduced.
-- Admin write operations must create audit logs, and `/admin/logs` should remain usable for API, ingestion, LLM, push, and audit troubleshooting.
+- 不要提交密钥或生产环境 `.env` 文件
+- AI 生成的市场内容应尽可能附带可核验来源
+- 产品不得输出交易指令、收益承诺、杠杆建议或直接买卖推荐
+- 后台任务默认只在一个生产 API 实例上启用，除非引入分布式锁
+- 管理端写操作需记录审计日志；`/admin/logs` 应可用于 API、采集、LLM、推送与审计排查
 
-## Development Docs
+## 开发文档
 
-Start with [README_AI_DEVELOPMENT_DOCS.md](README_AI_DEVELOPMENT_DOCS.md) for the AI-agent-oriented project documentation index, version plan, and module specs.
+面向 AI Agent 与开发者的文档索引见 [README_AI_DEVELOPMENT_DOCS.md](README_AI_DEVELOPMENT_DOCS.md)，包含版本规划与模块规格说明。
