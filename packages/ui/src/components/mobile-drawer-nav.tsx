@@ -3,19 +3,21 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
-import type { NavItem } from "./app-shell";
+import type { NavGroup, NavItem } from "./app-shell";
 
 type MobileDrawerNavProps = {
   navItems: NavItem[];
+  navGroups?: NavGroup[];
   title: string;
   footer?: ReactNode;
   variant?: "default" | "perplexity";
 };
 
-export function MobileDrawerNav({ navItems, title, footer, variant = "default" }: MobileDrawerNavProps) {
+export function MobileDrawerNav({ navItems, navGroups, title, footer, variant = "default" }: MobileDrawerNavProps) {
   const [open, setOpen] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
   const isPerplexity = variant === "perplexity";
+  const groupedNav = navGroups ?? [{ label: "", items: navItems }];
 
   useEffect(() => {
     setCurrentPath(window.location.pathname);
@@ -63,22 +65,29 @@ export function MobileDrawerNav({ navItems, title, footer, variant = "default" }
               </button>
             </div>
             <nav className="mt-5 min-h-0 flex-1 space-y-1 overflow-y-auto">
-              {navItems.map((item) => {
-                const active = currentPath === item.href || (item.href !== "/admin" && currentPath.startsWith(`${item.href}/`));
-                return (
-                  <a
-                    aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "block rounded-xl px-3 py-2.5 text-sm transition",
-                      active ? "bg-[#E8F4F6] font-medium text-[#186A73]" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
-                    )}
-                    href={item.href}
-                    key={item.href}
-                  >
-                    {item.label}
-                  </a>
-                );
-              })}
+              {groupedNav.map((group) => (
+                <div className="space-y-1 pb-3 last:pb-0" key={group.label || "default"}>
+                  {group.label ? (
+                    <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{group.label}</p>
+                  ) : null}
+                  {group.items.map((item) => {
+                    const active = currentPath === item.href || (item.href !== "/admin" && currentPath.startsWith(`${item.href}/`));
+                    return (
+                      <a
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "block rounded-xl px-3 py-2.5 text-sm transition",
+                          active ? "bg-[#E8F4F6] font-medium text-[#186A73]" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
+                        )}
+                        href={item.href}
+                        key={item.href}
+                      >
+                        {item.label}
+                      </a>
+                    );
+                  })}
+                </div>
+              ))}
             </nav>
             {footer ? (
               <div className="mt-4 shrink-0 border-t border-slate-200 pt-4">
